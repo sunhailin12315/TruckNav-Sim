@@ -1,5 +1,7 @@
 # Truck Nav
 
+> [English](README.md) | [中文](README.zh-CN.md)
+
 **Truck Nav** is an external GPS navigation system for Euro Truck Simulator 2 and American Truck Siulator built using Typescript. It runs as an APK, EXE or browser (perfect for a phone, tablet or second monitor) and provides real-time tracking and routing based on the in-game map.
 
 <div align="center">

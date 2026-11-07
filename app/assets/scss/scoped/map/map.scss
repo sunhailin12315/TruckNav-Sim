@@ -88,13 +88,17 @@
 }
 
 .job-card-wrap {
+    // Sits below the left button column (4 buttons ≈ 11.8rem at the maximum
+    // HUD button size) so it never covers the settings / events /
+    // drive-report buttons.
     position: absolute;
-    top: calc($game-info-bar-height + 1.8rem + 5rem);
+    top: calc($game-info-bar-height + 14.2rem);
     left: 10px;
     z-index: 1200;
 
     @media (orientation: portrait) {
         max-width: min(340px, 60vw);
+        top: calc($game-info-bar-height + 14.2rem);
     }
 }
 

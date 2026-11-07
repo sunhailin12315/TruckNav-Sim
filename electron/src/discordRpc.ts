@@ -7,6 +7,8 @@ export interface DiscordRpcPayload {
     cargoName?: string;
     truckBrand?: string;
     truckName?: string;
+    /** Momentary line for deliveries, fines and cancellations. */
+    statusNote?: string;
 }
 
 // Enter your Discord application client ID here to enable Rich Presence integration.
@@ -234,7 +236,11 @@ function buildPresence(payload: DiscordRpcPayload) {
             1;
     let state = payload.connected ? "Cruising" : "Waiting for telemetry";
 
-    if (payload.connected && payload.hasActiveJob) {
+    const statusNote = cleanLocation(payload.statusNote);
+
+    if (payload.connected && statusNote) {
+        state = statusNote;
+    } else if (payload.connected && payload.hasActiveJob) {
         const fromCity = cleanLocation(payload.sourceCity);
         const toCity = cleanLocation(payload.destinationCity);
 

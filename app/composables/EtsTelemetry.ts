@@ -8,6 +8,7 @@ import {
     getRemainingDeliveryMinutes,
     getTruckState,
 } from "~/assets/utils/telemetry/helpers";
+import { currencySymbolFor, formatMoney } from "~/assets/utils/shared/format";
 import type { AchievementDef } from "~/assets/utils/gameplay/achievements";
 import type {
     TruckState,
@@ -103,6 +104,7 @@ function sendDiscordRpcState(payload: {
     cargoName?: string;
     truckBrand?: string;
     truckName?: string;
+    statusNote?: string;
 }) {
     if (typeof window === "undefined") return;
 
@@ -125,6 +127,66 @@ function clearDiscordRpcState() {
     if (!electronApi?.clearDiscordRpc) return;
 
     electronApi.clearDiscordRpc();
+}
+
+// Momentary Rich Presence line (deliveries, fines, cancellations). The note
+// rides on top of the last telemetry-derived payload and expires on its own.
+const RPC_NOTE_TTL_MS = 3 * 60_000;
+type RpcBasePayload = {
+    game: string;
+    connected: boolean;
+    hasActiveJob: boolean;
+    sourceCity?: string;
+    destinationCity?: string;
+    cargoName?: string;
+    truckBrand?: string;
+    truckName?: string;
+};
+let rpcStatusNote = "";
+let rpcNoteTimer: ReturnType<typeof setTimeout> | null = null;
+let lastRpcBasePayload: RpcBasePayload | null = null;
+
+function pushRpcPayload() {
+    if (!lastRpcBasePayload) return;
+    sendDiscordRpcState({
+        ...lastRpcBasePayload,
+        statusNote: rpcStatusNote || undefined,
+    });
+}
+
+function setRpcStatusNote(note: string) {
+    rpcStatusNote = note;
+
+    if (rpcNoteTimer) clearTimeout(rpcNoteTimer);
+    if (note) {
+        rpcNoteTimer = setTimeout(() => {
+            rpcStatusNote = "";
+            pushRpcPayload();
+        }, RPC_NOTE_TTL_MS);
+    }
+
+    pushRpcPayload();
+}
+
+function clearRpcStatusNote() {
+    if (rpcNoteTimer) {
+        clearTimeout(rpcNoteTimer);
+        rpcNoteTimer = null;
+    }
+
+    if (rpcStatusNote) {
+        rpcStatusNote = "";
+        pushRpcPayload();
+    }
+}
+
+function resetRpcStatusNote() {
+    lastRpcBasePayload = null;
+    rpcStatusNote = "";
+    if (rpcNoteTimer) {
+        clearTimeout(rpcNoteTimer);
+        rpcNoteTimer = null;
+    }
 }
 
 export function useEtsTelemetry() {
@@ -289,6 +351,9 @@ export function useEtsTelemetry() {
         detectEconomyEvents(data, hasActiveJob);
 
         if (hasActiveJob) {
+            // A fresh job supersedes any lingering delivery/fine note.
+            if (!wasOnJob) clearRpcStatusNote();
+
             tripLog.beginTripIfIdle({
                 game: settings.value.selectedGame ?? "",
                 sourceCity: jobDetails.sourceCityName,
@@ -298,7 +363,7 @@ export function useEtsTelemetry() {
             });
         }
 
-        sendDiscordRpcState({
+        lastRpcBasePayload = {
             game: data.game,
             connected: gameConnected,
             hasActiveJob,
@@ -308,6 +373,10 @@ export function useEtsTelemetry() {
             cargoName: data.job.cargo?.name,
             truckBrand: data.truck.constants?.brand,
             truckName: data.truck.constants?.name,
+        };
+        sendDiscordRpcState({
+            ...lastRpcBasePayload,
+            statusNote: rpcStatusNote || undefined,
         });
 
         if (onUpdate) {
@@ -363,6 +432,12 @@ export function useEtsTelemetry() {
                             onJob,
                         ),
                     );
+
+                    if (item.kind === "fine") {
+                        setRpcStatusNote(
+                            `Fine · -${formatMoney(item.amount, currencySymbolFor(settings.value.selectedGame))}`,
+                        );
+                    }
                 }
             }
         }
@@ -423,6 +498,9 @@ export function useEtsTelemetry() {
                 delivered.revenue,
                 jobState.destinationCityName,
             );
+            setRpcStatusNote(
+                `Delivered to ${jobState.destinationCityName || "company"} · +${formatMoney(delivered.revenue, currencySymbolFor(settings.value.selectedGame))}`,
+            );
             announceAchievements(
                 tripLog.endTrip({
                     kind: "delivered",
@@ -466,6 +544,9 @@ export function useEtsTelemetry() {
 
             if (penalty > 0) {
                 notifyFeedEvent("cancelled", penalty, "");
+                setRpcStatusNote(
+                    `Job cancelled · -${formatMoney(penalty, currencySymbolFor(settings.value.selectedGame))}`,
+                );
                 announceAchievements(
                     tripLog.endTrip({
                         kind: "cancelled",
@@ -492,6 +573,7 @@ export function useEtsTelemetry() {
         headingOffset = 0;
         lastPosition = null;
         speedSamples = [];
+        resetRpcStatusNote();
 
         Object.assign(gameState, {
             gameConnected: false,

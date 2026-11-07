@@ -1,0 +1,267 @@
+import type { GameType } from "~/types";
+
+// ---------------------------------------------------------------
+// Settings data contract: types, defaults, parsing/normalization
+// and versioned migrations. Kept free of Vue/Nuxt imports so it
+// stays unit-testable; app/composables/Settings.ts holds behavior.
+// ---------------------------------------------------------------
+
+export type UnitSystem = "metric" | "imperial";
+export type TextTheme = "light" | "dark";
+export type RouteTimeMode = "game" | "real";
+export type UiComponent =
+    | "speed"
+    | "fuel"
+    | "sleep"
+    | "time"
+    | "speedLimit"
+    | "topBar";
+export type ActiveComponents = UiComponent[];
+export type LocaleCode = "en" | "de" | "nl" | "cs" | "sk" | "ko" | "ro";
+
+export interface GameProfile {
+    themeColor: string;
+    textColor: TextTheme;
+    routeColor: string;
+    backgroundColor: string;
+    landColor: string;
+    roadColor: string;
+    units: UnitSystem;
+    ownedDlcs: number[];
+    lastDestination: [number, number] | null;
+    hasTurnNavigation: boolean;
+    fontFamily: string;
+    activeMod: string | "none";
+}
+
+export interface AppSettingsState {
+    /** Bumped whenever the settings shape changes; see MIGRATIONS. */
+    schemaVersion: number;
+    selectedGame: GameType;
+    savedIP: string | null;
+    profiles: {
+        ets2: GameProfile;
+        ats: GameProfile;
+    };
+    hudBtnSize: number;
+    truckMarkerSize: number;
+    compactTripFontSize: number;
+    activeUiComponents: ActiveComponents;
+    locale: LocaleCode;
+    routeTimeMode: RouteTimeMode;
+}
+
+export const SETTINGS_SCHEMA_VERSION = 1;
+
+const UI_COMPONENTS: readonly UiComponent[] = [
+    "speed",
+    "fuel",
+    "sleep",
+    "time",
+    "speedLimit",
+    "topBar",
+];
+
+const LOCALES: readonly LocaleCode[] = ["en", "de", "nl", "cs", "sk", "ro", "ko"];
+
+const DEFAULT_PROFILE: GameProfile = {
+    themeColor: "#fbc02d",
+    textColor: "light",
+    routeColor: "#22d3ee",
+    roadColor: "#4a5f7a",
+    backgroundColor: "#24467b",
+    landColor: "#272d39",
+    units: "metric",
+    ownedDlcs: Array.from({ length: 10 }, (_, i) => i + 1),
+    lastDestination: null,
+    hasTurnNavigation: true,
+    fontFamily: "Commissioner",
+    activeMod: "none",
+};
+
+export const DEFAULT_SETTINGS: AppSettingsState = {
+    schemaVersion: SETTINGS_SCHEMA_VERSION,
+    selectedGame: null,
+    savedIP: null,
+    profiles: {
+        ets2: {
+            ...DEFAULT_PROFILE,
+            themeColor: "#fbc02d",
+            textColor: "dark",
+            units: "metric",
+        },
+        ats: {
+            ...DEFAULT_PROFILE,
+            themeColor: "#d32f2f",
+            ownedDlcs: Array.from({ length: 18 }, (_, i) => i + 1),
+            units: "imperial",
+        },
+    },
+    hudBtnSize: 30,
+    truckMarkerSize: 40,
+    compactTripFontSize: 1.8,
+    activeUiComponents: [
+        "speed",
+        "speedLimit",
+        "fuel",
+        "time",
+        "sleep",
+        "topBar",
+    ],
+    locale: "en",
+    routeTimeMode: "game",
+};
+
+/** A fresh, deeply-copied default settings object (no shared references). */
+export function defaultSettings(): AppSettingsState {
+    return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+}
+
+type RawRecord = Record<string, unknown>;
+
+// One step per version bump: MIGRATIONS[v] upgrades stored data written by
+// schema version v into the shape of version v + 1. Data without a version
+// is treated as v1 (the current shape), so future changes only append steps.
+const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
+    // Example for the next bump (SETTINGS_SCHEMA_VERSION -> 2):
+    // 1: (raw) => ({ ...raw, newSetting: true }),
+};
+
+function oneOf<T extends string>(
+    value: unknown,
+    allowed: readonly T[],
+    fallback: T,
+): T {
+    return typeof value === "string" && (allowed as readonly string[]).includes(value)
+        ? (value as T)
+        : fallback;
+}
+
+function asFiniteNumber(value: unknown, fallback: number): number {
+    return typeof value === "number" && Number.isFinite(value)
+        ? value
+        : fallback;
+}
+
+function asColor(value: unknown, fallback: string): string {
+    return typeof value === "string" && value.length > 0 ? value : fallback;
+}
+
+function asCoordinate(value: unknown): [number, number] | null {
+    if (
+        Array.isArray(value) &&
+        value.length === 2 &&
+        typeof value[0] === "number" &&
+        Number.isFinite(value[0]) &&
+        typeof value[1] === "number" &&
+        Number.isFinite(value[1])
+    ) {
+        return [value[0], value[1]];
+    }
+    return null;
+}
+
+function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
+    const source = raw && typeof raw === "object" ? (raw as RawRecord) : {};
+
+    return {
+        themeColor: asColor(source.themeColor, defaults.themeColor),
+        textColor: oneOf(source.textColor, ["light", "dark"] as const, defaults.textColor),
+        routeColor: asColor(source.routeColor, defaults.routeColor),
+        backgroundColor: asColor(source.backgroundColor, defaults.backgroundColor),
+        landColor: asColor(source.landColor, defaults.landColor),
+        roadColor: asColor(source.roadColor, defaults.roadColor),
+        units: oneOf(source.units, ["metric", "imperial"] as const, defaults.units),
+        ownedDlcs: Array.isArray(source.ownedDlcs)
+            ? source.ownedDlcs.filter(
+                  (id): id is number =>
+                      typeof id === "number" && Number.isInteger(id) && id > 0,
+              )
+            : [...defaults.ownedDlcs],
+        lastDestination: asCoordinate(source.lastDestination),
+        hasTurnNavigation:
+            typeof source.hasTurnNavigation === "boolean"
+                ? source.hasTurnNavigation
+                : defaults.hasTurnNavigation,
+        fontFamily: asColor(source.fontFamily, defaults.fontFamily),
+        activeMod: typeof source.activeMod === "string" ? source.activeMod : defaults.activeMod,
+    };
+}
+
+function normalizeSettings(raw: unknown): AppSettingsState {
+    const source = raw && typeof raw === "object" ? (raw as RawRecord) : {};
+    const profiles = (source.profiles && typeof source.profiles === "object"
+        ? (source.profiles as RawRecord)
+        : {}) as RawRecord;
+
+    return {
+        schemaVersion: SETTINGS_SCHEMA_VERSION,
+        selectedGame:
+            source.selectedGame === "ets2" || source.selectedGame === "ats"
+                ? source.selectedGame
+                : null,
+        savedIP: typeof source.savedIP === "string" ? source.savedIP : null,
+        profiles: {
+            ets2: normalizeProfile(profiles.ets2, DEFAULT_SETTINGS.profiles.ets2),
+            ats: normalizeProfile(profiles.ats, DEFAULT_SETTINGS.profiles.ats),
+        },
+        hudBtnSize: asFiniteNumber(source.hudBtnSize, DEFAULT_SETTINGS.hudBtnSize),
+        truckMarkerSize: asFiniteNumber(
+            source.truckMarkerSize,
+            DEFAULT_SETTINGS.truckMarkerSize,
+        ),
+        compactTripFontSize: asFiniteNumber(
+            source.compactTripFontSize,
+            DEFAULT_SETTINGS.compactTripFontSize,
+        ),
+        activeUiComponents: Array.isArray(source.activeUiComponents)
+            ? source.activeUiComponents.filter((id): id is UiComponent =>
+                  (UI_COMPONENTS as readonly string[]).includes(id as string),
+              )
+            : [...DEFAULT_SETTINGS.activeUiComponents],
+        locale: oneOf(source.locale, LOCALES, DEFAULT_SETTINGS.locale),
+        routeTimeMode: oneOf(
+            source.routeTimeMode,
+            ["game", "real"] as const,
+            DEFAULT_SETTINGS.routeTimeMode,
+        ),
+    };
+}
+
+/**
+ * Parses stored settings JSON: runs pending schema migrations, then
+ * normalizes every field against the defaults so corrupt or stale data can
+ * never reach the runtime.
+ */
+export function loadSettingsFromRaw(json: string): {
+    settings: AppSettingsState;
+    migrated: boolean;
+} {
+    let raw: unknown = null;
+    try {
+        raw = JSON.parse(json);
+    } catch {
+        raw = null;
+    }
+
+    let migrated = false;
+    if (raw && typeof raw === "object") {
+        const record = raw as RawRecord;
+        const storedVersion =
+            typeof record.schemaVersion === "number" &&
+            Number.isInteger(record.schemaVersion) &&
+            record.schemaVersion >= 1
+                ? record.schemaVersion
+                : 1;
+
+        for (let v = storedVersion; v < SETTINGS_SCHEMA_VERSION; v++) {
+            const step = MIGRATIONS[v];
+            if (step) {
+                raw = step(record);
+                migrated = true;
+            }
+        }
+    }
+
+    return { settings: normalizeSettings(raw), migrated };
+}

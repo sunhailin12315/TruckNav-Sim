@@ -1,101 +1,28 @@
-import type { GameType } from "~/types";
+import {
+    DEFAULT_SETTINGS,
+    defaultSettings,
+    loadSettingsFromRaw,
+} from "~/assets/utils/shared/settingsSchema";
 
-export type UnitSystem = "metric" | "imperial";
-export type TextTheme = "light" | "dark";
-export type RouteTimeMode = "game" | "real";
-export type UiComponent =
-    | "speed"
-    | "fuel"
-    | "sleep"
-    | "time"
-    | "speedLimit"
-    | "topBar";
-export type ActiveComponents = UiComponent[];
-export type LocaleCode = "en" | "de" | "nl" | "cs" | "sk" | "ko" | "ro";
-
-export interface GameProfile {
-    themeColor: string;
-    textColor: TextTheme;
-    routeColor: string;
-    backgroundColor: string;
-    landColor: string;
-    roadColor: string;
-    units: UnitSystem;
-    ownedDlcs: number[];
-    lastDestination: [number, number] | null;
-    hasTurnNavigation: boolean;
-    fontFamily: string;
-    activeMod: string | "none";
-}
-
-export interface AppSettingsState {
-    selectedGame: GameType;
-    savedIP: string | null;
-    profiles: {
-        ets2: GameProfile;
-        ats: GameProfile;
-    };
-    hudBtnSize: number;
-    truckMarkerSize: number;
-    compactTripFontSize: number;
-    activeUiComponents: ActiveComponents;
-    locale: LocaleCode;
-    routeTimeMode: RouteTimeMode;
-}
-
-const DEFAULT_PROFILE: GameProfile = {
-    themeColor: "#fbc02d",
-    textColor: "light",
-    routeColor: "#22d3ee",
-    roadColor: "#4a5f7a",
-    backgroundColor: "#24467b",
-    landColor: "#272d39",
-    units: "metric",
-    ownedDlcs: Array.from({ length: 10 }, (_, i) => i + 1),
-    lastDestination: null,
-    hasTurnNavigation: true,
-    fontFamily: "Commissioner",
-    activeMod: "none",
-};
-
-const DEFAULT_SETTINGS: AppSettingsState = {
-    selectedGame: null,
-    savedIP: null,
-    profiles: {
-        ets2: {
-            ...DEFAULT_PROFILE,
-            themeColor: "#fbc02d",
-            textColor: "dark",
-            units: "metric",
-        },
-        ats: {
-            ...DEFAULT_PROFILE,
-            themeColor: "#d32f2f",
-            ownedDlcs: Array.from({ length: 18 }, (_, i) => i + 1),
-            units: "imperial",
-        },
-    },
-    hudBtnSize: 30,
-    truckMarkerSize: 40,
-    compactTripFontSize: 1.8,
-    activeUiComponents: [
-        "speed",
-        "speedLimit",
-        "fuel",
-        "time",
-        "sleep",
-        "topBar",
-    ],
-    locale: "en",
-    routeTimeMode: "game",
-};
+export type {
+    ActiveComponents,
+    AppSettingsState,
+    GameProfile,
+    LocaleCode,
+    RouteTimeMode,
+    TextTheme,
+    UiComponent,
+    UnitSystem,
+} from "~/assets/utils/shared/settingsSchema";
 
 const STORAGE_KEY = "truck-nav-settings";
 
 export const useSettings = () => {
-    const settings = useState<AppSettingsState>("app-settings", () => ({
-        ...DEFAULT_SETTINGS,
-    }));
+    // defaultSettings() deep-copies so runtime mutations never touch the
+    // shared DEFAULT_SETTINGS template.
+    const settings = useState<AppSettingsState>("app-settings", () =>
+        defaultSettings(),
+    );
 
     const activeSettings = computed(() => {
         const game = settings.value.selectedGame || "ets2";
@@ -164,32 +91,12 @@ export const useSettings = () => {
         const savedString = localStorage.getItem(STORAGE_KEY);
 
         if (savedString) {
-            try {
-                const parsed = JSON.parse(savedString);
-                settings.value = { ...DEFAULT_SETTINGS, ...parsed };
-
-                settings.value.profiles = {
-                    ets2: {
-                        ...DEFAULT_SETTINGS.profiles.ets2,
-                        ...(parsed.profiles?.ets2 || {}),
-                        fontFamily:
-                            parsed.profiles?.ets2?.fontFamily ||
-                            DEFAULT_SETTINGS.profiles.ets2.fontFamily,
-                    },
-                    ats: {
-                        ...DEFAULT_SETTINGS.profiles.ats,
-                        ...(parsed.profiles?.ats || {}),
-                        fontFamily:
-                            parsed.profiles?.ats?.fontFamily ||
-                            DEFAULT_SETTINGS.profiles.ats.fontFamily,
-                    },
-                };
-            } catch (e) {
-                console.error("Corrupt settings found, resetting to defaults.");
-                settings.value = { ...DEFAULT_SETTINGS };
-            }
+            // Parses, runs pending schema migrations and normalizes every
+            // field; corrupt or stale data falls back to defaults per-field.
+            const { settings: loaded } = loadSettingsFromRaw(savedString);
+            settings.value = loaded;
         } else {
-            settings.value = { ...DEFAULT_SETTINGS };
+            settings.value = defaultSettings();
         }
 
         applySideEffects();

@@ -86,6 +86,37 @@ describe("getScaleMultiplier", () => {
         const noUk = { ...config, hasUkRule: false };
         expect(getScaleMultiplier(-32000, -6000, null, null, noUk)).toBe(19);
     });
+
+    it("finds areas anywhere in a long list via the spatial grid", () => {
+        // 400 disjoint areas spread over the map; only the last one contains
+        // the probe point. A regression to a broken bucketing would miss it.
+        const cities: WorkerCityArea[] = [];
+        for (let i = 0; i < 400; i++) {
+            cities.push({
+                minX: i * 30000,
+                maxX: i * 30000 + 10000,
+                minZ: 0,
+                maxZ: 10000,
+            });
+        }
+
+        const probe = 399 * 30000 + 5000;
+        expect(getScaleMultiplier(probe, 5000, cities, null, config)).toBe(3);
+        expect(getScaleMultiplier(probe + 20000, 5000, cities, null, config)).toBe(19);
+    });
+
+    it("handles large negative coordinates across cell boundaries", () => {
+        const cities: WorkerCityArea[] = [
+            { minX: -60000, maxX: -45000, minZ: -30000, maxZ: -20000 },
+        ];
+        // Inside (spanning two grid cells diagonally); urban beats the UK rule.
+        expect(getScaleMultiplier(-51000, -25000, cities, null, config)).toBe(3);
+        expect(getScaleMultiplier(-59000, -29000, cities, null, config)).toBe(3);
+        // Outside the area but inside the UK rule zone.
+        expect(getScaleMultiplier(-44000, -25000, cities, null, config)).toBe(15);
+        // Outside both: rural fallback.
+        expect(getScaleMultiplier(-20000, -25000, cities, null, config)).toBe(19);
+    });
 });
 
 describe("calculateRoute", () => {

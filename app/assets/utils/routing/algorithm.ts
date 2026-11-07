@@ -108,6 +108,48 @@ export function resetRoutingState() {
     edge_objects = null;
 }
 
+// City areas are tested once per display-path segment; a linear scan over a
+// few hundred areas turns into millions of rectangle checks on long routes.
+// Bucket areas into a coarse grid once per city list (WeakMap keeps it alive
+// only while that list is).
+const CITY_GRID_CELL = 20000;
+const cityGridCache = new WeakMap<
+    WorkerCityArea[],
+    Map<number, WorkerCityArea[]>
+>();
+
+function cityCellKey(cx: number, cz: number): number {
+    return (cx + 512) * 1024 + (cz + 512);
+}
+
+function getCityGrid(cityAreas: WorkerCityArea[]) {
+    const cached = cityGridCache.get(cityAreas);
+    if (cached) return cached;
+
+    const cells = new Map<number, WorkerCityArea[]>();
+    for (const area of cityAreas) {
+        const minCx = Math.floor(area.minX / CITY_GRID_CELL);
+        const maxCx = Math.floor(area.maxX / CITY_GRID_CELL);
+        const minCz = Math.floor(area.minZ / CITY_GRID_CELL);
+        const maxCz = Math.floor(area.maxZ / CITY_GRID_CELL);
+
+        for (let cx = minCx; cx <= maxCx; cx++) {
+            for (let cz = minCz; cz <= maxCz; cz++) {
+                const key = cityCellKey(cx, cz);
+                let list = cells.get(key);
+                if (!list) {
+                    list = [];
+                    cells.set(key, list);
+                }
+                list.push(area);
+            }
+        }
+    }
+
+    cityGridCache.set(cityAreas, cells);
+    return cells;
+}
+
 export function getScaleMultiplier(
     gameX: number,
     gameZ: number,
@@ -127,16 +169,25 @@ export function getScaleMultiplier(
 
     if (!cityAreas || cityAreas.length === 0) return highwayScale;
 
-    for (let i = 0; i < cityAreas.length; i++) {
-        const area = cityAreas[i]!;
+    const cell = getCityGrid(cityAreas).get(
+        cityCellKey(
+            Math.floor(gameX / CITY_GRID_CELL),
+            Math.floor(gameZ / CITY_GRID_CELL),
+        ),
+    );
 
-        if (
-            gameX >= area.minX &&
-            gameX <= area.maxX &&
-            gameZ >= area.minZ &&
-            gameZ <= area.maxZ
-        ) {
-            return urban;
+    if (cell) {
+        for (let i = 0; i < cell.length; i++) {
+            const area = cell[i]!;
+
+            if (
+                gameX >= area.minX &&
+                gameX <= area.maxX &&
+                gameZ >= area.minZ &&
+                gameZ <= area.maxZ
+            ) {
+                return urban;
+            }
         }
     }
 

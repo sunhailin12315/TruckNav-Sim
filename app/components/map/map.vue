@@ -3,6 +3,7 @@ import { ref, onMounted, shallowRef, Transition } from "vue";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { usePlatform } from "~/composables/Platform";
+import type { DirectionStep } from "~/assets/utils/routing/directions";
 import {
     blendWithBg,
     darkenColor,
@@ -216,6 +217,33 @@ watch(
 // Settings Controller
 const { activeSettings, settings } = useSettings();
 const { t } = useTranslations();
+
+// Maneuver instructions are translated at render time from the step type
+// (steps carry English text baked in at route-generation time), so switching
+// the locale retranslates the card immediately.
+const MANEUVER_TEXT_KEYS: Partial<Record<DirectionStep["type"], string>> = {
+    depart: "directions.depart",
+    left: "directions.turnLeft",
+    right: "directions.turnRight",
+    "slight-left": "directions.keepLeft",
+    "slight-right": "directions.keepRight",
+    "exit-highway": "directions.takeExit",
+    destination: "directions.arrived",
+};
+
+const nextInstructionText = computed(() => {
+    const nextTurn = fullRouteDirections.value[1];
+    if (!nextTurn) return t("map.followRoute");
+
+    if (nextTurn.type === "roundabout") {
+        return nextTurn.exitCount && nextTurn.exitCount > 0
+            ? t("directions.roundaboutExit", { n: nextTurn.exitCount })
+            : t("directions.roundaboutExitGeneric");
+    }
+
+    const textKey = MANEUVER_TEXT_KEYS[nextTurn.type];
+    return textKey ? t(textKey) : t("map.followRoute");
+});
 
 let uiTimer: ReturnType<typeof setTimeout> | null = null;
 let routeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -661,9 +689,7 @@ const onCancelRoute = () => {
                         "
                         :upcoming-turns="fullRouteDirections"
                         :distance-to-next-turn="nextTurnDistance"
-                        :next-instruction="
-                            fullRouteDirections[1]?.text || t('map.followRoute')
-                        "
+                        :next-instruction="nextInstructionText"
                     />
 
                     <Transition name="fade">

@@ -19,6 +19,7 @@ const downloadProgress = ref(0);
 const downloadingId = ref<string | null>(null);
 const isBaseDownloaded = ref(false);
 const isModPanelOpen = ref(false);
+const isSettingsOpen = ref(false);
 
 const downloadedMods = ref<Record<string, boolean>>({});
 
@@ -159,6 +160,10 @@ function selectMod(modId: string | "none") {
 function toggleModPanel() {
     isModPanelOpen.value = !isModPanelOpen.value;
 }
+
+function toggleSettingsPanel() {
+    isSettingsOpen.value = !isSettingsOpen.value;
+}
 </script>
 
 <template>
@@ -169,6 +174,15 @@ function toggleModPanel() {
             </div>
             <Icon class="icon" name="lucide:cast" size="20" />
             <span>{{ t("mobile.pairWithComputer") }}</span>
+
+            <button
+                class="settings-btn"
+                :aria-label="t('settings.title')"
+                :title="t('settings.title')"
+                @click="toggleSettingsPanel"
+            >
+                <Icon name="lucide:settings" size="24" />
+            </button>
         </div>
 
         <div class="content">
@@ -181,10 +195,10 @@ function toggleModPanel() {
                     <button @click="toggleModPanel" class="btn nav-btn mod-btn">
                         <Icon name="lucide:settings" size="20" />
                         <span>
-                            Map Mods ({{
+                            {{ t("map.mapMods") }} ({{
                                 activeSettings.activeMod === "none" ||
                                 !activeSettings.activeMod
-                                    ? "None"
+                                    ? t("common.none")
                                     : activeSettings.activeMod
                             }})
                         </span>
@@ -195,7 +209,7 @@ function toggleModPanel() {
                         class="btn nav-btn mod-btn default-color"
                     >
                         <Icon name="lucide:trash-2" size="20" />
-                        <span>Uninstall Base Map</span>
+                        <span>{{ t("map.uninstallBaseMap") }}</span>
                     </button>
                 </div>
             </div>
@@ -213,7 +227,7 @@ function toggleModPanel() {
                     @click.prevent="emit('connected')"
                     class="btn nav-btn success-btn"
                 >
-                    <span>Start Navigation</span>
+                    <span>{{ t("common.startNavigation") }}</span>
                     <Icon name="lucide:map-pinned" size="20" />
                 </button>
             </template>
@@ -222,10 +236,7 @@ function toggleModPanel() {
                 <div class="bottom-download-button">
                     <InfoBox type="note">
                         <template #content>
-                            <p>
-                                Please make sure that TruckNav PC Companion is
-                                running before downloading
-                            </p>
+                            <p>{{ t("map.companionRequired") }}</p>
                         </template></InfoBox
                     >
 
@@ -239,7 +250,7 @@ function toggleModPanel() {
                         class="btn nav-btn"
                         :disabled="isDownloading"
                     >
-                        <span>Download Base Map</span>
+                        <span>{{ t("map.downloadBaseMap") }}</span>
                         <Icon name="lucide:download" size="20" />
                     </button>
 
@@ -256,14 +267,14 @@ function toggleModPanel() {
             <Transition name="panel-pop">
                 <PopupPanel
                     v-if="isModPanelOpen"
-                    title="Select Map Mod"
+                    :title="t('map.selectMapMod')"
                     @close="toggleModPanel"
                 >
                     <div class="mod-list-container">
                         <div class="mod-item">
                             <div class="mod-info">
-                                <strong>Default Map</strong>
-                                <p>Standard game map (No Mods)</p>
+                                <strong>{{ t("map.defaultMap") }}</strong>
+                                <p>{{ t("map.defaultMapDesc") }}</p>
                             </div>
                             <div class="mod-actions">
                                 <button
@@ -277,8 +288,8 @@ function toggleModPanel() {
                                     {{
                                         activeSettings.activeMod === "none" ||
                                         !activeSettings.activeMod
-                                            ? "Selected"
-                                            : "Select"
+                                            ? t("map.selected")
+                                            : t("map.select")
                                     }}
                                 </button>
                             </div>
@@ -312,7 +323,7 @@ function toggleModPanel() {
                                     @click="startDownload(mod.id, mod.url)"
                                 >
                                     <Icon name="lucide:download" size="20" />
-                                    Download
+                                    {{ t("map.download") }}
                                 </button>
 
                                 <span
@@ -321,7 +332,7 @@ function toggleModPanel() {
                                 >
                                     {{
                                         downloadProgress === -1
-                                            ? "In Progress"
+                                            ? t("map.inProgress")
                                             : (downloadProgress || 0) + "%"
                                     }}
                                 </span>
@@ -336,8 +347,8 @@ function toggleModPanel() {
                                     >
                                         {{
                                             activeSettings.activeMod === mod.id
-                                                ? "Selected"
-                                                : "Select"
+                                                ? t("map.selected")
+                                                : t("map.select")
                                         }}
                                     </button>
 
@@ -358,6 +369,12 @@ function toggleModPanel() {
                 </PopupPanel>
             </Transition>
         </div>
+
+        <Transition name="panel-pop">
+            <div v-show="isSettingsOpen" class="settings-overlay">
+                <SettingsPanel :close-panel="toggleSettingsPanel" />
+            </div>
+        </Transition>
     </section>
 </template>
 

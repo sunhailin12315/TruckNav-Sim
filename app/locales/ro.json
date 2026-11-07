@@ -13,6 +13,7 @@
         "hide": "Ascunde",
         "loadingRouteData": "Se încarcă datele rutei...",
         "missing": "Lipsește",
+        "none": "Fără",
         "note": "Notă",
         "offlineTryAgain": "Deconectat, încearcă să deschizi din nou",
         "reset": "Resetare",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "Browser",
         "discordRpc": "Discord RPC",
+        "error": "Eroare",
         "ets2": "ETS2",
         "launchStartup": "Lansare la pornire",
         "localGps": "GPS Local",
@@ -69,6 +71,17 @@
         "title": "Bun venit la TruckNav!",
         "truckingCompanion": "Partenerul tău la drum",
         "troubleshoot": "Dacă folosiți o versiune cracked sau un repack, plugin-ul poate afișa ca 'Lipsă' chiar și după configurare"
+    },
+    "directions": {
+        "arrived": "Ai ajuns",
+        "depart": "Pornire pe traseu",
+        "keepLeft": "Păstrează stânga",
+        "keepRight": "Păstrează dreapta",
+        "roundaboutExit": "Ieși la ieșirea {{n}}",
+        "roundaboutExitGeneric": "ieși la sensul giratoriu",
+        "takeExit": "Folosește ieșirea",
+        "turnLeft": "Virează la stânga",
+        "turnRight": "Virează la dreapta"
     },
     "events": {
         "achievement": "Realizare deblocată",
@@ -113,7 +126,18 @@
         "urbanAhead": "Intrare în zona urbană",
         "tappingDisabled": "Apăsare dezactivată",
         "tappingEnabled": "Apăsare Activată",
-        "addStop": "Adaugă oprire"
+        "addStop": "Adaugă oprire",
+        "mapMods": "Moduri de hartă",
+        "uninstallBaseMap": "Dezinstalează harta de bază",
+        "companionRequired": "Asigură-te că TruckNav PC Companion rulează înainte de descărcare",
+        "downloadBaseMap": "Descarcă harta de bază",
+        "selectMapMod": "Selectează modul de hartă",
+        "defaultMap": "Harta implicită",
+        "defaultMapDesc": "Harta standard de joc (fără moduri)",
+        "selected": "Selectat",
+        "select": "Selectează",
+        "download": "Descarcă",
+        "inProgress": "În desfășurare"
     },
     "mobile": {
         "pairWithComputer": "Asociați cu Calculatorul"
@@ -187,7 +211,8 @@
         "german": "Germană",
         "slovak": "Slovacă",
         "romanian": "Română",
-        "korean": "Coreeană"
+        "korean": "Coreeană",
+        "chinese": "Chineză"
     },
     "uiComponents": {
         "fuelDescription": "Arată nivelul de combustibil rămas și notifică atunci când rămâne puțin.",

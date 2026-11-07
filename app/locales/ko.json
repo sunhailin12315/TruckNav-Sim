@@ -13,6 +13,7 @@
         "hide": "숨기기",
         "loadingRouteData": "경로 데이터를 불러오는 중...",
         "missing": "찾을 수 없음",
+        "none": "없음",
         "note": "메모",
         "offlineTryAgain": "오프라인, 다시 실행해 주세요.",
         "reset": "초기화",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "브라우저",
         "discordRpc": "디스코드 RPC",
+        "error": "오류",
         "ets2": "ETS2",
         "launchStartup": "윈도우 시작 시 자동 실행",
         "localGps": "내부 GPS",
@@ -69,6 +71,17 @@
         "title": "TruckNav에 오신 것을 환영합니다!",
         "truckingCompanion": "트럭커를 위한 스마트 드라이빙 파트너",
         "troubleshoot": "크랙 혹은 리팩 사용 시 플러그인 인식 오류가 발생할 수 있습니다"
+    },
+    "directions": {
+        "arrived": "목적지에 도착",
+        "depart": "경로를 따라 출발",
+        "keepLeft": "왼쪽 차로로 주행",
+        "keepRight": "오른쪽 차로로 주행",
+        "roundaboutExit": "{{n}}번째 출구로 진출",
+        "roundaboutExitGeneric": "회전로에서 진출",
+        "takeExit": "출구로 진출",
+        "turnLeft": "좌회전",
+        "turnRight": "우회전"
     },
     "events": {
         "achievement": "업적 달성",
@@ -113,7 +126,18 @@
         "urbanAhead": "도시 지역 진입",
         "tappingDisabled": "터치 비활성화",
         "tappingEnabled": "터치 활성화",
-        "addStop": "경유지 추가"
+        "addStop": "경유지 추가",
+        "mapMods": "맵 모드",
+        "uninstallBaseMap": "기본 맵 제거",
+        "companionRequired": "다운로드하기 전에 TruckNav PC Companion이 실행 중인지 확인하세요",
+        "downloadBaseMap": "기본 맵 다운로드",
+        "selectMapMod": "맵 모드 선택",
+        "defaultMap": "기본 맵",
+        "defaultMapDesc": "표준 게임 맵 (모드 없음)",
+        "selected": "선택됨",
+        "select": "선택",
+        "download": "다운로드",
+        "inProgress": "진행 중"
     },
     "mobile": {
         "pairWithComputer": "컴퓨터와 연결"
@@ -187,7 +211,8 @@
         "german": "독일어",
         "slovak": "슬로바키아어",
         "romanian": "루마니아어",
-        "korean": "한국어"
+        "korean": "한국어",
+        "chinese": "중국어"
     },
     "uiComponents": {
         "fuelDescription": "남은 연료량을 표시하며, 연료가 부족하면 깜빡입니다.",

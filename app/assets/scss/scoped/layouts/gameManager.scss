@@ -44,6 +44,30 @@
     cursor: pointer;
 }
 
+.settings-btn {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    margin-left: auto;
+
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+}
+
+.settings-overlay {
+    position: fixed;
+    top: env(safe-area-inset-top);
+    left: 0;
+    width: 100dvw;
+    height: calc(100dvh - env(safe-area-inset-top));
+
+    z-index: 4000;
+}
+
 .top-content {
     display: flex;
     flex-direction: column;

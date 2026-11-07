@@ -17,7 +17,7 @@ export type UiComponent =
     | "speedLimit"
     | "topBar";
 export type ActiveComponents = UiComponent[];
-export type LocaleCode = "en" | "de" | "nl" | "cs" | "sk" | "ko" | "ro";
+export type LocaleCode = "en" | "de" | "nl" | "cs" | "sk" | "ko" | "ro" | "zh";
 
 export interface GameProfile {
     themeColor: string;
@@ -74,7 +74,16 @@ const UI_COMPONENTS: readonly UiComponent[] = [
     "topBar",
 ];
 
-const LOCALES: readonly LocaleCode[] = ["en", "de", "nl", "cs", "sk", "ro", "ko"];
+const LOCALES: readonly LocaleCode[] = [
+    "en",
+    "de",
+    "nl",
+    "cs",
+    "sk",
+    "ro",
+    "ko",
+    "zh",
+];
 
 const DEFAULT_PROFILE: GameProfile = {
     themeColor: "#fbc02d",

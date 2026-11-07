@@ -13,6 +13,7 @@
         "hide": "Hide",
         "loadingRouteData": "Loading Route Data...",
         "missing": "Missing",
+        "none": "None",
         "note": "Note",
         "offlineTryAgain": "Offline, try opening again.",
         "reset": "Reset",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "Browser",
         "discordRpc": "Discord RPC",
+        "error": "Error",
         "ets2": "ETS2",
         "launchStartup": "Launch on startup",
         "localGps": "Local GPS",
@@ -69,6 +71,17 @@
         "title": "Welcome to TruckNav!",
         "truckingCompanion": "Your Trucking Companion",
         "troubleshoot": "If you're using a cracked version or a repack, the plugin may show as 'Missing' even after setup"
+    },
+    "directions": {
+        "arrived": "Arrived",
+        "depart": "Head on Route",
+        "keepLeft": "Keep left",
+        "keepRight": "Keep right",
+        "roundaboutExit": "Take exit {{n}}",
+        "roundaboutExitGeneric": "exit at the roundabout",
+        "takeExit": "Take the exit",
+        "turnLeft": "Turn left",
+        "turnRight": "Turn right"
     },
     "events": {
         "achievement": "Achievement Unlocked",
@@ -113,7 +126,18 @@
         "urbanAhead": "Entering Urban Area",
         "tappingDisabled": "Tapping Disabled",
         "tappingEnabled": "Tapping Enabled",
-        "addStop": "Add Stop"
+        "addStop": "Add Stop",
+        "mapMods": "Map Mods",
+        "uninstallBaseMap": "Uninstall Base Map",
+        "companionRequired": "Please make sure that TruckNav PC Companion is running before downloading",
+        "downloadBaseMap": "Download Base Map",
+        "selectMapMod": "Select Map Mod",
+        "defaultMap": "Default Map",
+        "defaultMapDesc": "Standard game map (No Mods)",
+        "selected": "Selected",
+        "select": "Select",
+        "download": "Download",
+        "inProgress": "In Progress"
     },
     "mobile": {
         "pairWithComputer": "Pair with Computer"
@@ -187,7 +211,8 @@
         "german": "German",
         "slovak": "Slovak",
         "romanian": "Romanian",
-        "korean": "Korean"
+        "korean": "Korean",
+        "chinese": "Chinese"
     },
     "uiComponents": {
         "fuelDescription": "Shows your remaining fuel level and it pulses when running low.",

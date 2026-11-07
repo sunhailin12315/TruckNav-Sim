@@ -59,7 +59,7 @@ const handleExplorerLaunch = async (gameName: string) => {
         checkStatus();
     } else {
         if (result.message !== "Cancelled") {
-            alert("Error: " + result.message);
+            alert(t("desktop.error") + ": " + result.message);
         }
     }
 };
@@ -142,8 +142,8 @@ const toggleRemoteGpsWindow = () => {
                             t("desktop.launchStartup")
                         }}</span>
                         <SegmentedControl
-                            left-option="On"
-                            right-option="Off"
+                            :left-option="t('settings.on')"
+                            :right-option="t('settings.off')"
                             @connect="
                                 updateDesktopSetting(
                                     'startWithWindows',
@@ -160,8 +160,8 @@ const toggleRemoteGpsWindow = () => {
                             t("desktop.startMinimized")
                         }}</span>
                         <SegmentedControl
-                            left-option="On"
-                            right-option="Off"
+                            :left-option="t('settings.on')"
+                            :right-option="t('settings.off')"
                             @connect="
                                 updateDesktopSetting(
                                     'startMinimized',
@@ -290,10 +290,7 @@ const toggleRemoteGpsWindow = () => {
 
         <div class="troubleshoot">
             <InfoBox type="note">
-                <template #content
-                    >If you're using a cracked version or a repack, the plugin
-                    may show as 'Missing' even after setup
-                </template>
+                <template #content>{{ t("desktop.troubleshoot") }}</template>
             </InfoBox>
         </div>
     </section>

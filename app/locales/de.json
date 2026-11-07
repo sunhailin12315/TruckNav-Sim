@@ -13,6 +13,7 @@
         "hide": "Ausblenden",
         "loadingRouteData": "Routendaten werden geladen...",
         "missing": "Fehlt",
+        "none": "Keine",
         "note": "Hinweis",
         "offlineTryAgain": "Offline, versuche es erneut zu öffnen.",
         "reset": "Zurücksetzen",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "Browser",
         "discordRpc": "Discord RPC",
+        "error": "Fehler",
         "ets2": "ETS2",
         "launchStartup": "Beim Systemstart starten",
         "localGps": "Lokales GPS",
@@ -69,6 +71,17 @@
         "title": "Willkommen bei TruckNav!",
         "truckingCompanion": "Dein Trucking-Begleiter",
         "troubleshoot": "Falls du eine gecrackte Version oder ein Repack verwendest, wird das Plugin möglicherweise auch nach der Einrichtung als „Fehlt“ angezeigt."
+    },
+    "directions": {
+        "arrived": "Angekommen",
+        "depart": "Auf der Route fahren",
+        "keepLeft": "Links halten",
+        "keepRight": "Rechts halten",
+        "roundaboutExit": "Ausfahrt {{n}} nehmen",
+        "roundaboutExitGeneric": "am Kreisverkehr ausfahren",
+        "takeExit": "Ausfahrt nehmen",
+        "turnLeft": "Links abbiegen",
+        "turnRight": "Rechts abbiegen"
     },
     "events": {
         "achievement": "Erfolg freigeschaltet",
@@ -113,7 +126,18 @@
         "urbanAhead": "Stadtgebiet beginnt",
         "tappingDisabled": "Tippen deaktiviert",
         "tappingEnabled": "Tippen aktiviert",
-        "addStop": "Stopp hinzufügen"
+        "addStop": "Stopp hinzufügen",
+        "mapMods": "Karten-Mods",
+        "uninstallBaseMap": "Basiskarte deinstallieren",
+        "companionRequired": "Stelle bitte sicher, dass der TruckNav PC Companion läuft, bevor du herunterlädst",
+        "downloadBaseMap": "Basiskarte herunterladen",
+        "selectMapMod": "Karten-Mod auswählen",
+        "defaultMap": "Standardkarte",
+        "defaultMapDesc": "Standard-Spielkarte (keine Mods)",
+        "selected": "Ausgewählt",
+        "select": "Auswählen",
+        "download": "Herunterladen",
+        "inProgress": "Läuft"
     },
     "mobile": {
         "pairWithComputer": "Mit Computer koppeln"
@@ -187,7 +211,8 @@
         "german": "Deutsch",
         "slovak": "Slowakisch",
         "romanian": "Rumänisch",
-        "korean": "Koreanisch"
+        "korean": "Koreanisch",
+        "chinese": "Chinesisch"
     },
     "uiComponents": {
         "fuelDescription": "Zeigt deinen verbleibenden Kraftstoff an und pulsiert bei niedrigem Stand.",

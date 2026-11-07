@@ -13,6 +13,7 @@
         "hide": "Schovat",
         "loadingRouteData": "Hledání dat trasy...",
         "missing": "Chybí",
+        "none": "Žádný",
         "note": "Poznámka",
         "offlineTryAgain": "Offline, zkus to znovu.",
         "reset": "Resetovat",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "Prohlížeč:",
         "discordRpc": "Discord RPC",
+        "error": "Chyba",
         "ets2": "ETS2",
         "launchStartup": "Spustit při zapnutí systému",
         "localGps": "Lokální GPS",
@@ -69,6 +71,17 @@
         "title": "Vítej v TruckNav!",
         "truckingCompanion": "Tvůj společník při řízení náklaďáku",
         "troubleshoot": "Pokud používáš pirátskou verzi nebo repack, plugin se může ukazovat jako chybějící i po nastavení."
+    },
+    "directions": {
+        "arrived": "Dosaženo cíle",
+        "depart": "Vyraz po trase",
+        "keepLeft": "Drž se vlevo",
+        "keepRight": "Drž se vpravo",
+        "roundaboutExit": "Vyjeď na {{n}}. výjezdu",
+        "roundaboutExitGeneric": "vyjeď na kruhovém objezdu",
+        "takeExit": "Použij sjezd",
+        "turnLeft": "Zahni doleva",
+        "turnRight": "Zahni doprava"
     },
     "events": {
         "achievement": "Úspěch odemčen",
@@ -113,7 +126,18 @@
         "urbanAhead": "Vjíždíte do města",
         "tappingDisabled": "Dotyk vypnut",
         "tappingEnabled": "Dotyk zapnut",
-        "addStop": "Přidat zastávku"
+        "addStop": "Přidat zastávku",
+        "mapMods": "Mapové mody",
+        "uninstallBaseMap": "Odinstalovat základní mapu",
+        "companionRequired": "Před stažením se ujistě, že běží TruckNav PC Companion",
+        "downloadBaseMap": "Stáhnout základní mapu",
+        "selectMapMod": "Vybrat mapový mod",
+        "defaultMap": "Výchozí mapa",
+        "defaultMapDesc": "Standardní herní mapa (bez modů)",
+        "selected": "Vybráno",
+        "select": "Vybrat",
+        "download": "Stáhnout",
+        "inProgress": "Probíhá"
     },
     "mobile": {
         "pairWithComputer": "Spárovat s počítačem"
@@ -187,7 +211,8 @@
         "german": "Němčina",
         "slovak": "Slovenština",
         "romanian": "Rumunština",
-        "korean": "Korejština"
+        "korean": "Korejština",
+        "chinese": "Čínština"
     },
     "uiComponents": {
         "fuelDescription": "Ukáže zbývající palivo a pulzuje, když dochází.",

@@ -13,6 +13,7 @@
         "hide": "Verbergen",
         "loadingRouteData": "Routegegevens laden...",
         "missing": "Ontbreekt",
+        "none": "Geen",
         "note": "Opmerking",
         "offlineTryAgain": "Offline, probeer opnieuw te openen.",
         "reset": "Resetten",
@@ -52,6 +53,7 @@
         "ats": "ATS",
         "browser": "Browser",
         "discordRpc": "Discord RPC",
+        "error": "Fout",
         "ets2": "ETS2",
         "launchStartup": "Start bij opstarten",
         "localGps": "Lokale GPS",
@@ -69,6 +71,17 @@
         "title": "Welkom bij TruckNav!",
         "truckingCompanion": "Jouw trucking-maatje",
         "troubleshoot": "Als je een cracked versie of repack gebruikt, kan de plugin ook na de setup als 'Ontbreekt' worden weergegeven"
+    },
+    "directions": {
+        "arrived": "Aangekomen",
+        "depart": "Rijd over de route",
+        "keepLeft": "Links aanhouden",
+        "keepRight": "Rechts aanhouden",
+        "roundaboutExit": "Neem afrit {{n}}",
+        "roundaboutExitGeneric": "afrit bij de rotonde",
+        "takeExit": "Neem de afrit",
+        "turnLeft": "Sla linksaf",
+        "turnRight": "Sla rechtsaf"
     },
     "events": {
         "achievement": "Prestatie ontgrendeld",
@@ -113,7 +126,18 @@
         "urbanAhead": "Stadsgebied binnenkomen",
         "tappingDisabled": "Tikken uitgeschakeld",
         "tappingEnabled": "Tikken ingeschakeld",
-        "addStop": "Stop toevoegen"
+        "addStop": "Stop toevoegen",
+        "mapMods": "Kaart-Mods",
+        "uninstallBaseMap": "Basiskaart verwijderen",
+        "companionRequired": "Zorg ervoor dat TruckNav PC Companion draait voordat je downloadt",
+        "downloadBaseMap": "Basiskaart downloaden",
+        "selectMapMod": "Kaart-Mod selecteren",
+        "defaultMap": "Standaardkaart",
+        "defaultMapDesc": "Standaard spelkaart (geen mods)",
+        "selected": "Geselecteerd",
+        "select": "Selecteren",
+        "download": "Downloaden",
+        "inProgress": "Bezig"
     },
     "mobile": {
         "pairWithComputer": "Koppelen met computer"
@@ -187,7 +211,8 @@
         "german": "Duits",
         "slovak": "Slowaaks",
         "romanian": "Roemeens",
-        "korean": "Koreaans"
+        "korean": "Koreaans",
+        "chinese": "Chinees"
     },
     "uiComponents": {
         "fuelDescription": "Toont je resterende brandstofniveau en pulseert wanneer het laag is.",

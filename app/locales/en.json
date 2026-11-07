@@ -138,6 +138,7 @@
         "altShorter": "{{n}} km shorter",
         "altSlower": "{{n}} min slower",
         "detourInfo": "Detour +{{km}} km (~{{min}} min)",
+        "rerouting": "Recalculating route…",
         "mapMods": "Map Mods",
         "uninstallBaseMap": "Uninstall Base Map",
         "companionRequired": "Please make sure that TruckNav PC Companion is running before downloading",
@@ -157,6 +158,9 @@
         "locatingRoute": "Locating Route",
         "noRouteAvailable": "No Route Available",
         "routeFound": "Route Found"
+    },
+    "voice": {
+        "aheadOf": "In {{m}} meters,"
     },
     "settings": {
         "appFont": "App Font",
@@ -193,6 +197,11 @@
         "selectComponents": "Select Components",
         "soundAlerts": "Sound Alerts",
         "soundAlertsDescription": "Beeps and vibration for overspeed, fatigue and events.",
+        "urbanWarning": "Urban Area Alert",
+        "voiceNavigation": "Voice Guidance",
+        "voiceNavigationDescription": "Spoken turn-by-turn directions while navigating.",
+        "voiceConcise": "Concise Announcements",
+        "voiceConciseDescription": "Only announce turns at the near-distance call.",
         "statsTitle": "Statistics",
         "textTheme": "Text Theme",
         "dayNightMode": "Day / Night",

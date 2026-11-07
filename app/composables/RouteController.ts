@@ -83,6 +83,10 @@ export const useRouteController = (
     // Incremented once each time the route approaches an urban entry point.
     const urbanAheadTrigger = ref(0);
 
+    // Incremented whenever a deviation triggers a recalculation, so the UI
+    // can announce the replan (AMap's autoreroute cue).
+    const rerouteTrigger = ref(0);
+
     // Rest/fuel planning: the next reachable service area or gas station
     // along the route, drawn as a marker and announced once.
     const serviceSuggestion = ref<{
@@ -1541,6 +1545,7 @@ export const useRouteController = (
             if (!isCalculating.value && waypointList.value.length > 0) {
                 lastRecalcTime.value = now;
                 console.log("Deviation detected! Recalculating...");
+                rerouteTrigger.value++;
                 handleMultiRouteCalculation(
                     truckCoords,
                     truckHeading,
@@ -1596,6 +1601,7 @@ export const useRouteController = (
         isWorkerReady,
         isRouteActive,
         urbanAheadTrigger,
+        rerouteTrigger,
         serviceSuggestion,
         routeAlternatives,
         primaryRouteSummary,

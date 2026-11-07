@@ -142,6 +142,8 @@ describe("settingsSchema", () => {
             eventFeed: true,
             soundAlerts: false,
             urbanWarning: true,
+            voiceNavigation: false,
+            voiceConcise: true,
         });
         expect(settings.profiles.ets2.avoidFerries).toBe(false);
     });
@@ -160,6 +162,8 @@ describe("settingsSchema", () => {
             eventFeed: false,
             soundAlerts: true,
             urbanWarning: true,
+            voiceNavigation: false,
+            voiceConcise: true,
         });
     });
 
@@ -189,6 +193,25 @@ describe("settingsSchema", () => {
         expect(migrated).toBe(true);
         expect(settings.profiles.ets2.dayNightMode).toBe("auto");
         expect(settings.profiles.ats.dayNightMode).toBe("off");
+    });
+
+    it("migrates v5 data up to v6 with voice defaults", () => {
+        const stored = {
+            schemaVersion: 5,
+            gameplay: { eventFeed: false, voiceNavigation: true },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay).toEqual({
+            eventFeed: false,
+            soundAlerts: false,
+            urbanWarning: true,
+            voiceNavigation: true,
+            voiceConcise: true,
+        });
     });
 
     it("normalizes the gameplay block per-field", () => {

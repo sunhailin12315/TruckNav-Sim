@@ -10,6 +10,7 @@ import {
     lightenColor,
 } from "~/assets/utils/shared/colors";
 import { generateTruckIcon } from "~/assets/utils/map/markers";
+import { pickTurnAnnouncement } from "~/assets/utils/guidance/voiceAnnouncements";
 
 defineProps<{ goHome: () => void }>();
 
@@ -119,6 +120,7 @@ const {
     removeWaypointAtIndex,
     findBestWaypointInsertionIndex,
     urbanAheadTrigger,
+    rerouteTrigger,
     serviceSuggestion,
     routeAlternatives,
     primaryRouteSummary,
@@ -207,6 +209,64 @@ watch(serviceSuggestion, (suggestion) => {
     if (!suggestion) return;
     suggestionNotificationTrigger.value++;
     playBeep(suggestion.kind === "rest" ? 520 : 700, 200, 2);
+});
+
+// ===== Voice guidance: spoken turn cues + replan announcement (M9) =====
+const { speak: speakCue, cancel: cancelSpeech } = useVoiceGuidance();
+
+// Announce the upcoming turn as the distance-to-turn crosses the threshold
+// marks; the spoken set resets whenever a different turn becomes "next".
+let spokenTurnKey = "";
+let spokenThresholds: number[] = [];
+watch(
+    [nextTurnDistance, fullRouteDirections, isNavigating],
+    ([nowKm, dirs], [prevKm]) => {
+        if (!isNavigating.value) return;
+
+        const upcoming = dirs?.[1];
+        if (!upcoming || upcoming.cumulativeKm === undefined) return;
+
+        const turnKey = `${upcoming.type}:${upcoming.cumulativeKm}`;
+        if (turnKey !== spokenTurnKey) {
+            spokenTurnKey = turnKey;
+            spokenThresholds = [];
+        }
+
+        const { voiceNavigation, voiceConcise } = settings.value.gameplay;
+        if (!voiceNavigation) return;
+
+        const threshold = pickTurnAnnouncement(
+            prevKm ?? Infinity,
+            nowKm,
+            spokenThresholds,
+            voiceConcise,
+        );
+        if (threshold === null) return;
+
+        spokenThresholds.push(threshold);
+        speakCue(
+            `${t("voice.aheadOf", { m: Math.round(threshold * 1000) })} ${nextInstructionText.value}`,
+        );
+    },
+);
+
+// Guidance ended (or paused): stop any pending speech.
+watch(isNavigating, (navigating) => {
+    if (!navigating) cancelSpeech();
+});
+
+// Deviation replan: toast + optional beep + spoken cue, at most once per
+// episode (the recalc itself is throttled upstream at 5 s).
+const rerouteNotificationTrigger = ref(0);
+let lastRerouteAnnouncedAt = 0;
+watch(rerouteTrigger, () => {
+    const now = Date.now();
+    if (now - lastRerouteAnnouncedAt < 20000) return;
+    lastRerouteAnnouncedAt = now;
+
+    rerouteNotificationTrigger.value++;
+    if (settings.value.gameplay.soundAlerts) playBeep(500, 180);
+    speakCue(t("map.rerouting"));
 });
 
 // Route preference change: recalculate the active route so the new ferry
@@ -837,6 +897,20 @@ const onSelectAlternative = (kind: string) => {
                                             ? '#7dd3fc'
                                             : '#f59e0b',
                                 }"
+                            />
+                        </template>
+                    </NotificationGeneral>
+
+                    <NotificationGeneral
+                        :trigger="rerouteNotificationTrigger"
+                        :text="t('map.rerouting')"
+                    >
+                        <template #icon>
+                            <Icon
+                                class="notification-icon"
+                                name="lucide:refresh-cw"
+                                size="24"
+                                :style="{ color: '#ff9800' }"
                             />
                         </template>
                     </NotificationGeneral>

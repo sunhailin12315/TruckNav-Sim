@@ -138,6 +138,7 @@
         "altShorter": "{{n}} km korter",
         "altSlower": "{{n}} min trager",
         "detourInfo": "Omweg +{{km}} km (~{{min}} min)",
+        "rerouting": "Route wordt opnieuw berekend…",
         "mapMods": "Kaart-Mods",
         "uninstallBaseMap": "Basiskaart verwijderen",
         "companionRequired": "Zorg ervoor dat TruckNav PC Companion draait voordat je downloadt",
@@ -157,6 +158,9 @@
         "locatingRoute": "Route zoeken",
         "noRouteAvailable": "Geen route beschikbaar",
         "routeFound": "Route gevonden"
+    },
+    "voice": {
+        "aheadOf": "Over {{m}} meter,"
     },
     "settings": {
         "appFont": "App-lettertype",
@@ -193,6 +197,11 @@
         "selectComponents": "Componenten selecteren",
         "soundAlerts": "Geluidswaarschuwingen",
         "soundAlertsDescription": "Pieptonen en vibratie bij te snel rijden, vermoeidheid en gebeurtenissen.",
+        "urbanWarning": "Stadsgebied-waarschuwing",
+        "voiceNavigation": "Stembegeleiding",
+        "voiceNavigationDescription": "Gesproken route-aanwijzingen tijdens navigatie.",
+        "voiceConcise": "Korte aankondigingen",
+        "voiceConciseDescription": "Aankondigen alleen op de nabije afstand.",
         "statsTitle": "Statistieken",
         "textTheme": "Tekstthema",
         "dayNightMode": "Dag / Nacht",

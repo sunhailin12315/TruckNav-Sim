@@ -138,6 +138,7 @@
         "altShorter": "{{n}}km 더 짧음",
         "altSlower": "{{n}}분 더 느림",
         "detourInfo": "우회 +{{km}}km (약 {{min}}분)",
+        "rerouting": "경로 재탐색 중…",
         "mapMods": "맵 모드",
         "uninstallBaseMap": "기본 맵 제거",
         "companionRequired": "다운로드하기 전에 TruckNav PC Companion이 실행 중인지 확인하세요",
@@ -157,6 +158,9 @@
         "locatingRoute": "경로 탐색 중",
         "noRouteAvailable": "사용 가능한 경로가 없음",
         "routeFound": "경로 탐색"
+    },
+    "voice": {
+        "aheadOf": "{{m}}미터 앞,"
     },
     "settings": {
         "appFont": "앱 글꼴",
@@ -193,6 +197,11 @@
         "selectComponents": "구성 요소 선택",
         "soundAlerts": "사운드 알림",
         "soundAlertsDescription": "과속, 피로, 이벤트 시 비프음과 진동을 제공합니다.",
+        "urbanWarning": "도시 지역 알림",
+        "voiceNavigation": "음성 안내",
+        "voiceNavigationDescription": "주행 중 음성으로 방향을 안내합니다.",
+        "voiceConcise": "간단 안내",
+        "voiceConciseDescription": "가까운 거리에서만 안내합니다.",
         "statsTitle": "통계",
         "textTheme": "글씨 테마",
         "dayNightMode": "낮 / 밤",

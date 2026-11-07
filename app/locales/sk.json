@@ -138,6 +138,7 @@
         "altShorter": "{{n}} km kratšie",
         "altSlower": "{{n}} min pomalšie",
         "detourInfo": "Objíždďka +{{km}} km (~{{min}} min)",
+        "rerouting": "Prepočítavam trasu…",
         "mapMods": "Mapové mody",
         "uninstallBaseMap": "Odinštalovať základnú mapu",
         "companionRequired": "Pred stiahnutím sa uisti, že beží TruckNav PC Companion",
@@ -157,6 +158,9 @@
         "locatingRoute": "Hľadanie trasy",
         "noRouteAvailable": "Žiadna dostupná trasa!",
         "routeFound": "Trasa nájdená"
+    },
+    "voice": {
+        "aheadOf": "Za {{m}} metrov,"
     },
     "settings": {
         "appFont": "Font aplikácie",
@@ -193,6 +197,11 @@
         "selectComponents": "Vyber komponenty",
         "soundAlerts": "Zvukové upozornenia",
         "soundAlertsDescription": "Pípanie a vibrácie pri prekročení rýchlosti, únave a udalostiach.",
+        "urbanWarning": "Upozornenie na mesto",
+        "voiceNavigation": "Hlasové pokyny",
+        "voiceNavigationDescription": "Hovorené pokyny počas navigácie.",
+        "voiceConcise": "Stručné pokyny",
+        "voiceConciseDescription": "Pokyny iba na krátku vzdialenosť.",
         "statsTitle": "Štatistiky",
         "textTheme": "Vzhľad textu",
         "dayNightMode": "Deň / noc",

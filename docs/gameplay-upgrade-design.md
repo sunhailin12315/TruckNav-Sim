@@ -182,6 +182,12 @@
 - [x] 8.3 `useDayNight` composable：gameTime（"Wed 21:30"）→ factor → `mapColors`（land/water/road 混合色）；MapLibre 建图用混合色 + `watch(mapColors)` → `setPaintProperty` 实时联动（background/water/country-borders/water-outline/roads），watcher 随 `map.remove` 销毁——顺带修了"改配色必须重进地图"的旧问题
 - [x] 8.4 HUD 夜间联动：`--theme-color`/`--main-text-color` 改由 DayNight 统一写（Settings 只管字体/尺寸变量），夜间主题色与文字自动减光；外观设置新增"昼/夜模式"选择器（USelect，8 语言文案）
 
+### ✅ M9 — 语音播报（对标 TTS / 简洁播报 / autoreroute 提示）
+- [x] 9.1 settings v6：gameplay 新增 `voiceNavigation`（默认关，低打扰原则）与 `voiceConcise`（默认开）；迁移 + 规范化 + 测试
+- [x] 9.2 转向 TTS：纯函数 `voiceAnnouncements.ts`（阈值 2km/0.5km，简洁档只保留 0.5km，跨阈值触发 + 已播集合去重）进 vitest；`useVoiceGuidance` composable（Web Speech API 零依赖，按 locale 映射 BCP-47，新 cue 取消旧 cue）；map.vue 监听 nextTurnDistance + fullRouteDirections，播报文案复用转向卡的本地化指令文本（"前方X米，" + 指令）；结束导航时 cancel
+- [x] 9.3 偏航重算反馈：RouteController 新增 `rerouteTrigger`；toast + soundAlerts 开启时蜂鸣 + 语音"正在重新规划路线"，20s 冷却防刷屏（对标 autoreroute.wav）
+- [x] 9.4 顺带修复存量 i18n 缺口：`settings.urbanWarning` 等键全语言补齐
+
 ### ⬜ 未实现 / 后续
 - （当前无——若需要全量精确的 toll 边标注，仍可走 packer 重打包替换运行时方案）
 

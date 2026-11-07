@@ -131,6 +131,7 @@
         "altShorter": "短{{n}}公里",
         "altSlower": "慢{{n}}分钟",
         "detourInfo": "绕行 +{{km}} 公里(约{{min}}分钟)",
+        "rerouting": "正在重新规划路线…",
         "companionRequired": "下载前,请确保 TruckNav PC Companion 正在运行",
         "defaultMap": "默认地图",
         "defaultMapDesc": "标准游戏地图(无模组)",
@@ -157,6 +158,9 @@
         "locatingRoute": "正在定位路线",
         "noRouteAvailable": "无可用路线",
         "routeFound": "已找到路线"
+    },
+    "voice": {
+        "aheadOf": "前方{{m}}米，"
     },
     "settings": {
         "appFont": "应用字体",
@@ -193,6 +197,11 @@
         "selectComponents": "选择组件",
         "soundAlerts": "声音提醒",
         "soundAlertsDescription": "超速、疲劳和事件时发出提示音与震动。",
+        "urbanWarning": "城区提醒",
+        "voiceNavigation": "语音播报",
+        "voiceNavigationDescription": "导航时播报转向指令。",
+        "voiceConcise": "简洁播报",
+        "voiceConciseDescription": "只在近距离播报一次转向。",
         "statsTitle": "统计",
         "textTheme": "文字主题",
         "dayNightMode": "昼 / 夜模式",

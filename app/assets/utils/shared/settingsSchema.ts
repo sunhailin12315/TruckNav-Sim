@@ -46,6 +46,10 @@ export interface GameplaySettings {
     soundAlerts: boolean;
     /** Toast when the route is about to enter an urban area. */
     urbanWarning: boolean;
+    /** Spoken turn-by-turn guidance via Web Speech synthesis. */
+    voiceNavigation: boolean;
+    /** Voice guidance announces only the near-distance call. */
+    voiceConcise: boolean;
 }
 
 export interface AppSettingsState {
@@ -66,7 +70,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 5;
+export const SETTINGS_SCHEMA_VERSION = 6;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -142,6 +146,8 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
         eventFeed: true,
         soundAlerts: false,
         urbanWarning: true,
+        voiceNavigation: false,
+        voiceConcise: true,
     },
 };
 
@@ -166,6 +172,9 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     3: (raw) => raw,
     // v5 adds dayNightMode (profile); the normalizer fills its default.
     4: (raw) => raw,
+    // v6 adds voiceNavigation / voiceConcise (gameplay); the normalizer
+    // fills their defaults.
+    5: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -218,6 +227,14 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.urbanWarning === "boolean"
                 ? source.urbanWarning
                 : defaults.urbanWarning,
+        voiceNavigation:
+            typeof source.voiceNavigation === "boolean"
+                ? source.voiceNavigation
+                : defaults.voiceNavigation,
+        voiceConcise:
+            typeof source.voiceConcise === "boolean"
+                ? source.voiceConcise
+                : defaults.voiceConcise,
     };
 }
 

@@ -138,6 +138,7 @@
         "altShorter": "{{n}} km mai scurt",
         "altSlower": "{{n}} de minute mai încet",
         "detourInfo": "Ocolire +{{km}} km (~{{min}} min)",
+        "rerouting": "Se recalculează traseul…",
         "mapMods": "Moduri de hartă",
         "uninstallBaseMap": "Dezinstalează harta de bază",
         "companionRequired": "Asigură-te că TruckNav PC Companion rulează înainte de descărcare",
@@ -157,6 +158,9 @@
         "locatingRoute": "Se găsește traseul",
         "noRouteAvailable": "Niciun traseu disponibil",
         "routeFound": "Traseu găsit"
+    },
+    "voice": {
+        "aheadOf": "La {{m}} de metri,"
     },
     "settings": {
         "appFont": "Fontul Aplicației",
@@ -193,6 +197,11 @@
         "selectComponents": "Alegeți componentele",
         "soundAlerts": "Alerte sonore",
         "soundAlertsDescription": "Bipuri și vibrații la depășirea vitezei, oboseală și evenimente.",
+        "urbanWarning": "Alertă zonă urbană",
+        "voiceNavigation": "Ghidare vocală",
+        "voiceNavigationDescription": "Direcții vorbite în timpul navigării.",
+        "voiceConcise": "Anunțuri scurte",
+        "voiceConciseDescription": "Anunță doar la distanța mică.",
         "statsTitle": "Statistici",
         "textTheme": "Temă text",
         "dayNightMode": "Zi / Noapte",

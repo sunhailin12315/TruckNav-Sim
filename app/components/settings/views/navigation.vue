@@ -13,6 +13,10 @@ const usesGameTime = computed(() => settings.value.routeTimeMode === "game");
 const hasEventFeed = computed(() => settings.value.gameplay.eventFeed);
 const hasSoundAlerts = computed(() => settings.value.gameplay.soundAlerts);
 const hasUrbanWarning = computed(() => settings.value.gameplay.urbanWarning);
+const hasVoiceNavigation = computed(
+    () => settings.value.gameplay.voiceNavigation,
+);
+const hasVoiceConcise = computed(() => settings.value.gameplay.voiceConcise);
 
 function toggleGuidedNavigation() {
     updateProfile(
@@ -33,7 +37,14 @@ function toggleRouteTimeMode() {
     updateGlobal("routeTimeMode", usesGameTime.value ? "real" : "game");
 }
 
-function toggleGameplayFlag(key: "eventFeed" | "soundAlerts" | "urbanWarning") {
+function toggleGameplayFlag(
+    key:
+        | "eventFeed"
+        | "soundAlerts"
+        | "urbanWarning"
+        | "voiceNavigation"
+        | "voiceConcise",
+) {
     updateGlobal("gameplay", {
         ...settings.value.gameplay,
         [key]: !settings.value.gameplay[key],
@@ -145,6 +156,36 @@ function toggleGameplayFlag(key: "eventFeed" | "soundAlerts" | "urbanWarning") {
                 @connect="toggleGameplayFlag('urbanWarning')"
                 size="normal"
                 :active="hasUrbanWarning"
+            />
+        </div>
+
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:speech" size="24" />
+                <p>{{ t("settings.voiceNavigation") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('voiceNavigation')"
+                size="normal"
+                :active="hasVoiceNavigation"
+            />
+        </div>
+
+        <div v-if="hasVoiceNavigation" class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:message-square-text" size="24" />
+                <p>{{ t("settings.voiceConcise") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('voiceConcise')"
+                size="normal"
+                :active="hasVoiceConcise"
             />
         </div>
     </div>

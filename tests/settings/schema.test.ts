@@ -119,12 +119,44 @@ describe("settingsSchema", () => {
         expect(settings.selectedGame).toBe("ets2");
         expect(settings.locale).toBe("ko");
         expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
-        expect(migrated).toBe(false);
+        // Unversioned data is treated as v1, so the v1 step marks it migrated.
+        expect(migrated).toBe(true);
     });
 
     it("stamps the schema version so the next save is versioned", () => {
         const { settings } = loadSettingsFromRaw("{}");
-        expect(settings.schemaVersion).toBe(1);
-        expect(JSON.parse(JSON.stringify(settings)).schemaVersion).toBe(1);
+        expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
+        expect(JSON.parse(JSON.stringify(settings)).schemaVersion).toBe(
+            SETTINGS_SCHEMA_VERSION,
+        );
+    });
+
+    it("fills gameplay defaults when migrating v1 data", () => {
+        const stored = { schemaVersion: 1, selectedGame: "ets2" };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay).toEqual({
+            eventFeed: true,
+            soundAlerts: false,
+        });
+    });
+
+    it("normalizes the gameplay block per-field", () => {
+        const stored = {
+            gameplay: { eventFeed: false, soundAlerts: "yes", junk: 1 },
+        };
+        const { settings } = loadSettingsFromRaw(JSON.stringify(stored));
+
+        expect(settings.gameplay.eventFeed).toBe(false);
+        expect(settings.gameplay.soundAlerts).toBe(
+            DEFAULT_SETTINGS.gameplay.soundAlerts,
+        );
+
+        expect(loadSettingsFromRaw('{"gameplay":42}').settings.gameplay).toEqual(
+            DEFAULT_SETTINGS.gameplay,
+        );
     });
 });

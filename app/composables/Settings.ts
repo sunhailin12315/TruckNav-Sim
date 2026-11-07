@@ -8,6 +8,7 @@ export type {
     ActiveComponents,
     AppSettingsState,
     GameProfile,
+    GameplaySettings,
     LocaleCode,
     RouteTimeMode,
     TextTheme,

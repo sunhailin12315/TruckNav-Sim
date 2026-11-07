@@ -34,6 +34,13 @@ export interface GameProfile {
     activeMod: string | "none";
 }
 
+export interface GameplaySettings {
+    /** Toast + history for fines, tolls, ferry/train rides and deliveries. */
+    eventFeed: boolean;
+    /** Beeps and vibration for overspeed, fatigue and feed events. */
+    soundAlerts: boolean;
+}
+
 export interface AppSettingsState {
     /** Bumped whenever the settings shape changes; see MIGRATIONS. */
     schemaVersion: number;
@@ -49,9 +56,10 @@ export interface AppSettingsState {
     activeUiComponents: ActiveComponents;
     locale: LocaleCode;
     routeTimeMode: RouteTimeMode;
+    gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 1;
+export const SETTINGS_SCHEMA_VERSION = 2;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -110,6 +118,11 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
     ],
     locale: "en",
     routeTimeMode: "game",
+    // The visual feed is quiet enough to ship on; sound stays opt-in.
+    gameplay: {
+        eventFeed: true,
+        soundAlerts: false,
+    },
 };
 
 /** A fresh, deeply-copied default settings object (no shared references). */
@@ -123,8 +136,9 @@ type RawRecord = Record<string, unknown>;
 // schema version v into the shape of version v + 1. Data without a version
 // is treated as v1 (the current shape), so future changes only append steps.
 const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
-    // Example for the next bump (SETTINGS_SCHEMA_VERSION -> 2):
-    // 1: (raw) => ({ ...raw, newSetting: true }),
+    // v2 adds the gameplay block; the normalizer fills in its defaults, so
+    // the step only marks stored v1 data as migrated (triggering a re-save).
+    1: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -159,6 +173,21 @@ function asCoordinate(value: unknown): [number, number] | null {
         return [value[0], value[1]];
     }
     return null;
+}
+
+function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySettings {
+    const source = raw && typeof raw === "object" ? (raw as RawRecord) : {};
+
+    return {
+        eventFeed:
+            typeof source.eventFeed === "boolean"
+                ? source.eventFeed
+                : defaults.eventFeed,
+        soundAlerts:
+            typeof source.soundAlerts === "boolean"
+                ? source.soundAlerts
+                : defaults.soundAlerts,
+    };
 }
 
 function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
@@ -224,6 +253,10 @@ function normalizeSettings(raw: unknown): AppSettingsState {
             source.routeTimeMode,
             ["game", "real"] as const,
             DEFAULT_SETTINGS.routeTimeMode,
+        ),
+        gameplay: normalizeGameplay(
+            source.gameplay,
+            DEFAULT_SETTINGS.gameplay,
         ),
     };
 }

@@ -8,6 +8,8 @@ const hasGuidedNavigation = computed(
     () => activeSettings.value.hasTurnNavigation === true,
 );
 const usesGameTime = computed(() => settings.value.routeTimeMode === "game");
+const hasEventFeed = computed(() => settings.value.gameplay.eventFeed);
+const hasSoundAlerts = computed(() => settings.value.gameplay.soundAlerts);
 
 function toggleGuidedNavigation() {
     updateProfile(
@@ -18,6 +20,13 @@ function toggleGuidedNavigation() {
 
 function toggleRouteTimeMode() {
     updateGlobal("routeTimeMode", usesGameTime.value ? "real" : "game");
+}
+
+function toggleGameplayFlag(key: "eventFeed" | "soundAlerts") {
+    updateGlobal("gameplay", {
+        ...settings.value.gameplay,
+        [key]: !settings.value.gameplay[key],
+    });
 }
 </script>
 
@@ -50,6 +59,36 @@ function toggleRouteTimeMode() {
                 @connect="toggleRouteTimeMode"
                 size="normal"
                 :active="usesGameTime"
+            />
+        </div>
+
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:bell" size="24" />
+                <p>{{ t("settings.eventFeed") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('eventFeed')"
+                size="normal"
+                :active="hasEventFeed"
+            />
+        </div>
+
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:volume-2" size="24" />
+                <p>{{ t("settings.soundAlerts") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('soundAlerts')"
+                size="normal"
+                :active="hasSoundAlerts"
             />
         </div>
     </div>

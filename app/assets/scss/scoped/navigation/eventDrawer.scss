@@ -1,0 +1,126 @@
+.feed-item-enter-active {
+    transition: 0.25s ease;
+}
+
+.feed-item-enter-from {
+    opacity: 0;
+    transform: translateX(10px);
+}
+
+.event-drawer {
+    position: absolute;
+    top: calc($game-info-bar-height + 1.8rem + 5rem);
+    right: 10px;
+    z-index: 2400;
+
+    width: min(300px, calc(100vw - 20px));
+    max-height: calc(55dvh);
+    display: flex;
+    flex-direction: column;
+
+    padding: 10px;
+
+    background-color: $primaryColor;
+    border: 2px solid var(--theme-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+    color: $white-font-text;
+
+    .drawer-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 4px 8px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+        .drawer-title {
+            flex: 1;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .drawer-btn {
+            padding: 2px;
+            color: var(--main-text-color);
+            opacity: 0.7;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+
+    .drawer-empty {
+        padding: 14px 4px;
+        margin: 0;
+        font-size: 1.3rem;
+        color: $white-font-text60;
+        text-align: center;
+    }
+
+    .drawer-list {
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .event-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .row-icon {
+            flex-shrink: 0;
+            color: var(--theme-color);
+        }
+
+        .row-text {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+
+            .row-title {
+                font-size: 1.35rem;
+                font-weight: 700;
+            }
+
+            .row-label {
+                font-size: 1.2rem;
+                color: $white-font-text60;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+
+        .row-right {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            .row-amount {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: $green-color;
+
+                &.spent {
+                    color: $red-color;
+                }
+            }
+
+            .row-time {
+                font-size: 1.15rem;
+                color: $white-font-text60;
+            }
+        }
+    }
+}

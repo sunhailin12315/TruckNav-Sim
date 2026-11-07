@@ -48,8 +48,29 @@ const jobState = reactive<JobState>({
 
 let lastPosition: [number, number] | null = null;
 let headingOffset = 0;
+let lastRpcSignature = "";
 
 let socket: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempts = 0;
+
+const BASE_RECONNECT_DELAY_MS = 3000;
+const MAX_RECONNECT_DELAY_MS = 30000;
+
+function scheduleReconnect(onUpdate?: (data: TelemetryUpdate) => void) {
+    if (reconnectTimer) return;
+
+    const delay = Math.min(
+        BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttempts,
+        MAX_RECONNECT_DELAY_MS,
+    );
+    reconnectAttempts++;
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        startTelemetry(onUpdate);
+    }, delay);
+}
 
 function sendDiscordRpcState(payload: {
     game: string;
@@ -66,10 +87,16 @@ function sendDiscordRpcState(payload: {
     const electronApi = (window as any).electronAPI;
     if (!electronApi?.updateDiscordRpc) return;
 
+    const signature = JSON.stringify(payload);
+    if (signature === lastRpcSignature) return;
+    lastRpcSignature = signature;
+
     electronApi.updateDiscordRpc(payload);
 }
 
 function clearDiscordRpcState() {
+    lastRpcSignature = "";
+
     if (typeof window === "undefined") return;
 
     const electronApi = (window as any).electronAPI;
@@ -97,6 +124,7 @@ export function useEtsTelemetry() {
         socket = new WebSocket(url);
 
         socket.onopen = () => {
+            reconnectAttempts = 0;
             console.log("Connected to Bridge");
         };
 
@@ -122,11 +150,16 @@ export function useEtsTelemetry() {
         socket.onclose = () => {
             socket = null;
             resetDataOnDisconnected(onUpdate);
-            setTimeout(() => startTelemetry(onUpdate), 3000);
+            scheduleReconnect(onUpdate);
         };
     }
 
     function stopTelemetry() {
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+
         if (socket) {
             socket.onclose = null;
             socket.close();

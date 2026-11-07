@@ -152,6 +152,7 @@ export const useRouteController = (
     );
 
     let worker: Worker | null = null;
+    let workerRequestId = 0;
     if (import.meta.client) {
         worker = new RouteWorker();
 
@@ -350,8 +351,15 @@ export const useRouteController = (
                 return;
             }
 
+            // Tag each request so overlapping calculations cannot consume
+            // each other's RESULT messages.
+            const requestId = ++workerRequestId;
+
             const handler = (e: MessageEvent) => {
-                if (e.data.type === "RESULT") {
+                if (
+                    e.data.type === "RESULT" &&
+                    e.data.requestId === requestId
+                ) {
                     worker!.removeEventListener("message", handler);
                     resolve(e.data.payload);
                 }
@@ -370,6 +378,7 @@ export const useRouteController = (
 
             worker.postMessage({
                 type: "CALC_MULTI_ROUTE",
+                requestId,
                 payload: {
                     startId: Number(startId),
                     waypointsCoords: cleanCoords,
@@ -968,61 +977,6 @@ export const useRouteController = (
                 },
             });
         }
-    }
-
-    function calculateRouteInWorker(
-        startId: number,
-        possibleEnds: number[],
-        heading: number,
-        startType: string,
-        targetCoords: [number, number],
-        projectedStartCoords: [number, number],
-        ownedDlcs: number[],
-        sdkScale: number,
-        avgSpeed: number,
-    ): Promise<any> {
-        return new Promise((resolve) => {
-            if (!worker) {
-                resolve(null);
-                return;
-            }
-
-            const handler = (e: MessageEvent) => {
-                if (e.data.type === "RESULT") {
-                    worker!.removeEventListener("message", handler);
-                    resolve(e.data.payload);
-                }
-            };
-
-            worker.addEventListener("message", handler);
-
-            const cleanEnds = possibleEnds.map((node) => Number(node));
-            const cleanTarget = [
-                Number(targetCoords[0]),
-                Number(targetCoords[1]),
-            ] as [number, number];
-            const cleanProjected = [
-                Number(projectedStartCoords[0]),
-                Number(projectedStartCoords[1]),
-            ] as [number, number];
-            const cleanDlcs = ownedDlcs.map((dlc) => Number(dlc));
-
-            worker.postMessage({
-                type: "CALC_ROUTE",
-                payload: {
-                    startId: Number(startId),
-                    possibleEnds: cleanEnds,
-                    heading: heading !== null ? Number(heading) : null,
-                    startType,
-                    targetCoords: cleanTarget,
-                    projectedStartCoords: cleanProjected,
-                    ownedDlcs: cleanDlcs,
-                    selectedGame: settings.value.selectedGame,
-                    sdkScale: Number(sdkScale),
-                    avgSpeed: Number(avgSpeed),
-                },
-            });
-        });
     }
 
     const lastRecalcTime = ref(0);

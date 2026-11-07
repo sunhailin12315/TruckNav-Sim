@@ -6,6 +6,15 @@ import path from "node:path";
 const EXE_NAME = "TruckNavTelemetry.exe";
 
 export default defineNitroPlugin((nitroApp) => {
+    // The telemetry bridge EXE and the process controls below (tasklist /
+    // taskkill / PowerShell) only exist on Windows.
+    if (process.platform !== "win32") {
+        console.log(
+            "[Telemetry] Non-Windows platform detected, skipping telemetry bridge launch.",
+        );
+        return;
+    }
+
     const rootDir = process.cwd();
     const serverExeDir = path.join(rootDir, "electron", "bin");
     const serverExePath = path.join(serverExeDir, EXE_NAME);

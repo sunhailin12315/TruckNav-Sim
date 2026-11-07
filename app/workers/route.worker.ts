@@ -106,7 +106,7 @@ class TypedNodeCoordsMap {
 }
 
 self.onmessage = async (e: MessageEvent) => {
-    const { type, payload } = e.data;
+    const { type, requestId, payload } = e.data;
 
     if (type === "INIT_GRAPH") {
         try {
@@ -166,7 +166,7 @@ self.onmessage = async (e: MessageEvent) => {
     if (type === "CALC_ROUTE") {
         try {
             if (!adjacency || !nodeCoordsMapInstance || !geometryF32) {
-                self.postMessage({ type: "RESULT", payload: null });
+                self.postMessage({ type: "RESULT", requestId, payload: null });
                 return;
             }
 
@@ -330,6 +330,7 @@ self.onmessage = async (e: MessageEvent) => {
                 self.postMessage(
                     {
                         type: "RESULT",
+                        requestId,
                         payload: {
                             ...result,
                             rawPath: finalSmoothedPath,
@@ -348,18 +349,18 @@ self.onmessage = async (e: MessageEvent) => {
                     ],
                 );
             } else {
-                self.postMessage({ type: "RESULT", payload: null });
+                self.postMessage({ type: "RESULT", requestId, payload: null });
             }
         } catch (error) {
             console.error("Web Worker calculation crash caught:", error);
-            self.postMessage({ type: "RESULT", payload: null });
+            self.postMessage({ type: "RESULT", requestId, payload: null });
         }
     }
 
     if (type === "CALC_MULTI_ROUTE") {
         try {
             if (!adjacency || !nodeCoordsMapInstance || !geometryF32) {
-                self.postMessage({ type: "RESULT", payload: null });
+                self.postMessage({ type: "RESULT", requestId, payload: null });
                 return;
             }
 
@@ -401,7 +402,7 @@ self.onmessage = async (e: MessageEvent) => {
                 );
 
                 if (!segmentResult) {
-                    self.postMessage({ type: "RESULT", payload: null });
+                    self.postMessage({ type: "RESULT", requestId, payload: null });
                     return;
                 }
 
@@ -523,6 +524,7 @@ self.onmessage = async (e: MessageEvent) => {
             self.postMessage(
                 {
                     type: "RESULT",
+                    requestId,
                     payload: {
                         nodeSequence: combinedNodeSequence,
                         displayPath: finalSmoothedPath,
@@ -545,7 +547,7 @@ self.onmessage = async (e: MessageEvent) => {
             );
         } catch (error) {
             console.error("Multi-routing worker error:", error);
-            self.postMessage({ type: "RESULT", payload: null });
+            self.postMessage({ type: "RESULT", requestId, payload: null });
         }
     }
 };

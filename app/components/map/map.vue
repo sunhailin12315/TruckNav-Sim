@@ -127,6 +127,12 @@ const {
     currentRoutePath,
 } = useRouteController(map, adjacency, nodeCoords, stopNavigationMode);
 
+// Settings Controller — declared before the watchers below: Vue evaluates
+// watch() source getters immediately, so any binding they read must already
+// exist (a TDZ here blanks the whole map view).
+const { activeSettings, settings, updateProfile } = useSettings();
+const { t } = useTranslations();
+
 // Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
 // job card can flag deadlines the current route won't make.
 const routeEtaMinutes = computed<number | null>(() => {
@@ -290,10 +296,6 @@ watch(
         );
     },
 );
-
-// Settings Controller
-const { activeSettings, settings, updateProfile } = useSettings();
-const { t } = useTranslations();
 
 // Maneuver instructions are translated at render time from the step type
 // (steps carry English text baked in at route-generation time), so switching

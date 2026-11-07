@@ -28,6 +28,14 @@ const REST_PLANNING_THRESHOLD_MIN = 90;
 const REST_SEARCH_KM_AHEAD = 150;
 const FUEL_SEARCH_KM_AHEAD = 150;
 const POI_MAX_DETOUR_KM = 3;
+const TOLL_ACCUMULATE_INTERVAL_MS = 10000;
+
+// Session-wide toll-gate POI cache: the map only exposes POIs from tiles
+// loaded so far, so points accumulate as the driver's viewport sweeps the
+// route. Reroutes use the set built so far (best-effort, grows over time).
+let sessionTollPoints: [number, number][] = [];
+let sessionTollRevision = 0;
+let sessionTollAccumulatedAt = 0;
 
 export const useRouteController = (
     map: Ref<maplibregl.Map | null>,
@@ -93,6 +101,43 @@ export const useRouteController = (
             points.push([coords[0]!, coords[1]!]);
         }
         return points;
+    }
+
+    /**
+     * Pulls toll-gate POIs from the currently loaded tiles into the session
+     * cache and pushes the cache to the worker when it grew.
+     */
+    function accumulateTollPoints(force = false) {
+        const now = Date.now();
+        if (!force && now - sessionTollAccumulatedAt < TOLL_ACCUMULATE_INTERVAL_MS)
+            return;
+        sessionTollAccumulatedAt = now;
+
+        if (!worker || !isWorkerReady.value) return;
+
+        const seen = new Set(
+            sessionTollPoints.map(([lng, lat]) => `${lng.toFixed(4)}:${lat.toFixed(4)}`),
+        );
+
+        let added = 0;
+        for (const [lng, lat] of querySpritePoints("toll_ico")) {
+            const key = `${lng.toFixed(4)}:${lat.toFixed(4)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            sessionTollPoints.push([lng, lat]);
+            added++;
+        }
+
+        if (added > 0 || force) {
+            sessionTollRevision++;
+            worker.postMessage({
+                type: "SET_TOLL_POINTS",
+                payload: {
+                    points: sessionTollPoints,
+                    revision: sessionTollRevision,
+                },
+            });
+        }
     }
 
     function findPoiAhead(
@@ -350,6 +395,9 @@ export const useRouteController = (
         );
 
         isWorkerReady.value = true;
+
+        // Baseline push so the worker starts with the session cache.
+        accumulateTollPoints(true);
     }
 
     async function handleMultiRouteCalculation(
@@ -411,6 +459,7 @@ export const useRouteController = (
                 sdkScale,
                 avgSpeed,
                 activeSettings.value.avoidFerries,
+                activeSettings.value.avoidTolls,
             );
 
             if (result) {
@@ -503,6 +552,7 @@ export const useRouteController = (
         sdkScale: number,
         avgSpeed: number,
         avoidFerries: boolean,
+        avoidTolls: boolean,
     ): Promise<any> {
         return new Promise((resolve) => {
             if (!worker) {
@@ -549,6 +599,7 @@ export const useRouteController = (
                     sdkScale: Number(sdkScale),
                     avgSpeed: Number(avgSpeed),
                     avoidFerries: avoidFerries === true,
+                    avoidTolls: avoidTolls === true,
                 },
             });
         });
@@ -1286,6 +1337,9 @@ export const useRouteController = (
             context?.fuelRangeKm ?? 0,
             context?.restStopMinutes ?? 0,
         );
+
+        // Keep the session toll-gate cache growing while the map moves.
+        accumulateTollPoints();
 
         if (fullRouteDirections.value.length > 1) {
             const upcomingTurn = fullRouteDirections.value[1];

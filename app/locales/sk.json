@@ -140,6 +140,7 @@
         "eventFeedDescription": "Zobrazuje pokuty, mýto, trajekty a dodávky v reálnom čase.",
         "guidedNavigation": "Navádzacia navigácia",
         "avoidFerries": "Vyhýbať sa trajektom",
+        "avoidTolls": "Vyhýbať sa mýtu",
         "realTime": "Reálny čas",
         "hudButtonSize": "Veľkosť tlačidiel",
         "imperial": "Imperiálne",

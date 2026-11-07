@@ -315,6 +315,58 @@ describe("calculateRoute", () => {
         expect(avoiding!.nodeSequence).toEqual([0, 2, 3, 1]);
     });
 
+    it("penalizes edges touching toll nodes when avoidTolls is set", () => {
+        resetRoutingState();
+        const nodeCoords = new Map<number, [number, number]>([
+            [0, [0, 0]], // S
+            [1, [2, 0]], // T: destination
+            [2, [1, 0.5]], // G: toll gate on the direct road
+            [3, [0, 2]], // R
+            [4, [2, 2]], // R2
+        ]);
+        const adjacency = buildAdjacency([
+            [0, edge(2, 500, 27)], // S -> G toll road
+            [2, edge(1, 500, 333)], // G -> T toll road
+            [0, edge(3, 700, 0)], // S -> R detour
+            [3, edge(4, 700, 90)], // R -> R2
+            [4, edge(1, 700, 180)], // R2 -> T
+        ]);
+
+        // Only the gate node is toll-tagged.
+        const tollNodes = new Set([2]);
+
+        const avoiding = calculateRoute(
+            0,
+            new Set([1]),
+            null,
+            adjacency,
+            nodeCoords,
+            "road",
+            [],
+            [2, 0],
+            false,
+            true,
+            tollNodes,
+        );
+        expect(avoiding!.nodeSequence).toEqual([0, 3, 4, 1]);
+
+        // Without the flag the cheaper toll road wins.
+        const throughToll = calculateRoute(
+            0,
+            new Set([1]),
+            null,
+            adjacency,
+            nodeCoords,
+            "road",
+            [],
+            [2, 0],
+            false,
+            false,
+            tollNodes,
+        );
+        expect(throughToll!.nodeSequence).toEqual([0, 2, 1]);
+    });
+
     it("re-maps cleanly after resetRoutingState (graph reload)", () => {
         resetRoutingState();
         const coordsA = new Map<number, [number, number]>([

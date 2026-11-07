@@ -163,6 +163,17 @@ describe("settingsSchema", () => {
         });
     });
 
+    it("migrates v3 data up to v4 with avoidTolls default", () => {
+        const stored = { schemaVersion: 3, selectedGame: "ets2" };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.profiles.ets2.avoidTolls).toBe(false);
+        expect(settings.profiles.ets2.avoidFerries).toBe(false);
+    });
+
     it("normalizes the gameplay block per-field", () => {
         const stored = {
             gameplay: { eventFeed: false, soundAlerts: "yes", junk: 1 },
@@ -185,15 +196,19 @@ describe("settingsSchema", () => {
     it("normalizes avoidFerries per-profile", () => {
         const stored = {
             profiles: {
-                ets2: { avoidFerries: true },
-                ats: { avoidFerries: "nope" },
+                ets2: { avoidFerries: true, avoidTolls: true },
+                ats: { avoidFerries: "nope", avoidTolls: 1 },
             },
         };
         const { settings } = loadSettingsFromRaw(JSON.stringify(stored));
 
         expect(settings.profiles.ets2.avoidFerries).toBe(true);
+        expect(settings.profiles.ets2.avoidTolls).toBe(true);
         expect(settings.profiles.ats.avoidFerries).toBe(
             DEFAULT_SETTINGS.profiles.ats.avoidFerries,
+        );
+        expect(settings.profiles.ats.avoidTolls).toBe(
+            DEFAULT_SETTINGS.profiles.ats.avoidTolls,
         );
     });
 });

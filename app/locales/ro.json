@@ -140,6 +140,7 @@
         "eventFeedDescription": "Afișează amenzi, taxe, feriboturi și livrări în timp real.",
         "guidedNavigation": "Navigare Ghidată",
         "avoidFerries": "Evită feriboturile",
+        "avoidTolls": "Evită taxele",
         "realTime": "Timp real",
         "hudButtonSize": "Hud Button Size",
         "imperial": "Imperial",

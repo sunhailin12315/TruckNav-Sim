@@ -140,6 +140,7 @@
         "eventFeedDescription": "Toont boetes, tolpoorten, veerbootritten en bezorgingen live.",
         "guidedNavigation": "Begeleide navigatie",
         "avoidFerries": "Veerboten vermijden",
+        "avoidTolls": "Tolwegen vermijden",
         "realTime": "Echte tijd",
         "hudButtonSize": "HUD-knopgrootte",
         "imperial": "Imperiaal",

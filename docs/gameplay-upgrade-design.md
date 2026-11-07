@@ -166,8 +166,13 @@
 - [x] 3.4 续航规划（`fuelRange` 对比剩余路线，不足时建议前方加油站打标；rest 优先于 fuel）
 - [x] 5.3 送达表现分（`computeDeliveryGrade` S/A/B/C，进结算卡 chip 与统计页任务行）
 
+### ✅ M6 — 避开收费站（运行时标注方案）
+- [x] 5.1 避开收费站——**未走 packer 重打包路线**：`spritelocations` 图层自带 `toll_ico` POI 点，运行时查询 → 会话累积缓存 → `SET_TOLL_POINTS` 推给 worker → 网格构建收费站节点集（0.5km 半径）→ A* 对触及节点的边 +15km 惩罚
+- 权衡：POI 查询只覆盖已加载瓦片，首次路线计算覆盖不全；开车过程中视口扫过的收费站持续入缓存，reroute 越用越准
+- 如后续拿到 QGIS 源数据，可在 `packer.ts` 给边直接标 toll 字段替换此方案
+
 ### ⬜ 未实现 / 后续
-- [ ] 5.1 避开收费站（需要 QGIS 源数据重跑 `packer.ts` 给边补 toll 标注）
+- （当前无——若需要全量精确的 toll 边标注，仍可走 packer 重打包替换运行时方案）
 
 ### 待实车验证
 - `remainingDeliveryTime` 日期语义假设（deadline − gameTime）

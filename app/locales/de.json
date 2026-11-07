@@ -140,6 +140,7 @@
         "eventFeedDescription": "Zeigt Strafen, Mautstellen, Fähren und Lieferungen in Echtzeit.",
         "guidedNavigation": "Geführte Navigation",
         "avoidFerries": "Fähren vermeiden",
+        "avoidTolls": "Maut vermeiden",
         "realTime": "Echtzeit",
         "hudButtonSize": "HUD Button Größe",
         "imperial": "Imperial",

@@ -31,6 +31,7 @@ export interface GameProfile {
     lastDestination: [number, number] | null;
     hasTurnNavigation: boolean;
     avoidFerries: boolean;
+    avoidTolls: boolean;
     fontFamily: string;
     activeMod: string | "none";
 }
@@ -62,7 +63,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 3;
+export const SETTINGS_SCHEMA_VERSION = 4;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -87,6 +88,7 @@ const DEFAULT_PROFILE: GameProfile = {
     lastDestination: null,
     hasTurnNavigation: true,
     avoidFerries: false,
+    avoidTolls: false,
     fontFamily: "Commissioner",
     activeMod: "none",
 };
@@ -147,6 +149,8 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     // v3 adds avoidFerries (profile) and urbanWarning (gameplay); the
     // normalizer fills their defaults, so this step only marks migration.
     2: (raw) => raw,
+    // v4 adds avoidTolls (profile); the normalizer fills its default.
+    3: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -228,6 +232,10 @@ function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
             typeof source.avoidFerries === "boolean"
                 ? source.avoidFerries
                 : defaults.avoidFerries,
+        avoidTolls:
+            typeof source.avoidTolls === "boolean"
+                ? source.avoidTolls
+                : defaults.avoidTolls,
         fontFamily: asColor(source.fontFamily, defaults.fontFamily),
         activeMod: typeof source.activeMod === "string" ? source.activeMod : defaults.activeMod,
     };

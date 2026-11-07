@@ -140,6 +140,7 @@
         "eventFeedDescription": "Shows fines, tolls, ferry rides and deliveries as they happen.",
         "guidedNavigation": "Guided Navigation",
         "avoidFerries": "Avoid Ferries",
+        "avoidTolls": "Avoid Tolls",
         "realTime": "Real Time",
         "hudButtonSize": "Hud Button Size",
         "imperial": "Imperial",

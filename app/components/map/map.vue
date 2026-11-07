@@ -198,9 +198,9 @@ watch(serviceSuggestion, (suggestion) => {
 });
 
 // Route preference change: recalculate the active route so the new ferry
-// policy applies immediately.
+// / toll policy applies immediately.
 watch(
-    () => activeSettings.value.avoidFerries,
+    () => [activeSettings.value.avoidFerries, activeSettings.value.avoidTolls],
     () => {
         if (!isRouteActive.value || !truckCoords.value) return;
 

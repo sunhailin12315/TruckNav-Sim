@@ -219,6 +219,8 @@ export const calculateRoute = (
     ownedDlcs: number[],
     targetLocation?: [number, number],
     avoidFerries = false,
+    avoidTolls = false,
+    tollNodes: Set<number> | null = null,
 ): {
     path: [number, number][];
     nodeSequence: number[];
@@ -242,6 +244,8 @@ export const calculateRoute = (
     // Equivalent detour meters added to every ferry edge when the user
     // prefers avoiding ferries; island-only destinations still route.
     const FERRY_AVOID_PENALTY = 25_000;
+    // Equivalent detour meters per edge touching a toll-gate node.
+    const TOLL_AVOID_PENALTY = 15_000;
 
     const START_EDGE_ID = globalNextEdgeId;
 
@@ -344,6 +348,12 @@ export const calculateRoute = (
 
             if (avoidFerries && edge.isFerry) {
                 stepCost += FERRY_AVOID_PENALTY;
+            }
+
+            if (avoidTolls && tollNodes &&
+                (tollNodes.has(currentId) || tollNodes.has(neighborNodeId))
+            ) {
+                stepCost += TOLL_AVOID_PENALTY;
             }
 
             if (!edge.isFerry && ferryGraceCounter === 0) {

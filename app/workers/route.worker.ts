@@ -20,6 +20,56 @@ let workerScaleConfig: MapScaleConfig = {
     hasUkRule: true,
 };
 
+// Toll-gate POI points accumulated by the main thread from the loaded map
+// tiles; rebuilt into a node set lazily whenever the revision advances.
+const TOLL_NODE_RADIUS_KM = 0.5;
+let tollPointsGeo: [number, number][] = [];
+let tollPointsRevision = 0;
+let tollNodeSetBuilt = -1;
+let tollNodeSet: Set<number> | null = null;
+
+function buildTollNodeSet(): Set<number> | null {
+    if (tollNodeSetBuilt === tollPointsRevision) return tollNodeSet;
+    tollNodeSetBuilt = tollPointsRevision;
+    tollNodeSet = null;
+
+    if (!nodeCoordsMapInstance || tollPointsGeo.length === 0) return null;
+
+    // Spatial grid over the toll points; each node checks its 3x3 cells.
+    const CELL = 0.01;
+    const grid = new Map<string, [number, number][]>();
+    for (const [lng, lat] of tollPointsGeo) {
+        const key = `${Math.floor(lng / CELL)}:${Math.floor(lat / CELL)}`;
+        const cellPoints = grid.get(key);
+        if (cellPoints) cellPoints.push([lng, lat]);
+        else grid.set(key, [[lng, lat]]);
+    }
+
+    const set = new Set<number>();
+    for (const [nodeId, [lng, lat]] of nodeCoordsMapInstance.entries()) {
+        const gx = Math.floor(lng / CELL);
+        const gy = Math.floor(lat / CELL);
+
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const cellPoints = grid.get(`${gx + dx}:${gy + dy}`);
+                if (!cellPoints) continue;
+
+                for (const [tollLng, tollLat] of cellPoints) {
+                    const dxKm = (tollLng - lng) * 111.0 * 0.65;
+                    const dyKm = (tollLat - lat) * 111.0;
+                    if (dxKm * dxKm + dyKm * dyKm <= TOLL_NODE_RADIUS_KM * TOLL_NODE_RADIUS_KM) {
+                        set.add(nodeId);
+                    }
+                }
+            }
+        }
+    }
+
+    tollNodeSet = set.size > 0 ? set : null;
+    return tollNodeSet;
+}
+
 class TypedNodeCoordsMap {
     private array: Float64Array;
     public size: number;
@@ -109,6 +159,12 @@ class TypedNodeCoordsMap {
 self.onmessage = async (e: MessageEvent) => {
     const { type, requestId, payload } = e.data;
 
+    if (type === "SET_TOLL_POINTS") {
+        tollPointsGeo = payload.points ?? [];
+        tollPointsRevision = payload.revision ?? 0;
+        return;
+    }
+
     if (type === "INIT_GRAPH") {
         try {
             const {
@@ -186,6 +242,7 @@ self.onmessage = async (e: MessageEvent) => {
                 sdkScale,
                 avgSpeed,
                 avoidFerries,
+                avoidTolls,
             } = payload;
 
             const result = calculateRoute(
@@ -198,6 +255,8 @@ self.onmessage = async (e: MessageEvent) => {
                 ownedDlcs,
                 targetCoords,
                 avoidFerries === true,
+                avoidTolls === true,
+                avoidTolls ? buildTollNodeSet() : null,
             );
 
             if (result && result.path && result.nodeSequence) {
@@ -385,7 +444,10 @@ self.onmessage = async (e: MessageEvent) => {
                 sdkScale,
                 avgSpeed,
                 avoidFerries,
+                avoidTolls,
             } = payload;
+
+            const tollNodes = avoidTolls ? buildTollNodeSet() : null;
 
             let currentStartId = startId;
             let currentHeading = heading;
@@ -412,6 +474,8 @@ self.onmessage = async (e: MessageEvent) => {
                     ownedDlcs,
                     targetCoords,
                     avoidFerries === true,
+                    avoidTolls === true,
+                    tollNodes,
                 );
 
                 if (!segmentResult) {

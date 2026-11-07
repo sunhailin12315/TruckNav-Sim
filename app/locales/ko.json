@@ -140,6 +140,7 @@
         "eventFeedDescription": "벌금, 톨게이트, 페리, 배달 이벤트를 실시간으로 표시합니다.",
         "guidedNavigation": "경로 안내",
         "avoidFerries": "페리 우회",
+        "avoidTolls": "톨게이트 우회",
         "realTime": "실제 시간",
         "hudButtonSize": "HUD 버튼 크기",
         "imperial": "마일",

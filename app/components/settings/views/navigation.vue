@@ -8,6 +8,7 @@ const hasGuidedNavigation = computed(
     () => activeSettings.value.hasTurnNavigation === true,
 );
 const avoidsFerries = computed(() => activeSettings.value.avoidFerries);
+const avoidsTolls = computed(() => activeSettings.value.avoidTolls);
 const usesGameTime = computed(() => settings.value.routeTimeMode === "game");
 const hasEventFeed = computed(() => settings.value.gameplay.eventFeed);
 const hasSoundAlerts = computed(() => settings.value.gameplay.soundAlerts);
@@ -22,6 +23,10 @@ function toggleGuidedNavigation() {
 
 function toggleAvoidFerries() {
     updateProfile("avoidFerries", avoidsFerries.value ? false : true);
+}
+
+function toggleAvoidTolls() {
+    updateProfile("avoidTolls", avoidsTolls.value ? false : true);
 }
 
 function toggleRouteTimeMode() {
@@ -80,6 +85,21 @@ function toggleGameplayFlag(key: "eventFeed" | "soundAlerts" | "urbanWarning") {
                 @connect="toggleAvoidFerries"
                 size="normal"
                 :active="avoidsFerries"
+            />
+        </div>
+
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:receipt" size="24" />
+                <p>{{ t("settings.avoidTolls") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleAvoidTolls"
+                size="normal"
+                :active="avoidsTolls"
             />
         </div>
 

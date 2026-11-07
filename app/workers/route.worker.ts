@@ -185,6 +185,7 @@ self.onmessage = async (e: MessageEvent) => {
                 selectedGame,
                 sdkScale,
                 avgSpeed,
+                avoidFerries,
             } = payload;
 
             const result = calculateRoute(
@@ -196,6 +197,7 @@ self.onmessage = async (e: MessageEvent) => {
                 startType,
                 ownedDlcs,
                 targetCoords,
+                avoidFerries === true,
             );
 
             if (result && result.path && result.nodeSequence) {
@@ -237,14 +239,15 @@ self.onmessage = async (e: MessageEvent) => {
                 const simplified = simplifyPath(rawDisplayPath, 0.00003);
                 const finalSmoothedPath = smoothPath(simplified, 4);
 
-                const finalStatsCache = buildRouteStatsCache(
-                    finalSmoothedPath,
-                    cityNodes,
-                    selectedGame,
-                    sdkScale,
-                    avgSpeed,
-                    workerScaleConfig,
-                );
+                const { stats: finalStatsCache, urbanKmMarks } =
+                    buildRouteStatsCache(
+                        finalSmoothedPath,
+                        cityNodes,
+                        selectedGame,
+                        sdkScale,
+                        avgSpeed,
+                        workerScaleConfig,
+                    );
 
                 const nodeKms = new Float32Array(result.nodeSequence.length);
                 const nodeDisplayIndices = new Int32Array(
@@ -339,6 +342,7 @@ self.onmessage = async (e: MessageEvent) => {
                             rawPath: finalSmoothedPath,
                             displayPath: finalSmoothedPath,
                             stats: finalStatsCache,
+                            urbanKmMarks,
                             nodeKms: nodeKms,
                             nodeDisplayIndices: nodeDisplayIndices,
                             sequenceManeuvers: sequenceManeuvers,
@@ -347,6 +351,7 @@ self.onmessage = async (e: MessageEvent) => {
                     },
                     [
                         finalStatsCache.buffer,
+                        urbanKmMarks.buffer,
                         nodeKms.buffer,
                         nodeDisplayIndices.buffer,
                         sequenceManeuvers.buffer,
@@ -379,6 +384,7 @@ self.onmessage = async (e: MessageEvent) => {
                 selectedGame,
                 sdkScale,
                 avgSpeed,
+                avoidFerries,
             } = payload;
 
             let currentStartId = startId;
@@ -405,6 +411,7 @@ self.onmessage = async (e: MessageEvent) => {
                     currentStartType,
                     ownedDlcs,
                     targetCoords,
+                    avoidFerries === true,
                 );
 
                 if (!segmentResult) {
@@ -477,14 +484,15 @@ self.onmessage = async (e: MessageEvent) => {
             const simplified = simplifyPath(combinedPathCoords, 0.00003);
             const finalSmoothedPath = smoothPath(simplified, 4);
 
-            const finalStatsCache = buildRouteStatsCache(
-                finalSmoothedPath,
-                cityNodes,
-                selectedGame,
-                sdkScale,
-                avgSpeed,
-                workerScaleConfig,
-            );
+            const { stats: finalStatsCache, urbanKmMarks } =
+                buildRouteStatsCache(
+                    finalSmoothedPath,
+                    cityNodes,
+                    selectedGame,
+                    sdkScale,
+                    avgSpeed,
+                    workerScaleConfig,
+                );
 
             const nodeKms = new Float32Array(combinedNodeSequence.length);
             const nodeDisplayIndices = new Int32Array(
@@ -536,6 +544,7 @@ self.onmessage = async (e: MessageEvent) => {
                         nodeSequence: combinedNodeSequence,
                         displayPath: finalSmoothedPath,
                         stats: finalStatsCache,
+                        urbanKmMarks,
                         nodeKms,
                         nodeDisplayIndices,
                         sequenceManeuvers,
@@ -548,6 +557,7 @@ self.onmessage = async (e: MessageEvent) => {
                 },
                 [
                     finalStatsCache.buffer,
+                    urbanKmMarks.buffer,
                     nodeKms.buffer,
                     nodeDisplayIndices.buffer,
                     sequenceManeuvers.buffer,

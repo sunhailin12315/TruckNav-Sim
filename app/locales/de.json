@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "Externe Route erkannt: Wegpunkt setzen",
         "followRoute": "Route folgen",
+        "urbanAhead": "Stadtgebiet beginnt",
         "tappingDisabled": "Tippen deaktiviert",
         "tappingEnabled": "Tippen aktiviert",
         "addStop": "Stopp hinzufügen"
@@ -135,6 +136,7 @@
         "eventFeed": "Ereignis-Feed",
         "eventFeedDescription": "Zeigt Strafen, Mautstellen, Fähren und Lieferungen in Echtzeit.",
         "guidedNavigation": "Geführte Navigation",
+        "avoidFerries": "Fähren vermeiden",
         "realTime": "Echtzeit",
         "hudButtonSize": "HUD Button Größe",
         "imperial": "Imperial",

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+    buildRouteStatsCache,
     calculateRoute,
     getScaleMultiplier,
     mergeClosePoints,
@@ -9,6 +10,7 @@ import {
     type WorkerCityArea,
 } from "~/assets/utils/routing/algorithm";
 import { toRad } from "~/assets/utils/map/maths";
+import { convertEts2ToGeo } from "~/assets/utils/map/converters";
 
 interface TestEdge {
     to: number;
@@ -270,6 +272,49 @@ describe("calculateRoute", () => {
         expect(result).toBeNull();
     });
 
+    it("penalizes ferry edges when avoidFerries is set", () => {
+        resetRoutingState();
+        const nodeCoords = new Map<number, [number, number]>([
+            [0, [0, 0]], // S
+            [1, [2, 0]], // F: destination dock
+            [2, [0, 2]], // R
+            [3, [2, 2]], // R2
+        ]);
+        const adjacency = buildAdjacency([
+            [0, edge(1, 1000, 90, { isFerry: 1 })], // S -> F ferry crossing
+            [0, edge(2, 700, 0)], // S -> R north road detour
+            [2, edge(3, 700, 90)], // R -> R2
+            [3, edge(1, 700, 180)], // R2 -> F
+        ]);
+
+        // Default: the ferry (1000) beats the detour (2100 + turn penalties).
+        const withFerry = calculateRoute(
+            0,
+            new Set([1]),
+            null,
+            adjacency,
+            nodeCoords,
+            "road",
+            [],
+            [2, 0],
+        );
+        expect(withFerry!.nodeSequence).toEqual([0, 1]);
+
+        // avoidFerries adds 25 km per ferry edge, so the detour wins.
+        const avoiding = calculateRoute(
+            0,
+            new Set([1]),
+            null,
+            adjacency,
+            nodeCoords,
+            "road",
+            [],
+            [2, 0],
+            true,
+        );
+        expect(avoiding!.nodeSequence).toEqual([0, 2, 3, 1]);
+    });
+
     it("re-maps cleanly after resetRoutingState (graph reload)", () => {
         resetRoutingState();
         const coordsA = new Map<number, [number, number]>([
@@ -319,6 +364,60 @@ describe("calculateRoute", () => {
             [2, 0],
         );
         expect(second!.nodeSequence).toEqual([0, 2, 3]);
+    });
+});
+
+describe("buildRouteStatsCache", () => {
+    it("marks where the route enters urban areas", () => {
+        // A path along game x from 0 to 10000 in 1000-unit steps; a city
+        // area covers 4000..6000, so exactly two segments are urban.
+        const gamePoints: [number, number][] = [];
+        for (let x = 0; x <= 10000; x += 1000) {
+            gamePoints.push([x, 0]);
+        }
+        const path = gamePoints.map(([x, z]) => convertEts2ToGeo(x, z));
+
+        const cities: WorkerCityArea[] = [
+            { minX: 4000, maxX: 6000, minZ: -1000, maxZ: 1000 },
+        ];
+
+        const { stats, urbanKmMarks } = buildRouteStatsCache(
+            path,
+            cities,
+            "ets2",
+            0,
+            80,
+            { ruralScale: 19, urbanScale: 3, hasUkRule: true },
+        );
+
+        // 10 rural segments × 19 km before the first urban segment.
+        expect(urbanKmMarks.length).toBe(1);
+        expect(urbanKmMarks[0]).toBeCloseTo(76, 3);
+
+        // Rural segments accumulate at 19 km each (scale 19).
+        expect(stats[1 * 3]).toBeCloseTo(19, 3);
+        // Urban segments accumulate at 3 km each (scale 3).
+        expect(stats[6 * 3]).toBeCloseTo(76 + 2 * 3, 3);
+    });
+
+    it("returns no marks for a fully rural route", () => {
+        const path: [number, number][] = [
+            [0, 0],
+            [0.001, 0],
+            [0.002, 0],
+        ];
+
+        const { stats, urbanKmMarks } = buildRouteStatsCache(
+            path,
+            null,
+            "ets2",
+            0,
+            80,
+            { ruralScale: 19, urbanScale: 3, hasUkRule: true },
+        );
+
+        expect(urbanKmMarks.length).toBe(0);
+        expect(stats[2 * 3]).toBeGreaterThan(0);
     });
 });
 

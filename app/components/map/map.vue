@@ -113,6 +113,7 @@ const {
     waypointList,
     removeWaypointAtIndex,
     findBestWaypointInsertionIndex,
+    urbanAheadTrigger,
 } = useRouteController(map, adjacency, nodeCoords, stopNavigationMode);
 
 // Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
@@ -166,6 +167,31 @@ watch(restStopMinutes, (minutes) => {
         fatigueArmed = true;
     }
 });
+
+// Urban-entry warning: the RouteController fires the trigger once per city
+// entry; gate visuals + sound behind the urbanWarning setting.
+const urbanNotificationTrigger = ref(0);
+watch(urbanAheadTrigger, () => {
+    if (!settings.value.gameplay.urbanWarning) return;
+    urbanNotificationTrigger.value++;
+    playBeep(600, 150);
+});
+
+// Route preference change: recalculate the active route so the new ferry
+// policy applies immediately.
+watch(
+    () => activeSettings.value.avoidFerries,
+    () => {
+        if (!isRouteActive.value || !truckCoords.value) return;
+
+        handleMultiRouteCalculation(
+            truckCoords.value,
+            truckHeading.value,
+            scale.value,
+            averageSpeed.value,
+        );
+    },
+);
 
 // Settings Controller
 const { activeSettings, settings } = useSettings();
@@ -674,6 +700,20 @@ const onCancelRoute = () => {
                                 name="lucide:bed-double"
                                 size="24"
                                 :style="{ color: '#7dd3fc' }"
+                            />
+                        </template>
+                    </NotificationGeneral>
+
+                    <NotificationGeneral
+                        :trigger="urbanNotificationTrigger"
+                        :text="t('map.urbanAhead')"
+                    >
+                        <template #icon>
+                            <Icon
+                                class="notification-icon"
+                                name="lucide:building-2"
+                                size="24"
+                                :style="{ color: '#fbc02d' }"
                             />
                         </template>
                     </NotificationGeneral>

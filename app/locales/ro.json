@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "Ruta externă detectată: Setați punctul de navigare",
         "followRoute": "Continuați traseul",
+        "urbanAhead": "Intrare în zona urbană",
         "tappingDisabled": "Apăsare dezactivată",
         "tappingEnabled": "Apăsare Activată",
         "addStop": "Adaugă oprire"
@@ -135,6 +136,7 @@
         "eventFeed": "Flux de evenimente",
         "eventFeedDescription": "Afișează amenzi, taxe, feriboturi și livrări în timp real.",
         "guidedNavigation": "Navigare Ghidată",
+        "avoidFerries": "Evită feriboturile",
         "realTime": "Timp real",
         "hudButtonSize": "Hud Button Size",
         "imperial": "Imperial",

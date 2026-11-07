@@ -141,6 +141,25 @@ describe("settingsSchema", () => {
         expect(settings.gameplay).toEqual({
             eventFeed: true,
             soundAlerts: false,
+            urbanWarning: true,
+        });
+        expect(settings.profiles.ets2.avoidFerries).toBe(false);
+    });
+
+    it("migrates v2 data up to v3 without losing gameplay flags", () => {
+        const stored = {
+            schemaVersion: 2,
+            gameplay: { eventFeed: false, soundAlerts: true },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay).toEqual({
+            eventFeed: false,
+            soundAlerts: true,
+            urbanWarning: true,
         });
     });
 
@@ -154,9 +173,27 @@ describe("settingsSchema", () => {
         expect(settings.gameplay.soundAlerts).toBe(
             DEFAULT_SETTINGS.gameplay.soundAlerts,
         );
+        expect(settings.gameplay.urbanWarning).toBe(
+            DEFAULT_SETTINGS.gameplay.urbanWarning,
+        );
 
         expect(loadSettingsFromRaw('{"gameplay":42}').settings.gameplay).toEqual(
             DEFAULT_SETTINGS.gameplay,
+        );
+    });
+
+    it("normalizes avoidFerries per-profile", () => {
+        const stored = {
+            profiles: {
+                ets2: { avoidFerries: true },
+                ats: { avoidFerries: "nope" },
+            },
+        };
+        const { settings } = loadSettingsFromRaw(JSON.stringify(stored));
+
+        expect(settings.profiles.ets2.avoidFerries).toBe(true);
+        expect(settings.profiles.ats.avoidFerries).toBe(
+            DEFAULT_SETTINGS.profiles.ats.avoidFerries,
         );
     });
 });

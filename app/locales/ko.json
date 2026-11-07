@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "외부 경로 감지: 경로 업데이트",
         "followRoute": "경로 따라가기",
+        "urbanAhead": "도시 지역 진입",
         "tappingDisabled": "터치 비활성화",
         "tappingEnabled": "터치 활성화",
         "addStop": "경유지 추가"
@@ -135,6 +136,7 @@
         "eventFeed": "이벤트 피드",
         "eventFeedDescription": "벌금, 톨게이트, 페리, 배달 이벤트를 실시간으로 표시합니다.",
         "guidedNavigation": "경로 안내",
+        "avoidFerries": "페리 우회",
         "realTime": "실제 시간",
         "hudButtonSize": "HUD 버튼 크기",
         "imperial": "마일",

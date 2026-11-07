@@ -218,6 +218,7 @@ export const calculateRoute = (
     startType: "road" | "yard" = "road",
     ownedDlcs: number[],
     targetLocation?: [number, number],
+    avoidFerries = false,
 ): {
     path: [number, number][];
     nodeSequence: number[];
@@ -237,6 +238,10 @@ export const calculateRoute = (
     const hIns = edge_hIn!;
 
     const ownedDlcSet = new Set(ownedDlcs);
+
+    // Equivalent detour meters added to every ferry edge when the user
+    // prefers avoiding ferries; island-only destinations still route.
+    const FERRY_AVOID_PENALTY = 25_000;
 
     const START_EDGE_ID = globalNextEdgeId;
 
@@ -336,6 +341,10 @@ export const calculateRoute = (
             }
 
             let stepCost = edge.weight || 1;
+
+            if (avoidFerries && edge.isFerry) {
+                stepCost += FERRY_AVOID_PENALTY;
+            }
 
             if (!edge.isFerry && ferryGraceCounter === 0) {
                 if (currentEdgeId === START_EDGE_ID && startHeading !== null) {
@@ -551,6 +560,7 @@ export function buildRouteStatsCache(
     scaleConfig: MapScaleConfig,
 ) {
     const cache = new Float32Array(pathCoords.length * 3);
+    const urbanKmMarks: number[] = [];
     const isAts = selectedGame === "ats";
 
     const baseHighway = isAts ? 105 : 82;
@@ -574,6 +584,8 @@ export function buildRouteStatsCache(
     cache[1] = 0; // game hours
     cache[2] = 0; // real hours
 
+    let prevMultiplier = 0;
+
     for (let i = 0; i < pathCoords.length - 1; i++) {
         const [x1, z1] = gamePoints[i]!;
         const [x2, z2] = gamePoints[i + 1]!;
@@ -590,6 +602,12 @@ export function buildRouteStatsCache(
             scaleConfig,
         );
 
+        // Rural→urban transitions mark where the driver should slow down.
+        if (multiplier === 3 && prevMultiplier !== 3) {
+            urbanKmMarks.push(totalKm);
+        }
+        prevMultiplier = multiplier;
+
         const segmentKm = (rawLength * multiplier) / 1000;
         const segmentSpeed = multiplier === 3 ? speeds.city : speeds.highway;
         const segmentGameHours = segmentKm / segmentSpeed;
@@ -604,5 +622,5 @@ export function buildRouteStatsCache(
         cache[idx + 2] = totalRealHours;
     }
 
-    return cache;
+    return { stats: cache, urbanKmMarks: new Float32Array(urbanKmMarks) };
 }

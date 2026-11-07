@@ -34,6 +34,9 @@ export const useRouteController = (
 
     const currentRoutePath = shallowRef<[number, number][] | null>(null);
     const routeStatsCache = shallowRef<Float32Array | null>(null);
+    // Absolute km marks where the route transitions into an urban area.
+    const routeUrbanKmMarks = shallowRef<Float32Array | null>(null);
+    let nextUrbanMarkIdx = 0;
     // Maps nodeSequence index -> displayPath index, provided by the worker.
     const nodeDisplayIndicesCache = shallowRef<Int32Array | null>(null);
 
@@ -52,6 +55,9 @@ export const useRouteController = (
 
     const isCalculating = ref(false);
     const routeFound = ref<boolean | null>(null);
+
+    // Incremented once each time the route approaches an urban entry point.
+    const urbanAheadTrigger = ref(0);
 
     const currentRouteIndex = ref(0);
     const isWorkerReady = ref(false);
@@ -260,6 +266,7 @@ export const useRouteController = (
                 userDlcs,
                 sdkScale,
                 avgSpeed,
+                activeSettings.value.avoidFerries,
             );
 
             if (result) {
@@ -271,6 +278,8 @@ export const useRouteController = (
                 const frozenRawPath = Object.freeze(result.displayPath);
                 currentRoutePath.value = frozenRawPath as any;
                 routeStatsCache.value = result.stats;
+                routeUrbanKmMarks.value = result.urbanKmMarks || null;
+                nextUrbanMarkIdx = 0;
                 nodeDisplayIndicesCache.value =
                     result.nodeDisplayIndices || null;
 
@@ -349,6 +358,7 @@ export const useRouteController = (
         ownedDlcs: number[],
         sdkScale: number,
         avgSpeed: number,
+        avoidFerries: boolean,
     ): Promise<any> {
         return new Promise((resolve) => {
             if (!worker) {
@@ -394,6 +404,7 @@ export const useRouteController = (
                     selectedGame: settings.value.selectedGame,
                     sdkScale: Number(sdkScale),
                     avgSpeed: Number(avgSpeed),
+                    avoidFerries: avoidFerries === true,
                 },
             });
         });
@@ -1078,6 +1089,25 @@ export const useRouteController = (
 
         updateRouteEta(remGameHours, remRealHours);
 
+        // Urban-entry warning: fire once when the next city area is close.
+        const urbanMarks = routeUrbanKmMarks.value;
+        if (urbanMarks && urbanMarks.length > 0) {
+            while (
+                nextUrbanMarkIdx < urbanMarks.length &&
+                urbanMarks[nextUrbanMarkIdx]! <= currentKm + 0.05
+            ) {
+                nextUrbanMarkIdx++;
+            }
+
+            if (nextUrbanMarkIdx < urbanMarks.length) {
+                const distToUrban = urbanMarks[nextUrbanMarkIdx]! - currentKm;
+                if (distToUrban <= 1.5) {
+                    urbanAheadTrigger.value++;
+                    nextUrbanMarkIdx++;
+                }
+            }
+        }
+
         if (fullRouteDirections.value.length > 1) {
             const upcomingTurn = fullRouteDirections.value[1];
 
@@ -1153,6 +1183,8 @@ export const useRouteController = (
         isRouteActive.value = false;
         endNodeId.value = null;
         currentRoutePath.value = null;
+        routeUrbanKmMarks.value = null;
+        nextUrbanMarkIdx = 0;
 
         waypointList.value = [];
         snappedWaypointNodeIds.value = [];
@@ -1175,6 +1207,7 @@ export const useRouteController = (
         currentRoutePath,
         isWorkerReady,
         isRouteActive,
+        urbanAheadTrigger,
         fullRouteDirections,
         nextTurnDistance,
         initWorkerData,

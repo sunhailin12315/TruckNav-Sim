@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "Externe route gedetecteerd: waypoint instellen",
         "followRoute": "Route volgen",
+        "urbanAhead": "Stadsgebied binnenkomen",
         "tappingDisabled": "Tikken uitgeschakeld",
         "tappingEnabled": "Tikken ingeschakeld",
         "addStop": "Stop toevoegen"
@@ -135,6 +136,7 @@
         "eventFeed": "Gebeurtenissen feed",
         "eventFeedDescription": "Toont boetes, tolpoorten, veerbootritten en bezorgingen live.",
         "guidedNavigation": "Begeleide navigatie",
+        "avoidFerries": "Veerboten vermijden",
         "realTime": "Echte tijd",
         "hudButtonSize": "HUD-knopgrootte",
         "imperial": "Imperiaal",

@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "Externá trasa detekovaná: Nastavený waypoint",
         "followRoute": "Sledovať cestu",
+        "urbanAhead": "Vjíždíte do mesta",
         "tappingDisabled": "Dotyk vypnutý",
         "tappingEnabled": "Dotyk zapnutý",
         "addStop": "Pridať zastávku"
@@ -135,6 +136,7 @@
         "eventFeed": "Zoznam udalostí",
         "eventFeedDescription": "Zobrazuje pokuty, mýto, trajekty a dodávky v reálnom čase.",
         "guidedNavigation": "Navádzacia navigácia",
+        "avoidFerries": "Vyhýbať sa trajektom",
         "realTime": "Reálny čas",
         "hudButtonSize": "Veľkosť tlačidiel",
         "imperial": "Imperiálne",

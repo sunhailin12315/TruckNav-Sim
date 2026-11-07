@@ -107,6 +107,7 @@
     "map": {
         "externalRouteDetected": "External Route Detected: Set Waypoint",
         "followRoute": "Follow Route",
+        "urbanAhead": "Entering Urban Area",
         "tappingDisabled": "Tapping Disabled",
         "tappingEnabled": "Tapping Enabled",
         "addStop": "Add Stop"
@@ -135,6 +136,7 @@
         "eventFeed": "Event Feed",
         "eventFeedDescription": "Shows fines, tolls, ferry rides and deliveries as they happen.",
         "guidedNavigation": "Guided Navigation",
+        "avoidFerries": "Avoid Ferries",
         "realTime": "Real Time",
         "hudButtonSize": "Hud Button Size",
         "imperial": "Imperial",

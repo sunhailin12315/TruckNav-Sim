@@ -30,6 +30,7 @@ export interface GameProfile {
     ownedDlcs: number[];
     lastDestination: [number, number] | null;
     hasTurnNavigation: boolean;
+    avoidFerries: boolean;
     fontFamily: string;
     activeMod: string | "none";
 }
@@ -39,6 +40,8 @@ export interface GameplaySettings {
     eventFeed: boolean;
     /** Beeps and vibration for overspeed, fatigue and feed events. */
     soundAlerts: boolean;
+    /** Toast when the route is about to enter an urban area. */
+    urbanWarning: boolean;
 }
 
 export interface AppSettingsState {
@@ -59,7 +62,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 2;
+export const SETTINGS_SCHEMA_VERSION = 3;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -83,6 +86,7 @@ const DEFAULT_PROFILE: GameProfile = {
     ownedDlcs: Array.from({ length: 10 }, (_, i) => i + 1),
     lastDestination: null,
     hasTurnNavigation: true,
+    avoidFerries: false,
     fontFamily: "Commissioner",
     activeMod: "none",
 };
@@ -122,6 +126,7 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
     gameplay: {
         eventFeed: true,
         soundAlerts: false,
+        urbanWarning: true,
     },
 };
 
@@ -139,6 +144,9 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     // v2 adds the gameplay block; the normalizer fills in its defaults, so
     // the step only marks stored v1 data as migrated (triggering a re-save).
     1: (raw) => raw,
+    // v3 adds avoidFerries (profile) and urbanWarning (gameplay); the
+    // normalizer fills their defaults, so this step only marks migration.
+    2: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -187,6 +195,10 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.soundAlerts === "boolean"
                 ? source.soundAlerts
                 : defaults.soundAlerts,
+        urbanWarning:
+            typeof source.urbanWarning === "boolean"
+                ? source.urbanWarning
+                : defaults.urbanWarning,
     };
 }
 
@@ -212,6 +224,10 @@ function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
             typeof source.hasTurnNavigation === "boolean"
                 ? source.hasTurnNavigation
                 : defaults.hasTurnNavigation,
+        avoidFerries:
+            typeof source.avoidFerries === "boolean"
+                ? source.avoidFerries
+                : defaults.avoidFerries,
         fontFamily: asColor(source.fontFamily, defaults.fontFamily),
         activeMod: typeof source.activeMod === "string" ? source.activeMod : defaults.activeMod,
     };

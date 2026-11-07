@@ -21,6 +21,32 @@
         "startNavigation": "Navigation starten",
         "stop": "Stopp"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "Erste Lieferung",
+            "desc": "Schließe deine erste Lieferung ab."
+        },
+        "roadWarrior": {
+            "title": "Fernfahrer",
+            "desc": "Liefere insgesamt über 1.000 km Fracht."
+        },
+        "truckingTycoon": {
+            "title": "Speditions-Tycoon",
+            "desc": "Verdiene insgesamt 100.000 Einnahmen."
+        },
+        "glassTransporter": {
+            "title": "Glas-Transporteur",
+            "desc": "10 Lieferungen in Folge ohne Ladungsschaden."
+        },
+        "lawAbiding": {
+            "title": "Gesetzestreuer Fahrer",
+            "desc": "10 Aufträge in Folge ohne Strafe."
+        },
+        "oldSalt": {
+            "title": "Alter Seebär",
+            "desc": "Nimm an 10 Fährenüberfahrten teil."
+        }
+    },
     "desktop": {
         "app": "App:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "Dein Trucking-Begleiter",
         "troubleshoot": "Falls du eine gecrackte Version oder ein Repack verwendest, wird das Plugin möglicherweise auch nach der Einrichtung als „Fehlt“ angezeigt."
     },
+    "events": {
+        "achievement": "Erfolg freigeschaltet",
+        "cancelled": "Auftrag abgebrochen",
+        "delivered": "Lieferung abgeschlossen",
+        "fine": "Strafe",
+        "ferry": "Fähre",
+        "history": "Ereignisverlauf",
+        "noEvents": "Noch keine Ereignisse",
+        "overspeed": "Zu schnell",
+        "restDue": "Pause fällig",
+        "toll": "Mautstelle",
+        "train": "Zug"
+    },
     "input": {
         "bridgeNotReachable": "Bridge nicht erreichbar",
         "couldNotConnect": "Verbindung fehlgeschlagen...",
@@ -51,6 +90,19 @@
         "ipAddress": "IP-Adresse:",
         "missingValue": "Bitte gib einen Wert ein.",
         "placeholder": "Hier eingeben..."
+    },
+    "job": {
+        "autoLoaded": "Automatisch geladen",
+        "autoParker": "Auto-Parker",
+        "cargo": "Ladung",
+        "cargoDamage": "Ladungsschaden",
+        "deliveredAt": "Zugestellt um",
+        "deliveryComplete": "Lieferung abgeschlossen",
+        "jobCancelled": "Auftrag abgebrochen",
+        "overdue": "Überfällig",
+        "unknownDestination": "Unbekanntes Ziel",
+        "unknownSource": "Unbekannter Startort",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "Externe Route erkannt: Wegpunkt setzen",
@@ -80,6 +132,8 @@
         "general": "Allgemein",
         "estimatedTime": "Geschätzte Zeit",
         "gameTime": "Spielzeit",
+        "eventFeed": "Ereignis-Feed",
+        "eventFeedDescription": "Zeigt Strafen, Mautstellen, Fähren und Lieferungen in Echtzeit.",
         "guidedNavigation": "Geführte Navigation",
         "realTime": "Echtzeit",
         "hudButtonSize": "HUD Button Größe",
@@ -96,11 +150,29 @@
         "releaseDate": "Veröffentlichung",
         "route": "Route",
         "selectComponents": "Komponenten auswählen",
+        "soundAlerts": "Tonalarme",
+        "soundAlertsDescription": "Pieptöne und Vibration bei Geschwindigkeitsüberschreitung, Müdigkeit und Ereignissen.",
+        "statsTitle": "Statistiken",
         "textTheme": "Text Design",
         "theme": "Design",
         "title": "Einstellungen",
         "truckMarkerSize": "Truck Marker Größe",
         "units": "Einheiten"
+    },
+    "stats": {
+        "delivered": "Geliefert",
+        "cancelled": "Abgebrochen",
+        "distance": "Distanz",
+        "revenue": "Einnahmen",
+        "expenses": "Ausgaben",
+        "net": "Nettoeinkommen",
+        "avgDamage": "Ø Ladungsschaden",
+        "trips": "Letzte Aufträge",
+        "achievements": "Erfolge",
+        "clear": "Daten löschen",
+        "clearConfirm": "Zum Bestätigen erneut tippen",
+        "empty": "Noch keine Aufträge aufgezeichnet.",
+        "cargoDamageShort": "Schaden"
     },
     "languages": {
         "czech": "Tschechisch",

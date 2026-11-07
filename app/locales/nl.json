@@ -21,6 +21,32 @@
         "startNavigation": "Navigatie starten",
         "stop": "Stop"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "Eerste bezorging",
+            "desc": "Voltooi je eerste bezorging."
+        },
+        "roadWarrior": {
+            "title": "Wegheld",
+            "desc": "Bezorg lading over in totaal 1.000 km."
+        },
+        "truckingTycoon": {
+            "title": "Transportmagnaat",
+            "desc": "Verdien in totaal 100.000 aan inkomsten."
+        },
+        "glassTransporter": {
+            "title": "Glastransporteur",
+            "desc": "10 bezorgingen achter elkaar zonder ladingsschade."
+        },
+        "lawAbiding": {
+            "title": "Wetgetrouwe chauffeur",
+            "desc": "10 opdrachten achter elkaar zonder boete."
+        },
+        "oldSalt": {
+            "title": "Oude zeewolf",
+            "desc": "Maak 10 veerbootovertochten."
+        }
+    },
     "desktop": {
         "app": "App:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "Jouw trucking-maatje",
         "troubleshoot": "Als je een cracked versie of repack gebruikt, kan de plugin ook na de setup als 'Ontbreekt' worden weergegeven"
     },
+    "events": {
+        "achievement": "Prestatie ontgrendeld",
+        "cancelled": "Opdracht geannuleerd",
+        "delivered": "Bezorging voltooid",
+        "fine": "Boete",
+        "ferry": "Veerboot",
+        "history": "Gebeurtenissen",
+        "noEvents": "Nog geen gebeurtenissen",
+        "overspeed": "Te snel",
+        "restDue": "Rustpauze vereist",
+        "toll": "Tolpoort",
+        "train": "Trein"
+    },
     "input": {
         "bridgeNotReachable": "Bridge niet bereikbaar",
         "couldNotConnect": "Kon geen verbinding maken...",
@@ -51,6 +90,19 @@
         "ipAddress": "IP-adres:",
         "missingValue": "Voer een waarde in.",
         "placeholder": "Typ hier..."
+    },
+    "job": {
+        "autoLoaded": "Automatisch geladen",
+        "autoParker": "Auto Parker",
+        "cargo": "Lading",
+        "cargoDamage": "Ladingsschade",
+        "deliveredAt": "Bezorgd om",
+        "deliveryComplete": "Bezorging voltooid",
+        "jobCancelled": "Opdracht geannuleerd",
+        "overdue": "Te laat",
+        "unknownDestination": "Onbekende bestemming",
+        "unknownSource": "Onbekende startlocatie",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "Externe route gedetecteerd: waypoint instellen",
@@ -80,6 +132,8 @@
         "general": "Algemeen",
         "estimatedTime": "Geschatte tijd",
         "gameTime": "Speltijd",
+        "eventFeed": "Gebeurtenissen feed",
+        "eventFeedDescription": "Toont boetes, tolpoorten, veerbootritten en bezorgingen live.",
         "guidedNavigation": "Begeleide navigatie",
         "realTime": "Echte tijd",
         "hudButtonSize": "HUD-knopgrootte",
@@ -96,11 +150,29 @@
         "releaseDate": "Releasedatum",
         "route": "Route",
         "selectComponents": "Componenten selecteren",
+        "soundAlerts": "Geluidswaarschuwingen",
+        "soundAlertsDescription": "Pieptonen en vibratie bij te snel rijden, vermoeidheid en gebeurtenissen.",
+        "statsTitle": "Statistieken",
         "textTheme": "Tekstthema",
         "theme": "Thema",
         "title": "Instellingen",
         "truckMarkerSize": "Truckmarkergrootte",
         "units": "Eenheden"
+    },
+    "stats": {
+        "delivered": "Geleverd",
+        "cancelled": "Geannuleerd",
+        "distance": "Afstand",
+        "revenue": "Inkomsten",
+        "expenses": "Uitgaven",
+        "net": "Netto-inkomen",
+        "avgDamage": "Gem. ladingsschade",
+        "trips": "Recente opdrachten",
+        "achievements": "Prestaties",
+        "clear": "Data wissen",
+        "clearConfirm": "Tik opnieuw om te bevestigen",
+        "empty": "Nog geen opdrachten opgenomen.",
+        "cargoDamageShort": "Schade"
     },
     "languages": {
         "czech": "Tsjechisch",

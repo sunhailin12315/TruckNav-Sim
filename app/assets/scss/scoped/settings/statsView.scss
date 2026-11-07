@@ -1,0 +1,182 @@
+.stats-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+
+        .stat-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            padding: 10px;
+
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+
+            .stat-value {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: $white-font-text;
+
+                &.good {
+                    color: $green-color;
+                }
+
+                &.bad {
+                    color: $red-color;
+                }
+            }
+
+            .stat-label {
+                font-size: 1.2rem;
+                color: $white-font-text60;
+            }
+        }
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $white-font-text;
+
+        svg {
+            color: var(--theme-color);
+        }
+    }
+
+    .achievement-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        .achievement-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            padding: 8px 10px;
+
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            opacity: 0.45;
+
+            &.unlocked {
+                opacity: 1;
+
+                .achievement-icon {
+                    color: var(--theme-color);
+                }
+            }
+
+            .achievement-icon {
+                flex-shrink: 0;
+                color: $white-font-text60;
+            }
+
+            .achievement-text {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+
+                .achievement-title {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                }
+
+                .achievement-desc {
+                    font-size: 1.2rem;
+                    color: $white-font-text60;
+                }
+            }
+        }
+    }
+
+    .stats-empty {
+        margin: 0;
+        padding: 8px 4px;
+
+        font-size: 1.3rem;
+        color: $white-font-text60;
+    }
+
+    .trip-list {
+        display: flex;
+        flex-direction: column;
+
+        .trip-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+
+            padding: 8px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            .trip-main {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+
+                .trip-title {
+                    font-size: 1.35rem;
+                    font-weight: 700;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .trip-meta {
+                    font-size: 1.15rem;
+                    color: $white-font-text60;
+                }
+            }
+
+            .trip-amount {
+                flex-shrink: 0;
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: $red-color;
+
+                &.good {
+                    color: $green-color;
+                }
+            }
+        }
+    }
+
+    .clear-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+
+        margin-top: 4px;
+        padding: 8px;
+
+        font-size: 1.3rem;
+
+        color: $red-color;
+        border: 1.5px solid $red-color;
+        border-radius: 12px;
+        background: transparent;
+
+        &.armed {
+            color: $white-font-text;
+            background: $red-color;
+        }
+    }
+}

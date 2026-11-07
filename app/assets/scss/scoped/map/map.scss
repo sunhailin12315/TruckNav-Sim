@@ -87,6 +87,42 @@
     gap: 0.8rem;
 }
 
+.job-card-wrap {
+    position: absolute;
+    top: calc($game-info-bar-height + 1.8rem + 5rem);
+    left: 10px;
+    z-index: 1200;
+
+    @media (orientation: portrait) {
+        max-width: min(340px, 60vw);
+    }
+}
+
+.delivery-card-wrap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2500;
+}
+
+.left-buttons .option-btn {
+    position: relative;
+}
+
+.bell-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 1;
+
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    background-color: $red-color;
+}
+
 .icon {
     width: var(--hud-btn-size);
     height: var(--hud-btn-size);

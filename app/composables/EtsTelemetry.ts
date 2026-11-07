@@ -1,15 +1,21 @@
 import { Capacitor } from "@capacitor/core";
 import {
+    extractGameEvent,
     getGameState,
+    getJobDetails,
     getJobState,
     getNavigationState,
+    getRemainingDeliveryMinutes,
     getTruckState,
 } from "~/assets/utils/telemetry/helpers";
+import type { AchievementDef } from "~/assets/utils/gameplay/achievements";
 import type {
     TruckState,
     GameState,
     NavigationState,
     JobState,
+    DeliveryState,
+    DeliveryInfo,
     TelemetryUpdate,
     TelemetryPacket,
 } from "~/types";
@@ -38,13 +44,44 @@ const navigationState = reactive<NavigationState>({
 const jobState = reactive<JobState>({
     hasActiveJob: false,
     income: 0,
-    deadlineTime: new Date(),
-    remainingTime: new Date(),
-    sourceCity: "0",
-    sourceCompany: "0",
+    cargoName: "",
+    cargoMassKg: 0,
+    cargoDamage: 0,
+    remainingMinutes: null,
+    sourceCityName: "",
+    sourceCompanyName: "",
+    destinationCityName: "",
+    destinationCompanyName: "",
     destinationCity: "0",
     destinationCompany: "0",
 });
+
+const deliveryState = reactive<DeliveryState>({
+    isVisible: false,
+    info: null,
+});
+
+// Delivery detection: jobs end when onJob flips off; the settlement data
+// may lag a few packets behind, so a short lookup window bridges the gap.
+const DELIVERY_LOOKUP_WINDOW_MS = 4000;
+let wasOnJob = false;
+let jobEndWindowUntil = 0;
+let lastDeliveryKey = "";
+let pendingTripEnd = false;
+
+function normalizeDamage(value: number) {
+    // The plugin reports damage as 0-100, but guard against 0-1 fractions.
+    const percent = value <= 1 ? value * 100 : value;
+    return Math.max(0, Math.min(100, percent));
+}
+
+function formatGameClock(isoTime: string) {
+    const date = new Date(isoTime);
+    if (Number.isNaN(date.getTime())) return "";
+    const hours = date.getUTCHours().toString().padStart(2, "0");
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+}
 
 let lastPosition: [number, number] | null = null;
 let headingOffset = 0;
@@ -92,11 +129,24 @@ function clearDiscordRpcState() {
 
 export function useEtsTelemetry() {
     const { settings } = useSettings();
+    const { pushEvent } = useEventFeed();
+    const { playBeep, vibrate } = useSoundAlerts();
+    const tripLog = useTripLog();
+    const { t } = useTranslations();
 
     const isCapacitor = Capacitor.isNativePlatform();
 
     let speedSamples: number[] = [];
     const maxSamples = 120;
+
+    // Rising-edge tracker for the momentary special-event flags; the plugin
+    // may hold a flag true across several packets, so only 0→1 pushes feed.
+    let prevEventFlags = {
+        fined: false,
+        tollgate: false,
+        ferry: false,
+        train: false,
+    };
 
     function startTelemetry(onUpdate?: (data: TelemetryUpdate) => void) {
         if (socket) return;
@@ -222,11 +272,31 @@ export function useEtsTelemetry() {
             companyTarget: destinationCompany,
         } = getJobState(data, settings.value.selectedGame);
 
+        const jobDetails = getJobDetails(data);
+
         Object.assign(jobState, {
             hasActiveJob: hasActiveJob,
             destinationCity: destinationCity,
             destinationCompany: destinationCompany,
+            ...jobDetails,
+            remainingMinutes: getRemainingDeliveryMinutes(
+                data.job.remainingDeliveryTime,
+                data.common.gameTime,
+            ),
         });
+
+        detectDeliveryEnd(data, hasActiveJob);
+        detectEconomyEvents(data, hasActiveJob);
+
+        if (hasActiveJob) {
+            tripLog.beginTripIfIdle({
+                game: settings.value.selectedGame ?? "",
+                sourceCity: jobDetails.sourceCityName,
+                destinationCity: jobDetails.destinationCityName,
+                cargoName: jobDetails.cargoName,
+                cargoMassKg: jobDetails.cargoMassKg,
+            });
+        }
 
         sendDiscordRpcState({
             game: data.game,
@@ -248,6 +318,171 @@ export function useEtsTelemetry() {
                 job: { ...jobState },
             });
         }
+    }
+
+    function notifyFeedEvent(
+        kind: Parameters<typeof pushEvent>[0],
+        amount: number,
+        label: string,
+    ) {
+        pushEvent(kind, amount, label, gameState.gameTime);
+        playBeep(660, 120);
+        vibrate(30);
+    }
+
+    function announceAchievements(defs: AchievementDef[]) {
+        for (const def of defs) {
+            notifyFeedEvent("achievement", 0, t(def.titleKey));
+        }
+    }
+
+    function detectEconomyEvents(data: TelemetryPacket, onJob: boolean) {
+        const flags = {
+            fined: data.specialEvents.fined === true,
+            tollgate: data.specialEvents.tollgate === true,
+            ferry: data.specialEvents.ferry === true,
+            train: data.specialEvents.train === true,
+        };
+
+        const kinds = [
+            { kind: "fine", flag: "fined" },
+            { kind: "toll", flag: "tollgate" },
+            { kind: "ferry", flag: "ferry" },
+            { kind: "train", flag: "train" },
+        ] as const;
+
+        for (const { kind, flag } of kinds) {
+            if (flags[flag] && !prevEventFlags[flag]) {
+                const item = extractGameEvent(data, kind);
+                if (item) {
+                    notifyFeedEvent(item.kind, item.amount, item.label);
+                    announceAchievements(
+                        tripLog.recordEconomyEvent(
+                            item.kind,
+                            item.amount,
+                            onJob,
+                        ),
+                    );
+                }
+            }
+        }
+
+        prevEventFlags = flags;
+    }
+
+    function detectDeliveryEnd(data: TelemetryPacket, onJob: boolean) {
+        const now = Date.now();
+
+        if (wasOnJob && !onJob) {
+            // A job just ended; give the settlement data a few packets to arrive.
+            jobEndWindowUntil = now + DELIVERY_LOOKUP_WINDOW_MS;
+            pendingTripEnd = true;
+        }
+        wasOnJob = onJob;
+
+        if (now >= jobEndWindowUntil) {
+            if (pendingTripEnd) {
+                tripLog.endTrip(null);
+                pendingTripEnd = false;
+            }
+            return;
+        }
+        if (deliveryState.isVisible) return;
+
+        const delivered = data.gamePlayEvents?.jobDelivered;
+        const penalty = data.gamePlayEvents?.jobCancelledPenalty ?? 0;
+
+        if (delivered && (delivered.revenue > 0 || delivered.distanceKm > 0)) {
+            const key = `${delivered.deliveryTime}|${delivered.revenue}|${delivered.distanceKm}`;
+            if (key === lastDeliveryKey) {
+                jobEndWindowUntil = 0;
+                pendingTripEnd = false;
+                tripLog.endTrip(null);
+                return;
+            }
+
+            lastDeliveryKey = key;
+            jobEndWindowUntil = 0;
+            pendingTripEnd = false;
+
+            deliveryState.info = {
+                kind: "delivered",
+                revenue: delivered.revenue,
+                penalty: 0,
+                earnedXp: delivered.earnedXp ?? 0,
+                cargoDamage: normalizeDamage(delivered.cargoDamage ?? 0),
+                distanceKm: delivered.distanceKm ?? 0,
+                deliveredAt: formatGameClock(delivered.deliveryTime),
+                autoParker: delivered.autoParker ?? false,
+                autoLoaded: delivered.autoLoaded ?? false,
+            };
+            deliveryState.isVisible = true;
+
+            notifyFeedEvent(
+                "delivered",
+                delivered.revenue,
+                jobState.destinationCityName,
+            );
+            announceAchievements(
+                tripLog.endTrip({
+                    kind: "delivered",
+                    income: delivered.revenue,
+                    penalty: 0,
+                    cargoDamage: normalizeDamage(delivered.cargoDamage ?? 0),
+                    distanceKm: delivered.distanceKm ?? 0,
+                    earnedXp: delivered.earnedXp ?? 0,
+                    completedAt: gameState.gameTime,
+                }),
+            );
+            return;
+        }
+
+        if (penalty > 0 || data.specialEvents.jobCancelled === true) {
+            const key = `cancelled|${penalty}`;
+            if (key === lastDeliveryKey) {
+                jobEndWindowUntil = 0;
+                pendingTripEnd = false;
+                tripLog.endTrip(null);
+                return;
+            }
+
+            lastDeliveryKey = key;
+            jobEndWindowUntil = 0;
+            pendingTripEnd = false;
+
+            const info: DeliveryInfo = {
+                kind: "cancelled",
+                revenue: 0,
+                penalty: penalty,
+                earnedXp: 0,
+                cargoDamage: 0,
+                distanceKm: 0,
+                deliveredAt: "",
+                autoParker: false,
+                autoLoaded: false,
+            };
+            deliveryState.info = info;
+            deliveryState.isVisible = true;
+
+            if (penalty > 0) {
+                notifyFeedEvent("cancelled", penalty, "");
+                announceAchievements(
+                    tripLog.endTrip({
+                        kind: "cancelled",
+                        income: 0,
+                        penalty: penalty,
+                        cargoDamage: 0,
+                        distanceKm: 0,
+                        earnedXp: 0,
+                        completedAt: gameState.gameTime,
+                    }),
+                );
+            }
+        }
+    }
+
+    function dismissDelivery() {
+        deliveryState.isVisible = false;
     }
 
     function resetDataOnDisconnected(
@@ -280,6 +515,15 @@ export function useEtsTelemetry() {
 
         Object.assign(jobState, {
             hasActiveJob: false,
+            income: 0,
+            cargoName: "",
+            cargoMassKg: 0,
+            cargoDamage: 0,
+            remainingMinutes: null,
+            sourceCityName: "",
+            sourceCompanyName: "",
+            destinationCityName: "",
+            destinationCompanyName: "",
         });
 
         clearDiscordRpcState();
@@ -299,6 +543,8 @@ export function useEtsTelemetry() {
         ...toRefs(truckState),
         ...toRefs(gameState),
         ...toRefs(jobState),
+        ...toRefs(deliveryState),
+        dismissDelivery,
         startTelemetry,
         stopTelemetry,
     };

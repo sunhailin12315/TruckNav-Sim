@@ -21,6 +21,32 @@
         "startNavigation": "내비게이션 시작",
         "stop": "중지"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "첫 배달",
+            "desc": "첫 배달을 완료하세요."
+        },
+        "roadWarrior": {
+            "title": "도로의 전사",
+            "desc": "총 1,000km 이상 화물을 배달하세요."
+        },
+        "truckingTycoon": {
+            "title": "트럭 운송재벌",
+            "desc": "총 100,000의 수입을 벌어세요."
+        },
+        "glassTransporter": {
+            "title": "유리 운반가",
+            "desc": "10회 연속 화물 손상 없이 배달하세요."
+        },
+        "lawAbiding": {
+            "title": "법 준수 기사",
+            "desc": "10회 연속 벌금 없이 작업을 완료하세요."
+        },
+        "oldSalt": {
+            "title": "노련한 뱃사람",
+            "desc": "페리를 10회 이용하세요."
+        }
+    },
     "desktop": {
         "app": "앱:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "트럭커를 위한 스마트 드라이빙 파트너",
         "troubleshoot": "크랙 혹은 리팩 사용 시 플러그인 인식 오류가 발생할 수 있습니다"
     },
+    "events": {
+        "achievement": "업적 달성",
+        "cancelled": "작업 취소됨",
+        "delivered": "배달 완료",
+        "fine": "벌금",
+        "ferry": "페리",
+        "history": "이벤트 기록",
+        "noEvents": "아직 이벤트가 없습니다",
+        "overspeed": "과속",
+        "restDue": "휴식 필요",
+        "toll": "톨게이트",
+        "train": "기차"
+    },
     "input": {
         "bridgeNotReachable": "브릿지에 연결할 수 없음",
         "couldNotConnect": "연결할 수 없습니다...",
@@ -51,6 +90,19 @@
         "ipAddress": "아이피 주소:",
         "missingValue": "값을 입력해 주세요.",
         "placeholder": "여기에 입력..."
+    },
+    "job": {
+        "autoLoaded": "자동 적재",
+        "autoParker": "자동 주차",
+        "cargo": "화물",
+        "cargoDamage": "화물 손상",
+        "deliveredAt": "배달 시각",
+        "deliveryComplete": "배달 완료",
+        "jobCancelled": "작업 취소됨",
+        "overdue": "지연됨",
+        "unknownDestination": "알 수 없는 도착지",
+        "unknownSource": "알 수 없는 출발지",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "외부 경로 감지: 경로 업데이트",
@@ -80,6 +132,8 @@
         "general": "일반",
         "estimatedTime": "예상 시간",
         "gameTime": "게임 시간",
+        "eventFeed": "이벤트 피드",
+        "eventFeedDescription": "벌금, 톨게이트, 페리, 배달 이벤트를 실시간으로 표시합니다.",
         "guidedNavigation": "경로 안내",
         "realTime": "실제 시간",
         "hudButtonSize": "HUD 버튼 크기",
@@ -96,11 +150,29 @@
         "releaseDate": "출시일",
         "route": "경로",
         "selectComponents": "구성 요소 선택",
+        "soundAlerts": "사운드 알림",
+        "soundAlertsDescription": "과속, 피로, 이벤트 시 비프음과 진동을 제공합니다.",
+        "statsTitle": "통계",
         "textTheme": "글씨 테마",
         "theme": "테마",
         "title": "설정",
         "truckMarkerSize": "트럭 아이콘 크기",
         "units": "유닛"
+    },
+    "stats": {
+        "delivered": "배달 완료",
+        "cancelled": "취소",
+        "distance": "주행 거리",
+        "revenue": "수입",
+        "expenses": "지출",
+        "net": "순수익",
+        "avgDamage": "평균 화물 손상",
+        "trips": "최근 작업",
+        "achievements": "업적",
+        "clear": "데이터 초기화",
+        "clearConfirm": "다시 눌러 확인",
+        "empty": "기록된 작업이 없습니다.",
+        "cargoDamageShort": "손상"
     },
     "languages": {
         "czech": "체코어",

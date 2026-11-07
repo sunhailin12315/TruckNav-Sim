@@ -21,6 +21,32 @@
         "startNavigation": "Start Navigation",
         "stop": "Stop"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "First Delivery",
+            "desc": "Complete your first delivery."
+        },
+        "roadWarrior": {
+            "title": "Road Warrior",
+            "desc": "Deliver cargo over 1,000 km in total."
+        },
+        "truckingTycoon": {
+            "title": "Trucking Tycoon",
+            "desc": "Earn 100,000 in total revenue."
+        },
+        "glassTransporter": {
+            "title": "Glass Transporter",
+            "desc": "10 deliveries in a row without cargo damage."
+        },
+        "lawAbiding": {
+            "title": "Law-Abiding Driver",
+            "desc": "10 jobs in a row without a fine."
+        },
+        "oldSalt": {
+            "title": "Old Salt",
+            "desc": "Take 10 ferry crossings."
+        }
+    },
     "desktop": {
         "app": "App:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "Your Trucking Companion",
         "troubleshoot": "If you're using a cracked version or a repack, the plugin may show as 'Missing' even after setup"
     },
+    "events": {
+        "achievement": "Achievement Unlocked",
+        "cancelled": "Job Cancelled",
+        "delivered": "Delivery Complete",
+        "fine": "Fine",
+        "ferry": "Ferry",
+        "history": "Event History",
+        "noEvents": "No events yet",
+        "overspeed": "Over Speed Limit",
+        "restDue": "Rest Stop Due",
+        "toll": "Toll Gate",
+        "train": "Train"
+    },
     "input": {
         "bridgeNotReachable": "Bridge not reachable",
         "couldNotConnect": "Could not connect...",
@@ -51,6 +90,19 @@
         "ipAddress": "IP Address:",
         "missingValue": "Please input a value.",
         "placeholder": "Type here..."
+    },
+    "job": {
+        "autoLoaded": "Auto Loaded",
+        "autoParker": "Auto Parker",
+        "cargo": "Cargo",
+        "cargoDamage": "Cargo Damage",
+        "deliveredAt": "Delivered at",
+        "deliveryComplete": "Delivery Complete",
+        "jobCancelled": "Job Cancelled",
+        "overdue": "Overdue",
+        "unknownDestination": "Unknown Destination",
+        "unknownSource": "Unknown Source",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "External Route Detected: Set Waypoint",
@@ -80,6 +132,8 @@
         "general": "General",
         "estimatedTime": "Estimated Time",
         "gameTime": "Game Time",
+        "eventFeed": "Event Feed",
+        "eventFeedDescription": "Shows fines, tolls, ferry rides and deliveries as they happen.",
         "guidedNavigation": "Guided Navigation",
         "realTime": "Real Time",
         "hudButtonSize": "Hud Button Size",
@@ -96,11 +150,29 @@
         "releaseDate": "Release Date",
         "route": "Route",
         "selectComponents": "Select Components",
+        "soundAlerts": "Sound Alerts",
+        "soundAlertsDescription": "Beeps and vibration for overspeed, fatigue and events.",
+        "statsTitle": "Statistics",
         "textTheme": "Text Theme",
         "theme": "Theme",
         "title": "Settings",
         "truckMarkerSize": "Truck Marker Size",
         "units": "Units"
+    },
+    "stats": {
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "distance": "Distance",
+        "revenue": "Revenue",
+        "expenses": "Expenses",
+        "net": "Net Income",
+        "avgDamage": "Avg. Cargo Damage",
+        "trips": "Recent Jobs",
+        "achievements": "Achievements",
+        "clear": "Clear Data",
+        "clearConfirm": "Tap again to confirm",
+        "empty": "No trips recorded yet.",
+        "cargoDamageShort": "Damage"
     },
     "languages": {
         "czech": "Czech",

@@ -21,6 +21,32 @@
         "startNavigation": "Începeți Navigarea",
         "stop": "Oprește"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "Prima livrare",
+            "desc": "Finalizează prima ta livrare."
+        },
+        "roadWarrior": {
+            "title": "Războinicul drumurilor",
+            "desc": "Livrează marfă pe peste 1.000 km în total."
+        },
+        "truckingTycoon": {
+            "title": "Magnatul transporturilor",
+            "desc": "Câștigă 100.000 venit total."
+        },
+        "glassTransporter": {
+            "title": "Transportatorul de sticlă",
+            "desc": "10 livrări la rând fără deteriorarea mărfii."
+        },
+        "lawAbiding": {
+            "title": "Șofer respectuos al legii",
+            "desc": "10 comenzi la rând fără amendă."
+        },
+        "oldSalt": {
+            "title": "Lup de mare",
+            "desc": "Traversează cu feribotul de 10 ori."
+        }
+    },
     "desktop": {
         "app": "Aplicație:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "Partenerul tău la drum",
         "troubleshoot": "Dacă folosiți o versiune cracked sau un repack, plugin-ul poate afișa ca 'Lipsă' chiar și după configurare"
     },
+    "events": {
+        "achievement": "Realizare deblocată",
+        "cancelled": "Comandă anulată",
+        "delivered": "Livrare finalizată",
+        "fine": "Amendă",
+        "ferry": "Feribot",
+        "history": "Istoric evenimente",
+        "noEvents": "Niciun eveniment încă",
+        "overspeed": "Viteză depășită",
+        "restDue": "Pauză obligatorie",
+        "toll": "Barieră cu taxă",
+        "train": "Tren"
+    },
     "input": {
         "bridgeNotReachable": "Nu se poate stabili conexiunea cu Bridge-ul",
         "couldNotConnect": "Conectare nereușită...",
@@ -51,6 +90,19 @@
         "ipAddress": "Adresă IP:",
         "missingValue": "Vă rugăm introduceți o valoare.",
         "placeholder": "Scrieți aici..."
+    },
+    "job": {
+        "autoLoaded": "Încărcare automată",
+        "autoParker": "Parcare automată",
+        "cargo": "Marfă",
+        "cargoDamage": "Deteriorare marfă",
+        "deliveredAt": "Livrat la",
+        "deliveryComplete": "Livrare finalizată",
+        "jobCancelled": "Comandă anulată",
+        "overdue": "Depășit",
+        "unknownDestination": "Destinație necunoscută",
+        "unknownSource": "Sursă necunoscută",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "Ruta externă detectată: Setați punctul de navigare",
@@ -80,6 +132,8 @@
         "general": "General",
         "estimatedTime": "Timp estimat",
         "gameTime": "Timp în joc",
+        "eventFeed": "Flux de evenimente",
+        "eventFeedDescription": "Afișează amenzi, taxe, feriboturi și livrări în timp real.",
         "guidedNavigation": "Navigare Ghidată",
         "realTime": "Timp real",
         "hudButtonSize": "Hud Button Size",
@@ -96,11 +150,29 @@
         "releaseDate": "Data lansării",
         "route": "Rută",
         "selectComponents": "Alegeți componentele",
+        "soundAlerts": "Alerte sonore",
+        "soundAlertsDescription": "Bipuri și vibrații la depășirea vitezei, oboseală și evenimente.",
+        "statsTitle": "Statistici",
         "textTheme": "Temă text",
         "theme": "Temă",
         "title": "Setări",
         "truckMarkerSize": "Dimensiune Marker camion",
         "units": "Unități"
+    },
+    "stats": {
+        "delivered": "Livrate",
+        "cancelled": "Anulate",
+        "distance": "Distanță",
+        "revenue": "Venituri",
+        "expenses": "Cheltuieli",
+        "net": "Venit net",
+        "avgDamage": "Daune medii marfă",
+        "trips": "Comenzi recente",
+        "achievements": "Realizări",
+        "clear": "Șterge datele",
+        "clearConfirm": "Apăsați din nou pentru confirmare",
+        "empty": "Nicio comandă înregistrată încă.",
+        "cargoDamageShort": "Daune"
     },
     "languages": {
         "czech": "Cehă",

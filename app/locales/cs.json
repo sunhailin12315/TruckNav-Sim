@@ -21,6 +21,32 @@
         "startNavigation": "Začít navigaci",
         "stop": "Zastavit"
     },
+    "achievements": {
+        "firstDelivery": {
+            "title": "První dodávka",
+            "desc": "Dokonči svou první dodávku."
+        },
+        "roadWarrior": {
+            "title": "Silniční válečník",
+            "desc": "Dodej náklad celkem přes 1 000 km."
+        },
+        "truckingTycoon": {
+            "title": "Dopravní magnát",
+            "desc": "Vydělej celkem 100 000."
+        },
+        "glassTransporter": {
+            "title": "Skleněný přepravce",
+            "desc": "10 dodávek v řadě bez poškození nákladu."
+        },
+        "lawAbiding": {
+            "title": "Řidič dodržující předpisy",
+            "desc": "10 zakázek v řadě bez pokuty."
+        },
+        "oldSalt": {
+            "title": "Mořský vlk",
+            "desc": "Podnikni 10 přejezdů trajektem."
+        }
+    },
     "desktop": {
         "app": "Aplikace:",
         "ats": "ATS",
@@ -44,6 +70,19 @@
         "truckingCompanion": "Tvůj společník při řízení náklaďáku",
         "troubleshoot": "Pokud používáš pirátskou verzi nebo repack, plugin se může ukazovat jako chybějící i po nastavení."
     },
+    "events": {
+        "achievement": "Úspěch odemčen",
+        "cancelled": "Zakázka zrušena",
+        "delivered": "Dodávka dokončena",
+        "fine": "Pokuta",
+        "ferry": "Trajekt",
+        "history": "Historie událostí",
+        "noEvents": "Zatím žádné události",
+        "overspeed": "Překročena rychlost",
+        "restDue": "Nutná přestávka",
+        "toll": "Mýtná brána",
+        "train": "Vlak"
+    },
     "input": {
         "bridgeNotReachable": "Bridge nedosažitelný",
         "couldNotConnect": "Nedaří se připojit...",
@@ -51,6 +90,19 @@
         "ipAddress": "IP adresa:",
         "missingValue": "Prosím, vyplň toto pole.",
         "placeholder": "Piš sem..."
+    },
+    "job": {
+        "autoLoaded": "Automaticky naloženo",
+        "autoParker": "Automatické parkování",
+        "cargo": "Náklad",
+        "cargoDamage": "Poškození nákladu",
+        "deliveredAt": "Doručeno v",
+        "deliveryComplete": "Dodávka dokončena",
+        "jobCancelled": "Zakázka zrušena",
+        "overdue": "Po termínu",
+        "unknownDestination": "Neznámý cíl",
+        "unknownSource": "Neznámý start",
+        "xp": "XP"
     },
     "map": {
         "externalRouteDetected": "Externí trasa detekována: Nastaven waypoint",
@@ -80,6 +132,8 @@
         "general": "Obecné",
         "estimatedTime": "Odhadovaný čas",
         "gameTime": "Herní čas",
+        "eventFeed": "Zprávy o událostech",
+        "eventFeedDescription": "Zobrazuje pokuty, mýtné, trajekty a dodávky v reálném čase.",
         "guidedNavigation": "Naváděcí navigace",
         "realTime": "Reálný čas",
         "hudButtonSize": "Velikost tlačítek",
@@ -96,11 +150,29 @@
         "releaseDate": "Datum vydání",
         "route": "Trasa",
         "selectComponents": "Vyber komponenty",
+        "soundAlerts": "Zvukové upozornění",
+        "soundAlertsDescription": "Pípání a vibrace při překročení rychlosti, únavě a událostech.",
+        "statsTitle": "Statistiky",
         "textTheme": "Vzhled textu",
         "theme": "Vzhled",
         "title": "Nastavení",
         "truckMarkerSize": "Velikost ukazatele vozidla",
         "units": "Jednotky"
+    },
+    "stats": {
+        "delivered": "Doručeno",
+        "cancelled": "Zrušeno",
+        "distance": "Vzdálenost",
+        "revenue": "Příjmy",
+        "expenses": "Výdaje",
+        "net": "Čistý zisk",
+        "avgDamage": "Prům. poškození nákladu",
+        "trips": "Poslední zakázky",
+        "achievements": "Úspěchy",
+        "clear": "Vymazat data",
+        "clearConfirm": "Potvrďte opětovným klepnutím",
+        "empty": "Zatím žádné zakázky.",
+        "cargoDamageShort": "Poškození"
     },
     "languages": {
         "czech": "Čeština",

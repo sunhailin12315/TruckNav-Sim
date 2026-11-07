@@ -25,6 +25,12 @@ const isSheetHidden = ref(false);
 // JOB STATE
 const currentJobKey = ref<string>("");
 
+// Job card identity: re-expanded and re-keyed whenever a new job appears.
+const activeJobKey = computed(
+    () =>
+        `${sourceCityName.value}|${cargoName.value}|${income.value}`,
+);
+
 // NOTIFICATION TRIGGERS
 const clickingNotificationTrigger = ref(0);
 
@@ -47,6 +53,18 @@ const {
     scale,
     averageSpeed,
     destinationCompany,
+    cargoName,
+    cargoMassKg,
+    cargoDamage,
+    income,
+    remainingMinutes,
+    sourceCityName,
+    sourceCompanyName,
+    destinationCityName,
+    destinationCompanyName,
+    isVisible: isDeliveryVisible,
+    info: deliveryInfo,
+    dismissDelivery,
 } = useEtsTelemetry();
 
 // Map Areas Data
@@ -96,6 +114,58 @@ const {
     removeWaypointAtIndex,
     findBestWaypointInsertionIndex,
 } = useRouteController(map, adjacency, nodeCoords, stopNavigationMode);
+
+// Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
+// job card can flag deadlines the current route won't make.
+const routeEtaMinutes = computed<number | null>(() => {
+    const match = routeEta.value.match(/(\d+)h\s+(\d+)min/);
+    if (!match) return null;
+    return Number(match[1]) * 60 + Number(match[2]);
+});
+
+// EVENT FEED
+const { unreadCount: unreadEventCount } = useEventFeed();
+const { playBeep, vibrate } = useSoundAlerts();
+
+const isEventDrawerOpen = ref(false);
+const fatigueNotificationTrigger = ref(0);
+
+function toggleEventDrawer() {
+    isEventDrawerOpen.value = !isEventDrawerOpen.value;
+}
+
+// Overspeed edge: one beep when crossing the limit, re-armed once the truck
+// is back at or under the limit (no beeping while hovering just above).
+let overspeedArmed = true;
+watch([truckSpeed, speedLimit], () => {
+    const speeding =
+        speedLimit.value > 0 && truckSpeed.value > speedLimit.value + 5;
+
+    if (speeding && overspeedArmed) {
+        overspeedArmed = false;
+        playBeep(700, 200);
+        vibrate([80, 60, 80]);
+    } else if (
+        !speeding &&
+        truckSpeed.value <= speedLimit.value
+    ) {
+        overspeedArmed = true;
+    }
+});
+
+// Fatigue edge: alert once when the rest timer drops below 20 minutes,
+// re-armed after a full rest resets the counter.
+let fatigueArmed = true;
+watch(restStopMinutes, (minutes) => {
+    if (minutes > 0 && minutes < 20 && fatigueArmed) {
+        fatigueArmed = false;
+        fatigueNotificationTrigger.value++;
+        playBeep(520, 260, 2);
+        vibrate([120, 80, 120]);
+    } else if (minutes >= 90) {
+        fatigueArmed = true;
+    }
+});
 
 // Settings Controller
 const { activeSettings, settings } = useSettings();
@@ -525,6 +595,14 @@ const onCancelRoute = () => {
                         <HudButton :onClick="toggleSettingsPanel">
                             <Icon name="lucide:settings" class="icon" />
                         </HudButton>
+
+                        <HudButton :onClick="toggleEventDrawer">
+                            <span
+                                v-if="unreadEventCount > 0"
+                                class="bell-badge"
+                            ></span>
+                            <Icon name="lucide:bell" class="icon" />
+                        </HudButton>
                     </div>
 
                     <ManeuverCard
@@ -537,6 +615,27 @@ const onCancelRoute = () => {
                             fullRouteDirections[1]?.text || t('map.followRoute')
                         "
                     />
+
+                    <Transition name="fade">
+                        <div
+                            v-if="hasActiveJob && gameConnected"
+                            class="job-card-wrap"
+                        >
+                            <JobCard
+                                :job-key="activeJobKey"
+                                :cargo-name="cargoName"
+                                :cargo-mass-kg="cargoMassKg"
+                                :cargo-damage="cargoDamage"
+                                :income="income"
+                                :remaining-minutes="remainingMinutes"
+                                :eta-minutes="routeEtaMinutes"
+                                :source-city-name="sourceCityName"
+                                :source-company-name="sourceCompanyName"
+                                :destination-city-name="destinationCityName"
+                                :destination-company-name="destinationCompanyName"
+                            />
+                        </div>
+                    </Transition>
 
                     <NotificationGeneral
                         :trigger="clickingNotificationTrigger"
@@ -565,10 +664,26 @@ const onCancelRoute = () => {
                         </template>
                     </NotificationGeneral>
 
+                    <NotificationGeneral
+                        :trigger="fatigueNotificationTrigger"
+                        :text="t('events.restDue')"
+                    >
+                        <template #icon>
+                            <Icon
+                                class="notification-icon"
+                                name="lucide:bed-double"
+                                size="24"
+                                :style="{ color: '#7dd3fc' }"
+                            />
+                        </template>
+                    </NotificationGeneral>
+
                     <NotificationRoute
                         :is-route-found="routeFound"
                         :is-calculating-route="isCalculatingRoute"
                     />
+
+                    <EventToast />
 
                     <div class="hud-buttons">
                         <HudButton v-if="isWeb" :onClick="onToggleFullscreen">
@@ -645,6 +760,18 @@ const onCancelRoute = () => {
                         />
                     </div>
 
+                    <Transition name="panel-pop">
+                        <div
+                            v-if="isDeliveryVisible && deliveryInfo"
+                            class="delivery-card-wrap"
+                        >
+                            <DeliveryCard
+                                :info="deliveryInfo"
+                                @dismiss="dismissDelivery"
+                            />
+                        </div>
+                    </Transition>
+
                     <Transition name="sheet-slide" @after-leave="onSheetClosed">
                         <SheetSlide
                             v-if="isRouteActive"
@@ -661,6 +788,13 @@ const onCancelRoute = () => {
                         />
                     </Transition>
                 </div>
+            </Transition>
+
+            <Transition name="panel-pop">
+                <EventDrawer
+                    v-if="isEventDrawerOpen"
+                    @close="toggleEventDrawer"
+                />
             </Transition>
 
             <Transition name="panel-pop">

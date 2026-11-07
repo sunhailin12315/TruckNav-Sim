@@ -5,6 +5,7 @@ let nodeCoordsMapInstance: TypedNodeCoordsMap | null = null;
 import {
     buildRouteStatsCache,
     calculateRoute,
+    resetRoutingState,
     type WorkerCityArea,
     simplifyPath,
     smoothPath,
@@ -124,6 +125,10 @@ self.onmessage = async (e: MessageEvent) => {
             nodeCoordsF64 = new Float64Array(nodesCoordsBuffer);
             nodeCoordsMapInstance = new TypedNodeCoordsMap(nodeCoordsF64);
 
+            // Drop derived edge-id mappings from a previously loaded graph so
+            // the next calculation re-maps against this adjacency.
+            resetRoutingState();
+
             adjacency = new Map();
             if (cities) cityNodes = cities;
             if (scaleConfig) workerScaleConfig = scaleConfig;
@@ -197,14 +202,10 @@ self.onmessage = async (e: MessageEvent) => {
                 let fullPath = [...result.path];
                 let rawDisplayPath: [number, number][] = [];
 
-                const nodeIndices = new Int32Array(result.nodeSequence.length);
+                const routedEdges = result.edges || [];
 
                 for (let i = 0; i < result.nodeSequence.length - 1; i++) {
-                    nodeIndices[i] = rawDisplayPath.length;
-                    const u = result.nodeSequence[i]!;
-                    const v = result.nodeSequence[i + 1]!;
-
-                    const edge = adjacency.get(u)?.find((e) => e.to === v);
+                    const edge = routedEdges[i];
 
                     if (edge && edge.startIndex !== undefined) {
                         for (let p = 0; p < edge.pointCount; p++) {
@@ -227,8 +228,6 @@ self.onmessage = async (e: MessageEvent) => {
                         rawDisplayPath.push(fullPath[i]!);
                     }
                 }
-                nodeIndices[result.nodeSequence.length - 1] =
-                    rawDisplayPath.length;
                 rawDisplayPath.push(fullPath[fullPath.length - 1]!);
 
                 const simplified = simplifyPath(rawDisplayPath, 0.00003);
@@ -244,6 +243,9 @@ self.onmessage = async (e: MessageEvent) => {
                 );
 
                 const nodeKms = new Float32Array(result.nodeSequence.length);
+                const nodeDisplayIndices = new Int32Array(
+                    result.nodeSequence.length,
+                );
                 for (let i = 0; i < result.nodeSequence.length; i++) {
                     const originalNodePos = nodeCoordsMapInstance.get(
                         result.nodeSequence[i]!,
@@ -263,6 +265,7 @@ self.onmessage = async (e: MessageEvent) => {
                         }
                     }
                     nodeKms[i] = finalStatsCache[bestIdx * 3]!;
+                    nodeDisplayIndices[i] = bestIdx;
                 }
 
                 const sequenceManeuvers = new Int8Array(
@@ -271,9 +274,7 @@ self.onmessage = async (e: MessageEvent) => {
                 const sequenceExits = new Int8Array(result.nodeSequence.length);
 
                 for (let i = 0; i < result.nodeSequence.length - 1; i++) {
-                    const u = result.nodeSequence[i]!;
-                    const v = result.nodeSequence[i + 1]!;
-                    const edge = adjacency.get(u)?.find((e) => e.to === v);
+                    const edge = routedEdges[i];
 
                     let mType = edge ? edge.maneuverType || 0 : 0;
                     let extNum = edge ? edge.exitNumber || 0 : 0;
@@ -289,9 +290,7 @@ self.onmessage = async (e: MessageEvent) => {
                             ) {
                                 const scanU = result.nodeSequence[j]!;
                                 const scanV = result.nodeSequence[j + 1]!;
-                                const scanEdge = adjacency
-                                    .get(scanU)
-                                    ?.find((e) => e.to === scanV);
+                                const scanEdge = routedEdges[j];
 
                                 if (!scanEdge || scanEdge.maneuverType !== 3)
                                     break;
@@ -337,6 +336,7 @@ self.onmessage = async (e: MessageEvent) => {
                             displayPath: finalSmoothedPath,
                             stats: finalStatsCache,
                             nodeKms: nodeKms,
+                            nodeDisplayIndices: nodeDisplayIndices,
                             sequenceManeuvers: sequenceManeuvers,
                             sequenceExits: sequenceExits,
                         },
@@ -344,6 +344,7 @@ self.onmessage = async (e: MessageEvent) => {
                     [
                         finalStatsCache.buffer,
                         nodeKms.buffer,
+                        nodeDisplayIndices.buffer,
                         sequenceManeuvers.buffer,
                         sequenceExits.buffer,
                     ],
@@ -381,6 +382,7 @@ self.onmessage = async (e: MessageEvent) => {
             let currentStartType = startType;
 
             const combinedNodeSequence: number[] = [];
+            const combinedEdges: any[] = [];
             const combinedPathCoords: [number, number][] = [];
             const snappedNodeIds: number[] = [];
 
@@ -406,6 +408,8 @@ self.onmessage = async (e: MessageEvent) => {
                     return;
                 }
 
+                const segmentEdges = segmentResult.edges || [];
+
                 // Extract display coordinates for this segments geometry
                 const segmentDisplayPath: [number, number][] = [];
                 for (
@@ -413,9 +417,7 @@ self.onmessage = async (e: MessageEvent) => {
                     j < segmentResult.nodeSequence.length - 1;
                     j++
                 ) {
-                    const u = segmentResult.nodeSequence[j]!;
-                    const v = segmentResult.nodeSequence[j + 1]!;
-                    const edge = adjacency.get(u)?.find((e) => e.to === v);
+                    const edge = segmentEdges[j];
 
                     if (edge && edge.startIndex !== undefined) {
                         for (let p = 0; p < edge.pointCount; p++) {
@@ -442,17 +444,9 @@ self.onmessage = async (e: MessageEvent) => {
                 }
 
                 let arrivalHeading = 0;
-                if (segmentResult.nodeSequence.length >= 2) {
-                    const u =
-                        segmentResult.nodeSequence[
-                            segmentResult.nodeSequence.length - 2
-                        ]!;
-                    const v =
-                        segmentResult.nodeSequence[
-                            segmentResult.nodeSequence.length - 1
-                        ]!;
-
-                    const edge = adjacency.get(u)?.find((e) => e.to === v);
+                if (segmentEdges.length > 0) {
+                    const edge =
+                        segmentEdges[segmentEdges.length - 1];
                     arrivalHeading = edge ? edge.hOut || 0 : 0;
                 }
 
@@ -461,6 +455,9 @@ self.onmessage = async (e: MessageEvent) => {
                 }
 
                 combinedNodeSequence.push(...segmentResult.nodeSequence);
+                for (const segmentEdge of segmentEdges) {
+                    combinedEdges.push(segmentEdge);
+                }
                 combinedPathCoords.push(...segmentDisplayPath);
                 snappedNodeIds.push(segmentResult.endId);
 
@@ -482,6 +479,9 @@ self.onmessage = async (e: MessageEvent) => {
             );
 
             const nodeKms = new Float32Array(combinedNodeSequence.length);
+            const nodeDisplayIndices = new Int32Array(
+                combinedNodeSequence.length,
+            );
             for (let i = 0; i < combinedNodeSequence.length; i++) {
                 const originalNodePos = nodeCoordsMapInstance.get(
                     combinedNodeSequence[i]!,
@@ -502,6 +502,7 @@ self.onmessage = async (e: MessageEvent) => {
                     }
                 }
                 nodeKms[i] = finalStatsCache[bestIdx * 3]!;
+                nodeDisplayIndices[i] = bestIdx;
             }
 
             const sequenceManeuvers = new Int8Array(
@@ -509,9 +510,7 @@ self.onmessage = async (e: MessageEvent) => {
             );
             const sequenceExits = new Int8Array(combinedNodeSequence.length);
             for (let i = 0; i < combinedNodeSequence.length - 1; i++) {
-                const u = combinedNodeSequence[i]!;
-                const v = combinedNodeSequence[i + 1]!;
-                const edge = adjacency.get(u)?.find((e) => e.to === v);
+                const edge = combinedEdges[i];
 
                 let mType = edge ? edge.maneuverType || 0 : 0;
                 let extNum = edge ? edge.exitNumber || 0 : 0;
@@ -530,6 +529,7 @@ self.onmessage = async (e: MessageEvent) => {
                         displayPath: finalSmoothedPath,
                         stats: finalStatsCache,
                         nodeKms,
+                        nodeDisplayIndices,
                         sequenceManeuvers,
                         sequenceExits,
                         snappedNodeIds,
@@ -541,6 +541,7 @@ self.onmessage = async (e: MessageEvent) => {
                 [
                     finalStatsCache.buffer,
                     nodeKms.buffer,
+                    nodeDisplayIndices.buffer,
                     sequenceManeuvers.buffer,
                     sequenceExits.buffer,
                 ],

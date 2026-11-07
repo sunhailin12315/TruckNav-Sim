@@ -4,17 +4,34 @@ import { convertGeoToAts, convertGeoToEts2 } from "../map/converters";
 import type { GameType } from "~/types";
 import type { MapScaleConfig } from "~/composables/CityData";
 
-// Increased size to handle Directed Edges instead of Nodes
-const MAX_EDGES = 4000000;
+export interface RoutedEdge {
+    to: number;
+    weight: number;
+    hIn: number;
+    hOut?: number;
+    isFerry: number;
+    requiredDlc: number;
+    vPrefabId: number;
+    startIndex?: number;
+    pointCount?: number;
+    maneuverType: number;
+    exitNumber: number;
+    edgeId?: number;
+}
 
-const cache_costs = new Float64Array(MAX_EDGES);
-const cache_previous = new Int32Array(MAX_EDGES);
-const cache_visited = new Uint8Array(MAX_EDGES);
-const cache_is_ferry = new Uint8Array(MAX_EDGES);
+// Typed search buffers are allocated lazily in ensureEdgesMapped(), sized to
+// the actual edge count of the loaded graph plus one slot for the virtual
+// START edge. A fixed worst-case block (4M edges ≈ 100MB) is wasteful on
+// low-end devices.
+let cache_costs: Float64Array | null = null;
+let cache_previous: Int32Array | null = null;
+let cache_visited: Uint8Array | null = null;
+let cache_is_ferry: Uint8Array | null = null;
 
-const edge_target = new Int32Array(MAX_EDGES);
-const edge_source = new Int32Array(MAX_EDGES);
-const edge_hIn = new Float32Array(MAX_EDGES);
+let edge_target: Int32Array | null = null;
+let edge_source: Int32Array | null = null;
+let edge_hIn: Float32Array | null = null;
+let edge_objects: (RoutedEdge | undefined)[] | null = null;
 
 const openHeap = new MinHeap(50000);
 
@@ -32,7 +49,7 @@ export interface WorkerCityArea {
 function ensureCoordCache(nodeCoords: Map<number, [number, number]>) {
     if (cache_flatCoords && cache_flatCoords.length > 0) return;
 
-    cache_flatCoords = new Float64Array(900000 * 2);
+    cache_flatCoords = new Float64Array(nodeCoords.size * 2);
 
     for (const [id, [lng, lat]] of nodeCoords) {
         if (id * 2 + 1 < cache_flatCoords.length) {
@@ -46,6 +63,22 @@ function ensureEdgesMapped(adjacency: Map<number, any[]>) {
     if (isEdgesMapped) return;
     globalNextEdgeId = 0;
 
+    let totalEdges = 0;
+    for (const edges of adjacency.values()) {
+        totalEdges += edges.length;
+    }
+
+    const capacity = totalEdges + 1;
+
+    cache_costs = new Float64Array(capacity);
+    cache_previous = new Int32Array(capacity);
+    cache_visited = new Uint8Array(capacity);
+    cache_is_ferry = new Uint8Array(capacity);
+    edge_target = new Int32Array(capacity);
+    edge_source = new Int32Array(capacity);
+    edge_hIn = new Float32Array(capacity);
+    edge_objects = new Array(capacity);
+
     for (const [u, edges] of adjacency.entries()) {
         for (const edge of edges) {
             const eId = globalNextEdgeId++;
@@ -53,9 +86,26 @@ function ensureEdgesMapped(adjacency: Map<number, any[]>) {
             edge_target[eId] = edge.to;
             edge_source[eId] = u;
             edge_hIn[eId] = edge.hIn || 0;
+            edge_objects[eId] = edge;
         }
     }
     isEdgesMapped = true;
+}
+
+// Drops every derived structure so the next calculateRoute() re-maps against
+// a freshly loaded graph (game/mod switch re-initializes the worker data).
+export function resetRoutingState() {
+    isEdgesMapped = false;
+    globalNextEdgeId = 0;
+    cache_flatCoords = null;
+    cache_costs = null;
+    cache_previous = null;
+    cache_visited = null;
+    cache_is_ferry = null;
+    edge_target = null;
+    edge_source = null;
+    edge_hIn = null;
+    edge_objects = null;
 }
 
 export function getScaleMultiplier(
@@ -120,19 +170,29 @@ export const calculateRoute = (
 ): {
     path: [number, number][];
     nodeSequence: number[];
+    edges: (RoutedEdge | undefined)[];
     endId: number;
 } | null => {
     ensureCoordCache(nodeCoords);
     ensureEdgesMapped(adjacency);
 
     const flatCoords = cache_flatCoords!;
+    const costs = cache_costs!;
+    const previous = cache_previous!;
+    const visited = cache_visited!;
+    const isFerry = cache_is_ferry!;
+    const targets = edge_target!;
+    const sources = edge_source!;
+    const hIns = edge_hIn!;
+
+    const ownedDlcSet = new Set(ownedDlcs);
 
     const START_EDGE_ID = globalNextEdgeId;
 
-    cache_costs.fill(Infinity, 0, START_EDGE_ID + 1);
-    cache_previous.fill(-1, 0, START_EDGE_ID + 1);
-    cache_visited.fill(0, 0, START_EDGE_ID + 1);
-    cache_is_ferry.fill(0, 0, START_EDGE_ID + 1);
+    costs.fill(Infinity, 0, START_EDGE_ID + 1);
+    previous.fill(-1, 0, START_EDGE_ID + 1);
+    visited.fill(0, 0, START_EDGE_ID + 1);
+    isFerry.fill(0, 0, START_EDGE_ID + 1);
 
     openHeap.clear();
 
@@ -171,7 +231,7 @@ export const calculateRoute = (
         return Math.sqrt(dx * dx + dy * dy) * 100 * HEURISTIC_SCALE;
     };
 
-    cache_costs[START_EDGE_ID] = 0;
+    costs[START_EDGE_ID] = 0;
     openHeap.push(START_EDGE_ID, 0);
 
     let foundEndEdgeId: number | null = null;
@@ -184,13 +244,11 @@ export const calculateRoute = (
         const currentEdgeId = openHeap.pop();
         if (currentEdgeId === undefined) break;
 
-        if (cache_visited[currentEdgeId] === 1) continue;
-        cache_visited[currentEdgeId] = 1;
+        if (visited[currentEdgeId] === 1) continue;
+        visited[currentEdgeId] = 1;
 
         const currentId =
-            currentEdgeId === START_EDGE_ID
-                ? start
-                : edge_target[currentEdgeId]!;
+            currentEdgeId === START_EDGE_ID ? start : targets[currentEdgeId]!;
 
         if (possibleEnds.has(currentId)) {
             foundEndEdgeId = currentEdgeId;
@@ -198,17 +256,17 @@ export const calculateRoute = (
         }
 
         const currentArrivalHeading =
-            currentEdgeId === START_EDGE_ID ? 0 : edge_hIn[currentEdgeId];
+            currentEdgeId === START_EDGE_ID ? 0 : hIns[currentEdgeId];
         const prevId =
-            currentEdgeId === START_EDGE_ID ? -1 : edge_source[currentEdgeId];
-        const currentG = cache_costs[currentEdgeId]!;
+            currentEdgeId === START_EDGE_ID ? -1 : sources[currentEdgeId];
+        const currentG = costs[currentEdgeId]!;
 
         const neighbors = adjacency.get(currentId);
         if (!neighbors) continue;
 
         const cLng = flatCoords[currentId * 2]!;
         const cLat = flatCoords[currentId * 2 + 1]!;
-        const ferryGraceCounter = cache_is_ferry[currentEdgeId];
+        const ferryGraceCounter = isFerry[currentEdgeId];
 
         for (let i = 0; i < neighbors.length; i++) {
             const edge = neighbors[i]!;
@@ -216,9 +274,9 @@ export const calculateRoute = (
 
             // DLC Check
             const dlcId = edge.requiredDlc || 0;
-            if (dlcId !== 0 && !ownedDlcs.includes(dlcId)) continue;
+            if (dlcId !== 0 && !ownedDlcSet.has(dlcId)) continue;
 
-            if (cache_visited[neighborEdgeId] === 1) continue;
+            if (visited[neighborEdgeId] === 1) continue;
 
             const neighborNodeId = edge.to;
 
@@ -264,14 +322,14 @@ export const calculateRoute = (
             if (stepCost < 1) stepCost = 1;
             const tentativeG = currentG + stepCost;
 
-            if (tentativeG < cache_costs[neighborEdgeId]!) {
-                cache_previous[neighborEdgeId] = currentEdgeId;
-                cache_costs[neighborEdgeId] = tentativeG;
+            if (tentativeG < costs[neighborEdgeId]!) {
+                previous[neighborEdgeId] = currentEdgeId;
+                costs[neighborEdgeId] = tentativeG;
 
                 if (edge.isFerry) {
-                    cache_is_ferry[neighborEdgeId] = 5;
+                    isFerry[neighborEdgeId] = 5;
                 } else {
-                    cache_is_ferry[neighborEdgeId] = Math.max(
+                    isFerry[neighborEdgeId] = Math.max(
                         0,
                         ferryGraceCounter! - 1,
                     );
@@ -287,24 +345,31 @@ export const calculateRoute = (
 
     if (foundEndEdgeId === null) return null;
 
+    // Rebuild by collecting while walking the edge chain backwards and then
+    // reversing once, instead of unshift() per node (O(n^2) on long routes).
     const path: [number, number][] = [];
     const nodeSequence: number[] = [];
+    const edges: (RoutedEdge | undefined)[] = [];
     let currEdgeId: number = foundEndEdgeId;
 
     while (currEdgeId !== START_EDGE_ID && currEdgeId !== -1) {
-        const cId = edge_target[currEdgeId]!;
-        path.unshift([flatCoords[cId * 2]!, flatCoords[cId * 2 + 1]!]);
-        nodeSequence.unshift(cId);
-        currEdgeId = cache_previous[currEdgeId]!;
+        const cId = targets[currEdgeId]!;
+        path.push([flatCoords[cId * 2]!, flatCoords[cId * 2 + 1]!]);
+        nodeSequence.push(cId);
+        edges.push(edge_objects![currEdgeId]);
+        currEdgeId = previous[currEdgeId]!;
         if (path.length > 20000) break;
     }
 
-    path.unshift([flatCoords[start * 2]!, flatCoords[start * 2 + 1]!]);
-    nodeSequence.unshift(start);
+    path.push([flatCoords[start * 2]!, flatCoords[start * 2 + 1]!]);
+    nodeSequence.push(start);
+    path.reverse();
+    nodeSequence.reverse();
 
     return {
         path,
         nodeSequence,
+        edges,
         endId: nodeSequence[nodeSequence.length - 1]!,
     };
 };

@@ -34,6 +34,8 @@ export const useRouteController = (
 
     const currentRoutePath = shallowRef<[number, number][] | null>(null);
     const routeStatsCache = shallowRef<Float32Array | null>(null);
+    // Maps nodeSequence index -> displayPath index, provided by the worker.
+    const nodeDisplayIndicesCache = shallowRef<Int32Array | null>(null);
 
     const destinationName = ref<string>("");
     const routeDistance = ref<number>(0);
@@ -217,6 +219,7 @@ export const useRouteController = (
 
         isCalculating.value = true;
         routeFound.value = null;
+        nodeDisplayIndicesCache.value = null;
 
         try {
             const startConfig = findBestStartConfiguration(
@@ -268,6 +271,8 @@ export const useRouteController = (
                 const frozenRawPath = Object.freeze(result.displayPath);
                 currentRoutePath.value = frozenRawPath as any;
                 routeStatsCache.value = result.stats;
+                nodeDisplayIndicesCache.value =
+                    result.nodeDisplayIndices || null;
 
                 const cache = result.stats;
                 const lastIdx = (result.displayPath.length - 1) * 3;
@@ -562,6 +567,8 @@ export const useRouteController = (
         const MAX_ARROWS_TO_SHOW = 2;
         let arrowsDrawn = 0;
 
+        const displayIndices = nodeDisplayIndicesCache.value;
+
         for (const step of steps) {
             if (
                 ["depart", "destination", "straight", "ferry"].includes(
@@ -573,30 +580,56 @@ export const useRouteController = (
             if (arrowsDrawn >= MAX_ARROWS_TO_SHOW) break;
 
             let startIdx = -1;
-            let minStartDist = Infinity;
-            for (let i = 0; i < displayPath.length; i++) {
-                const distSq = getSquaredDist(displayPath[i]!, step.coords);
-                if (distSq < minStartDist) {
-                    minStartDist = distSq;
-                    startIdx = i;
-                }
-            }
+            let endIdx = -1;
 
-            let endIdx = startIdx;
-            if (step.exitCoords && startIdx !== -1) {
-                let minEndDist = Infinity;
-                const searchLimit = Math.min(
-                    displayPath.length,
-                    startIdx + 1000,
-                );
-                for (let i = startIdx; i < searchLimit; i++) {
-                    const distSq = getSquaredDist(
-                        displayPath[i]!,
-                        step.exitCoords,
+            const nodeIdx = step.nodeIndex;
+            const directStart =
+                displayIndices && nodeIdx !== undefined
+                    ? displayIndices[nodeIdx]
+                    : undefined;
+            const directEnd =
+                displayIndices && nodeIdx !== undefined
+                    ? displayIndices[nodeIdx + 1]
+                    : undefined;
+
+            if (
+                directStart !== undefined &&
+                directEnd !== undefined &&
+                directEnd >= directStart
+            ) {
+                // Exact indices from the worker: node -> display path.
+                startIdx = directStart;
+                endIdx = directEnd;
+                if (endIdx === startIdx && endIdx < displayPath.length - 1) {
+                    endIdx = startIdx + 1;
+                }
+            } else {
+                // Fallback: locate the maneuver by nearest coordinates.
+                let minStartDist = Infinity;
+                for (let i = 0; i < displayPath.length; i++) {
+                    const distSq = getSquaredDist(displayPath[i]!, step.coords);
+                    if (distSq < minStartDist) {
+                        minStartDist = distSq;
+                        startIdx = i;
+                    }
+                }
+
+                endIdx = startIdx;
+                if (step.exitCoords && startIdx !== -1) {
+                    let minEndDist = Infinity;
+                    const searchLimit = Math.min(
+                        displayPath.length,
+                        startIdx + 1000,
                     );
-                    if (distSq < minEndDist) {
-                        minEndDist = distSq;
-                        endIdx = i;
+                    for (let i = startIdx; i < searchLimit; i++) {
+                        const distSq = getSquaredDist(
+                            displayPath[i]!,
+                            step.exitCoords,
+                        );
+                        if (distSq < minEndDist) {
+                            minEndDist = distSq;
+                            endIdx = i;
+                        }
                     }
                 }
             }

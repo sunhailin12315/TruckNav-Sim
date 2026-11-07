@@ -22,6 +22,10 @@ export interface DirectionStep {
     exitCount?: number;
     cumulativeKm?: number;
     exitCumulativeKm?: number;
+    // Index of this step's node within the route nodeSequence; lets the UI
+    // resolve display-path positions through the worker's nodeDisplayIndices
+    // instead of scanning the whole path by coordinates.
+    nodeIndex?: number;
 }
 
 export function generateDirectionsList(
@@ -40,6 +44,7 @@ export function generateDirectionsList(
         text: "Head on Route",
         distance: 0,
         coords: nodeCoords.get(nodeSequence[0]!) || [0, 0],
+        nodeIndex: 0,
     });
 
     let lastStepKm = 0;
@@ -114,6 +119,7 @@ export function generateDirectionsList(
                     coords: nodeCoords.get(curr!) || [0, 0],
                     exitCoords: nodeCoords.get(next!) || [0, 0],
                     exitCount: exitCount,
+                    nodeIndex: i,
                 });
                 lastStepKm = nodeKms[i]!;
             }
@@ -131,6 +137,7 @@ export function generateDirectionsList(
         coords: nodeCoords.get(nodeSequence[nodeSequence.length - 1]!) || [
             0, 0,
         ],
+        nodeIndex: nodeSequence.length - 1,
     });
 
     return steps;

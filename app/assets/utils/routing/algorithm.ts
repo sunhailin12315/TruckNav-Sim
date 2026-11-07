@@ -365,6 +365,7 @@ export const calculateRoute = (
     nodeSequence.push(start);
     path.reverse();
     nodeSequence.reverse();
+    edges.reverse();
 
     return {
         path,

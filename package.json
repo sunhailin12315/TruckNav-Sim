@@ -6,6 +6,9 @@
     "scripts": {
         "version:sync": "node scripts/sync-version.mjs",
         "build": "nuxt build",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "nuxt typecheck",
         "dev": "nuxt dev",
         "generate": "nuxt generate",
         "preview": "nuxt preview",
@@ -54,6 +57,8 @@
         "patch-package": "^8.0.1",
         "sass-embedded": "^1.99.0",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "vitest": "^5.1.0",
+        "vue-tsc": "^3.3.14"
     }
 }

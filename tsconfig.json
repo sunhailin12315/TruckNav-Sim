@@ -22,6 +22,5 @@
         "allowImportingTsExtensions": true,
         "noEmit": true
     },
-    "include": ["e2e/**/*.ts"],
     "exclude": ["node_modules"]
 }

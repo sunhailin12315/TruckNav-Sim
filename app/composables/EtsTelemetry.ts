@@ -57,21 +57,6 @@ let reconnectAttempts = 0;
 const BASE_RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
 
-function scheduleReconnect(onUpdate?: (data: TelemetryUpdate) => void) {
-    if (reconnectTimer) return;
-
-    const delay = Math.min(
-        BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttempts,
-        MAX_RECONNECT_DELAY_MS,
-    );
-    reconnectAttempts++;
-
-    reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        startTelemetry(onUpdate);
-    }, delay);
-}
-
 function sendDiscordRpcState(payload: {
     game: string;
     connected: boolean;
@@ -165,6 +150,21 @@ export function useEtsTelemetry() {
             socket.close();
             socket = null;
         }
+    }
+
+    function scheduleReconnect(onUpdate?: (data: TelemetryUpdate) => void) {
+        if (reconnectTimer) return;
+
+        const delay = Math.min(
+            BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttempts,
+            MAX_RECONNECT_DELAY_MS,
+        );
+        reconnectAttempts++;
+
+        reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            startTelemetry(onUpdate);
+        }, delay);
     }
 
     function processData(

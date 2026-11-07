@@ -207,7 +207,11 @@ self.onmessage = async (e: MessageEvent) => {
                 for (let i = 0; i < result.nodeSequence.length - 1; i++) {
                     const edge = routedEdges[i];
 
-                    if (edge && edge.startIndex !== undefined) {
+                    if (
+                        edge &&
+                        edge.startIndex !== undefined &&
+                        edge.pointCount !== undefined
+                    ) {
                         for (let p = 0; p < edge.pointCount; p++) {
                             const lng = geometryF32[edge.startIndex + p * 2]!;
                             const lat =
@@ -419,7 +423,11 @@ self.onmessage = async (e: MessageEvent) => {
                 ) {
                     const edge = segmentEdges[j];
 
-                    if (edge && edge.startIndex !== undefined) {
+                    if (
+                        edge &&
+                        edge.startIndex !== undefined &&
+                        edge.pointCount !== undefined
+                    ) {
                         for (let p = 0; p < edge.pointCount; p++) {
                             const lng = geometryF32[edge.startIndex + p * 2]!;
                             const lat =

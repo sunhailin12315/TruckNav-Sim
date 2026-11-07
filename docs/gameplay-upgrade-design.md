@@ -134,3 +134,41 @@
 - 所有新文案进 `app/locales/` 全部 7 个语言（en/de/nl/cs/sk/ro/ko），`Translations.ts` 已是集中入口。
 - 默认全部播报关闭或低打扰，尊重"这是第二块屏幕"的使用场景。
 - 成就与统计**不联网**，避免引入账号系统的复杂度。
+
+---
+
+## 8. 实现状态（2026-11-07）
+
+全部经 vitest（76 测试）+ `nuxt typecheck` 验证，按里程碑提交：
+
+### ✅ M1 — `44e37b0` feat(gameplay): job panel and delivery settlement card
+- [x] 3.1 任务看板（`jobCard.vue`：货名/货重/收入/倒计时分级/货损条/ETA 对比）
+- [x] 3.2 送达结算卡（`deliveryCard.vue`：收入/XP/货损/加成 chips，取消变体）
+
+### ✅ M2 — `0d494e7` feat(feed): economy event feed with sound alerts, settings v2
+- [x] 3.3 部分疲劳提醒（<20min 边沿 toast + 震动；沿路线找休息点未做，见下）
+- [x] 3.5 事件通知中心（`eventToast.vue` + `eventDrawer.vue`，罚单/收费站/渡轮/火车/送达/取消，上升沿检测）
+- [x] 3.6 超速蜂鸣 + 震动（`SoundAlerts.ts`，WebAudio + navigator.vibrate，零依赖）
+- [x] 4.4 settings v2（`gameplay` 块，迁移已实装）
+
+### ✅ M3 — `da3567d` feat(stats): trip log, statistics and local achievements
+- [x] 4.1 旅程日志（localStorage，500 条，开销归属 job）
+- [x] 4.2 统计面板（settings 新 Statistics 视图，含净收益/平均货损/最近任务）
+- [x] 4.3 6 个本地成就（纯函数判定，解锁走 feed toast）
+
+### ✅ M4 — `43c493b` feat(routing): avoid-ferries preference and urban-entry warnings
+- [x] 5.1 避开渡轮（`isFerry` 边 +25km 惩罚，profile 开关，切换即重算）
+- [x] 5.2 城区提前减速提示（stats cache 附带城区入口 km 标记，1.5km 前预警）
+- [x] 5.4 Discord RPC 增强（送达/罚单/取消状态行，3 分钟 TTL，后续提交）
+
+### ⬜ 未实现 / 后续
+- [ ] 3.3 沿路线搜索休息点/加油站打标（服务区 prefab 图层已有，需要沿路线查询）
+- [ ] 3.4 续航规划（`fuelRange` 对比剩余距离，同上路线查询基础设施）
+- [ ] 5.1 避开收费站（需要 QGIS 源数据重跑 `packer.ts` 给边补 toll 标注）
+- [ ] 5.3 送达表现分（数据已在旅程日志里，纯函数可随时加）
+
+### 待实车验证
+- `remainingDeliveryTime` 日期语义假设（deadline − gameTime）
+- 渡轮/火车 flag 存活时长与详情到达时序（上升沿 + 4s 窗口是否够）
+- 25km 渡轮惩罚量级、1.5km 城区预警距离的体感调参
+- Electron WebAudio 首帧需用户手势（已有 `resume()` 兜底）

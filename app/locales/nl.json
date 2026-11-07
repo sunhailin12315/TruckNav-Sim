@@ -195,6 +195,13 @@
         "soundAlertsDescription": "Pieptonen en vibratie bij te snel rijden, vermoeidheid en gebeurtenissen.",
         "statsTitle": "Statistieken",
         "textTheme": "Tekstthema",
+        "dayNightMode": "Dag / Nacht",
+        "dayNight": {
+            "off": "Uit",
+            "auto": "Automatisch (Speltijd)",
+            "day": "Altijd dag",
+            "night": "Altijd nacht"
+        },
         "theme": "Thema",
         "title": "Instellingen",
         "truckMarkerSize": "Truckmarkergrootte",

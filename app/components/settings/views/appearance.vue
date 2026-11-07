@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { generateTruckIcon } from "~/assets/utils/map/markers";
 import SegmentedControl from "../segmentedControl.vue";
+import type { DayNightMode } from "~/composables/Settings";
 
 const { settings, activeSettings, updateProfile, DEFAULT_SETTINGS } =
     useSettings();
@@ -25,6 +26,26 @@ const items = ref([
     "Karla",
     "Commissioner",
 ]);
+
+const DAY_NIGHT_MODES: readonly DayNightMode[] = [
+    "off",
+    "auto",
+    "day",
+    "night",
+];
+const dayNightItems = computed(() =>
+    DAY_NIGHT_MODES.map((mode) => t(`settings.dayNight.${mode}`)),
+);
+const currentDayNightLabel = computed(() =>
+    t(`settings.dayNight.${activeSettings.value.dayNightMode}`),
+);
+
+function updateDayNightMode(label: string) {
+    const index = dayNightItems.value.indexOf(label);
+    if (index >= 0) {
+        updateProfile("dayNightMode", DAY_NIGHT_MODES[index]!);
+    }
+}
 
 async function updatePreviewIcon() {
     const img = await generateTruckIcon(activeSettings.value.themeColor);
@@ -116,6 +137,27 @@ watch(() => activeSettings.value.themeColor, updatePreviewIcon, {
                 @connect="toggleTextColor"
                 :active="isTextThemeLight"
                 size="normal"
+            />
+        </div>
+
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:sun-moon" size="24" />
+                <p>{{ t("settings.dayNightMode") }}</p>
+            </div>
+
+            <USelect
+                :model-value="currentDayNightLabel"
+                @update:model-value="(val: string) => updateDayNightMode(val)"
+                :items="dayNightItems"
+                variant="none"
+                class="selector"
+                :ui="{
+                    trailingIcon: 'shrink-0 size-[20px] text-white !px-6',
+                    content: 'bg-[#222e3c] shadow-xl rounded-md',
+                    item: 'flex items-center justify-between text-[1.6rem] font-BOLD !py-2 !px-3 text-[#f2f2f2] data-[highlighted]:bg-[#3d546e] rounded cursor-pointer transition-colors',
+                    itemTrailingIcon: 'text-white',
+                }"
             />
         </div>
 

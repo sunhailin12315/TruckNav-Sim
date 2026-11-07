@@ -195,6 +195,13 @@
         "soundAlertsDescription": "과속, 피로, 이벤트 시 비프음과 진동을 제공합니다.",
         "statsTitle": "통계",
         "textTheme": "글씨 테마",
+        "dayNightMode": "낮 / 밤",
+        "dayNight": {
+            "off": "끄기",
+            "auto": "자동 (게임 시간)",
+            "day": "항상 낮",
+            "night": "항상 밤"
+        },
         "theme": "테마",
         "title": "설정",
         "truckMarkerSize": "트럭 아이콘 크기",

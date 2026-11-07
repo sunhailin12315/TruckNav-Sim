@@ -195,6 +195,13 @@
         "soundAlertsDescription": "Beeps and vibration for overspeed, fatigue and events.",
         "statsTitle": "Statistics",
         "textTheme": "Text Theme",
+        "dayNightMode": "Day / Night",
+        "dayNight": {
+            "off": "Off",
+            "auto": "Auto (In-game clock)",
+            "day": "Always Day",
+            "night": "Always Night"
+        },
         "theme": "Theme",
         "title": "Settings",
         "truckMarkerSize": "Truck Marker Size",

@@ -9,6 +9,7 @@ import type { GameType } from "~/types";
 export type UnitSystem = "metric" | "imperial";
 export type TextTheme = "light" | "dark";
 export type RouteTimeMode = "game" | "real";
+export type DayNightMode = "off" | "auto" | "day" | "night";
 export type UiComponent =
     | "speed"
     | "fuel"
@@ -26,6 +27,8 @@ export interface GameProfile {
     backgroundColor: string;
     landColor: string;
     roadColor: string;
+    /** Day/night atmosphere switching (off = user colors only). */
+    dayNightMode: DayNightMode;
     units: UnitSystem;
     ownedDlcs: number[];
     lastDestination: [number, number] | null;
@@ -63,7 +66,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 4;
+export const SETTINGS_SCHEMA_VERSION = 5;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -92,6 +95,7 @@ const DEFAULT_PROFILE: GameProfile = {
     roadColor: "#4a5f7a",
     backgroundColor: "#24467b",
     landColor: "#272d39",
+    dayNightMode: "off",
     units: "metric",
     ownedDlcs: Array.from({ length: 10 }, (_, i) => i + 1),
     lastDestination: null,
@@ -160,6 +164,8 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     2: (raw) => raw,
     // v4 adds avoidTolls (profile); the normalizer fills its default.
     3: (raw) => raw,
+    // v5 adds dayNightMode (profile); the normalizer fills its default.
+    4: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -225,6 +231,11 @@ function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
         backgroundColor: asColor(source.backgroundColor, defaults.backgroundColor),
         landColor: asColor(source.landColor, defaults.landColor),
         roadColor: asColor(source.roadColor, defaults.roadColor),
+        dayNightMode: oneOf(
+            source.dayNightMode,
+            ["off", "auto", "day", "night"] as const,
+            defaults.dayNightMode,
+        ),
         units: oneOf(source.units, ["metric", "imperial"] as const, defaults.units),
         ownedDlcs: Array.isArray(source.ownedDlcs)
             ? source.ownedDlcs.filter(

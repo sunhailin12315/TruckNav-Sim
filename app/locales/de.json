@@ -195,6 +195,13 @@
         "soundAlertsDescription": "Pieptöne und Vibration bei Geschwindigkeitsüberschreitung, Müdigkeit und Ereignissen.",
         "statsTitle": "Statistiken",
         "textTheme": "Text Design",
+        "dayNightMode": "Tag / Nacht",
+        "dayNight": {
+            "off": "Aus",
+            "auto": "Automatisch (Spielzeit)",
+            "day": "Immer Tag",
+            "night": "Immer Nacht"
+        },
         "theme": "Design",
         "title": "Einstellungen",
         "truckMarkerSize": "Truck Marker Größe",

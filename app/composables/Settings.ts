@@ -7,6 +7,7 @@ import {
 export type {
     ActiveComponents,
     AppSettingsState,
+    DayNightMode,
     GameProfile,
     GameplaySettings,
     LocaleCode,
@@ -31,18 +32,8 @@ export const useSettings = () => {
     });
 
     const applySideEffects = () => {
-        document.documentElement.style.setProperty(
-            "--theme-color",
-            activeSettings.value.themeColor,
-        );
-
-        const isLight = activeSettings.value.textColor === "light";
-
-        document.documentElement.style.setProperty(
-            "--main-text-color",
-            isLight ? "#f2f2f2" : "#333",
-        );
-
+        // Theme + text colors are owned by useDayNight (they dim at night);
+        // everything else is applied here on every save.
         document.documentElement.style.setProperty(
             "--app-font",
             activeSettings.value.fontFamily,

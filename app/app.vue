@@ -5,6 +5,10 @@ onMounted(async () => {
     const { initSettings } = useSettings();
     initSettings();
 
+    // Owns the theme/text CSS variables (day/night aware); must run after
+    // settings are loaded so the first paint uses the saved palette.
+    useDayNight();
+
     const { initDesktopSettings } = useDesktopSettings();
     await initDesktopSettings();
 

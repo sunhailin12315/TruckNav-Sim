@@ -30,6 +30,29 @@ export function darkenColor(hex: string, amount = 0.1) {
 // utils/color.js
 
 /**
+ * Linearly mixes two hex colors; t = 0 returns hexA, t = 1 returns hexB.
+ */
+export function mixHexColors(hexA: string, hexB: string, t: number) {
+    const parse = (c: string) => ({
+        r: parseInt(c.slice(1, 3), 16),
+        g: parseInt(c.slice(3, 5), 16),
+        b: parseInt(c.slice(5, 7), 16),
+    });
+
+    const a = parse(hexA);
+    const b = parse(hexB);
+    const clamped = Math.max(0, Math.min(1, t));
+
+    const r = Math.round(a.r + (b.r - a.r) * clamped);
+    const g = Math.round(a.g + (b.g - a.g) * clamped);
+    const bl = Math.round(a.b + (b.b - a.b) * clamped);
+
+    return `#${r.toString(16).padStart(2, "0")}${g
+        .toString(16)
+        .padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
+}
+
+/**
  * Mixes a foreground color with a background color to simulate opacity.
  * @param fgHex - The color you want to show (e.g. Purple)
  * @param opacity - 0.0 to 1.0 (How visible the color should be)

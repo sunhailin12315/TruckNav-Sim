@@ -174,6 +174,23 @@ describe("settingsSchema", () => {
         expect(settings.profiles.ets2.avoidFerries).toBe(false);
     });
 
+    it("migrates v4 data up to v5 with dayNightMode default", () => {
+        const stored = {
+            schemaVersion: 4,
+            profiles: {
+                ets2: { dayNightMode: "auto" },
+                ats: { dayNightMode: "bogus" },
+            },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.profiles.ets2.dayNightMode).toBe("auto");
+        expect(settings.profiles.ats.dayNightMode).toBe("off");
+    });
+
     it("normalizes the gameplay block per-field", () => {
         const stored = {
             gameplay: { eventFeed: false, soundAlerts: "yes", junk: 1 },

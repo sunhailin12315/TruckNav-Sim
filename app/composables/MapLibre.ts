@@ -1,4 +1,5 @@
 import type { Map as MapLibreGl, StyleSpecification } from "maplibre-gl";
+import { watch } from "vue";
 import {
     blendWithBg,
     darkenColor,
@@ -12,6 +13,9 @@ export async function initializeMap(
     container: HTMLElement,
 ): Promise<MapLibreGl> {
     const { settings, activeSettings } = useSettings();
+    // Day/night atmosphere: the user palette blended toward night by the
+    // in-game clock (off mode = factor 0 = plain user colors).
+    const { mapColors } = useDayNight();
 
     const baseUrl = window.location.origin;
 
@@ -76,8 +80,7 @@ export async function initializeMap(
                 id: "background",
                 type: "background",
                 paint: {
-                    "background-color":
-                        activeSettings.value.backgroundColor ?? "#24467b",
+                    "background-color": mapColors.value.water,
                 },
             },
             {
@@ -173,6 +176,34 @@ export async function initializeMap(
         settings.value.selectedGame === "ets2" ? gameMap.ets : gameMap.ats;
     const map = new maplibregl.Map(selectedMap as maplibregl.MapOptions);
 
+    // Stream palette changes (user colors and the day/night blend) straight
+    // into the paint properties; the watcher dies with the map.
+    const stopMapColorsWatch = watch(mapColors, (colors) => {
+        if (map.getLayer("background"))
+            map.setPaintProperty(
+                "background",
+                "background-color",
+                colors.water,
+            );
+        if (map.getLayer("water"))
+            map.setPaintProperty("water", "fill-color", colors.land);
+        if (map.getLayer("country-borders"))
+            map.setPaintProperty(
+                "country-borders",
+                "fill-color",
+                darkenColor(colors.land, 0.4),
+            );
+        if (map.getLayer("water-outline"))
+            map.setPaintProperty(
+                "water-outline",
+                "line-color",
+                darkenColor(colors.land, 0.15),
+            );
+        if (map.getLayer("roads"))
+            map.setPaintProperty("roads", "line-color", colors.road);
+    });
+    map.on("remove", () => stopMapColorsWatch());
+
     map.on("error", (e) => {
         console.error(">>> MAP ERROR EVENT:", e);
         if (e.error) {
@@ -200,7 +231,7 @@ export async function initializeMap(
             source: "all-data",
             "source-layer": "water",
             paint: {
-                "fill-color": activeSettings.value?.landColor ?? "#272d39",
+                "fill-color": mapColors.value.land,
             },
         });
 
@@ -211,9 +242,7 @@ export async function initializeMap(
             source: "all-data",
             "source-layer": "countries",
             paint: {
-                "fill-color": activeSettings.value?.landColor
-                    ? darkenColor(activeSettings.value.landColor, 0.4)
-                    : "#3d546e",
+                "fill-color": darkenColor(mapColors.value.land, 0.4),
                 "fill-opacity": 0.4,
             },
         });
@@ -229,9 +258,7 @@ export async function initializeMap(
             source: "all-data",
             "source-layer": "water",
             paint: {
-                "line-color": activeSettings.value?.landColor
-                    ? darkenColor(activeSettings.value.landColor, 0.15)
-                    : "#1e3a5f",
+                "line-color": darkenColor(mapColors.value.land, 0.15),
                 "line-width": [
                     "interpolate",
                     ["linear"],
@@ -256,9 +283,7 @@ export async function initializeMap(
                 "line-cap": ["step", ["zoom"], "butt", 8, "round"],
             },
             paint: {
-                "line-color": activeSettings.value?.roadColor
-                    ? activeSettings.value.roadColor
-                    : "#4a5f7a",
+                "line-color": mapColors.value.road,
                 "line-width": [
                     "interpolate",
                     ["linear"],

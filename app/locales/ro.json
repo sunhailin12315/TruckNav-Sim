@@ -195,6 +195,13 @@
         "soundAlertsDescription": "Bipuri și vibrații la depășirea vitezei, oboseală și evenimente.",
         "statsTitle": "Statistici",
         "textTheme": "Temă text",
+        "dayNightMode": "Zi / Noapte",
+        "dayNight": {
+            "off": "Oprit",
+            "auto": "Automat (Ora din joc)",
+            "day": "Mereu zi",
+            "night": "Mereu noapte"
+        },
         "theme": "Temă",
         "title": "Setări",
         "truckMarkerSize": "Dimensiune Marker camion",

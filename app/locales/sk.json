@@ -195,6 +195,13 @@
         "soundAlertsDescription": "Pípanie a vibrácie pri prekročení rýchlosti, únave a udalostiach.",
         "statsTitle": "Štatistiky",
         "textTheme": "Vzhľad textu",
+        "dayNightMode": "Deň / noc",
+        "dayNight": {
+            "off": "Vypnuté",
+            "auto": "Automaticky (Čas v hre)",
+            "day": "Vždy deň",
+            "night": "Vždy noc"
+        },
         "theme": "Vzhľad",
         "title": "Nastavenia",
         "truckMarkerSize": "Veľkosť ukazovateľa vozidla",

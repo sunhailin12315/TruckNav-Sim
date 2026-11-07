@@ -127,6 +127,93 @@ export function getJobState(data: TelemetryPacket, selectedGame: GameType) {
     return { hasActiveJob, cityTarget, companyTarget, trailerCoords };
 }
 
+export function getJobDetails(data: TelemetryPacket) {
+    const cargo = data.job.cargo;
+
+    return {
+        cargoName: cargo?.name ?? "",
+        cargoMassKg: cargo?.mass ?? 0,
+        cargoDamage: normalizePercent(cargo?.cargoDamage ?? 0),
+        income: data.job.income ?? 0,
+        sourceCityName: data.job.citySource ?? "",
+        sourceCompanyName: data.job.companySource ?? "",
+        destinationCityName: data.job.cityDestination ?? "",
+        destinationCompanyName: data.job.companyDestination ?? "",
+    };
+}
+
+/**
+ * Remaining minutes until the delivery deadline, computed against the
+ * current game time. The plugin reports both as absolute game timestamps,
+ * so implausible results (e.g. a bare duration misread as a date) degrade
+ * to null instead of showing a bogus countdown.
+ */
+export function getRemainingDeliveryMinutes(
+    deliveryTimeIso: string,
+    gameTimeIso: string,
+): number | null {
+    const deadline = new Date(deliveryTimeIso).getTime();
+    const gameTime = new Date(gameTimeIso).getTime();
+
+    if (Number.isNaN(deadline) || Number.isNaN(gameTime)) return null;
+
+    const minutes = (deadline - gameTime) / 60000;
+
+    // Plausible window: 24h overdue up to a week of remaining time.
+    if (minutes < -24 * 60 || minutes > 7 * 24 * 60) return null;
+
+    return minutes;
+}
+
+function normalizePercent(value: number) {
+    // The plugin reports damage as 0-100, but guard against 0-1 fractions.
+    const percent = value <= 1 ? value * 100 : value;
+    return Math.max(0, Math.min(100, percent));
+}
+
+export type GameEventKind = "fine" | "toll" | "ferry" | "train";
+
+export interface GameEventItem {
+    kind: GameEventKind;
+    amount: number;
+    label: string;
+}
+
+/**
+ * Extracts the economy detail for one momentary special event. Returns null
+ * when the packet carries no usable data for the requested kind (e.g. the
+ * event flag fired before its payload arrived).
+ */
+export function extractGameEvent(
+    data: TelemetryPacket,
+    kind: GameEventKind,
+): GameEventItem | null {
+    const events = data.gamePlayEvents;
+    if (!events) return null;
+
+    switch (kind) {
+        case "fine": {
+            const fine = events.finedData;
+            if (!fine || !(fine.payAmount > 0)) return null;
+            return { kind, amount: fine.payAmount, label: fine.offence ?? "" };
+        }
+        case "toll": {
+            const amount = events.tollgatePayment;
+            if (!(amount > 0)) return null;
+            return { kind, amount, label: "" };
+        }
+        case "ferry":
+        case "train": {
+            const ride = kind === "ferry" ? events.ferryData : events.trainData;
+            if (!ride || !(ride.payAmount > 0)) return null;
+            const label = [ride.sourceName, ride.targetName]
+                .filter(Boolean)
+                .join(" → ");
+            return { kind, amount: ride.payAmount, label };
+        }
+    }
+}
+
 /**
  * Checks if telemetry bridge is reachable
  * @param ip Ip to get data from

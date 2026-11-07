@@ -1,0 +1,213 @@
+.job-card {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    padding: 10px 14px;
+
+    background-color: $primaryColor;
+    border: 2px solid var(--theme-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+    color: $white-font-text;
+
+    transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+    .collapse-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        padding: 2px;
+
+        color: var(--main-text-color);
+        opacity: 0.7;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    .compact-row {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 22px 2px 2px;
+
+        .compact-icon {
+            flex-shrink: 0;
+            color: var(--theme-color);
+        }
+
+        .compact-cargo {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .compact-sep {
+            opacity: 0.5;
+        }
+
+        .compact-dest {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .full-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .cargo-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-right: 24px;
+
+        .cargo-icon {
+            color: var(--theme-color);
+            flex-shrink: 0;
+        }
+
+        .cargo-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+
+            .cargo-name {
+                font-size: 1.6rem;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .cargo-mass {
+                font-size: 1.2rem;
+                color: $white-font-text60;
+            }
+        }
+    }
+
+    .route-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        font-size: 1.3rem;
+        color: $white-font-text60;
+
+        .route-icon {
+            flex-shrink: 0;
+        }
+
+        .route-arrow {
+            flex-shrink: 0;
+            color: var(--theme-color);
+        }
+
+        .route-destination {
+            color: $white-font-text;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .route-source {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .stats-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .stat-value {
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+
+            &.income .stat-value {
+                color: var(--theme-color);
+            }
+
+            &.deadline {
+                .stat-value {
+                    color: $white-font-text;
+                }
+
+                &.level-warn {
+                    color: $warning-color;
+
+                    .stat-value,
+                    svg {
+                        color: $warning-color;
+                    }
+                }
+
+                &.level-danger,
+                &.level-overdue {
+                    svg {
+                        color: $red-color;
+                    }
+
+                    .stat-value {
+                        color: $red-color;
+                    }
+                }
+            }
+        }
+    }
+
+    .damage-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        color: $warning-color;
+
+        .damage-track {
+            flex: 1;
+            height: 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+
+            .damage-fill {
+                height: 100%;
+                background: $warning-color;
+                border-radius: 6px;
+
+                &.is-bad {
+                    background: $red-color;
+                }
+            }
+        }
+
+        .damage-value {
+            font-size: 1.2rem;
+            white-space: nowrap;
+        }
+    }
+
+    &.collapsed {
+        .full-body {
+            display: none;
+        }
+
+        .compact-row {
+            display: flex;
+        }
+    }
+}

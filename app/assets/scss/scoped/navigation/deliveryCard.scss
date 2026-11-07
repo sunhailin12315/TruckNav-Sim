@@ -1,0 +1,119 @@
+.delivery-card {
+    position: relative;
+    width: min(400px, calc(100vw - 40px));
+    padding: 16px 18px;
+
+    background-color: $primaryDarkerColor;
+    border: 2px solid var(--theme-color);
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+
+    color: $white-font-text;
+
+    .close-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px;
+
+        color: var(--main-text-color);
+        opacity: 0.6;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-right: 26px;
+
+        .header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            &.ok {
+                background-color: $green-color;
+                color: #ffffff;
+            }
+
+            &.bad {
+                background-color: $red-color;
+                color: #ffffff;
+            }
+        }
+
+        .header-text {
+            display: flex;
+            flex-direction: column;
+
+            h3 {
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 700;
+            }
+
+            .delivered-at {
+                font-size: 1.3rem;
+                color: $white-font-text60;
+            }
+        }
+    }
+
+    .amount {
+        margin-top: 10px;
+
+        font-size: 2.6rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+
+        &.ok {
+            color: $green-color;
+        }
+
+        &.bad {
+            color: $red-color;
+        }
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            padding: 4px 10px;
+
+            font-size: 1.25rem;
+
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+
+            &.bad {
+                color: $red-color;
+            }
+
+            &.bonus {
+                color: var(--theme-color);
+            }
+        }
+    }
+
+    &.cancelled {
+        border-color: $red-color;
+    }
+}

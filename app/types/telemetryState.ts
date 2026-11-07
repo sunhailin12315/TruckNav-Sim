@@ -29,10 +29,33 @@ export interface NavigationState {
 export interface JobState {
     hasActiveJob: boolean;
     income: number;
-    deadlineTime: Date;
-    remainingTime: Date;
-    sourceCity: string;
-    sourceCompany: string;
+    cargoName: string;
+    cargoMassKg: number;
+    cargoDamage: number;
+    remainingMinutes: number | null;
+    sourceCityName: string;
+    sourceCompanyName: string;
+    destinationCityName: string;
+    destinationCompanyName: string;
     destinationCity: string;
     destinationCompany: string;
+}
+
+export type DeliveryKind = "delivered" | "cancelled";
+
+export interface DeliveryInfo {
+    kind: DeliveryKind;
+    revenue: number;
+    penalty: number;
+    earnedXp: number;
+    cargoDamage: number;
+    distanceKm: number;
+    deliveredAt: string;
+    autoParker: boolean;
+    autoLoaded: boolean;
+}
+
+export interface DeliveryState {
+    isVisible: boolean;
+    info: DeliveryInfo | null;
 }

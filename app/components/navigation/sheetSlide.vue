@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { RouteAlternativeSummary } from "~/assets/utils/routing/routeAlternatives";
+
 const props = defineProps<{
     isSheetHidden: boolean;
     truckSpeed: number;
@@ -7,8 +9,11 @@ const props = defineProps<{
     routeEta: string;
     routeDistance: number;
     isNavigating: boolean;
+    alternatives?: RouteAlternativeSummary[] | null;
+    primarySummary?: RouteAlternativeSummary | null;
     onStopNavigation: () => void;
     onStartNavigation: () => void;
+    onSelectAlternative: (kind: string) => void;
 }>();
 
 const { kmToUserUnits, distanceUnit } = useUnitConversion();
@@ -20,6 +25,61 @@ const progress = ref(100);
 const routeDistanceConverted = computed(() =>
     kmToUserUnits(props.routeDistance),
 );
+
+// AMap-style comparison badges: each alternative is described only by its
+// deltas against the primary route (time, toll gates, ferries, distance).
+const alternativeDeltas = computed(() => {
+    const primary = props.primarySummary;
+    if (!primary) return [];
+
+    return (props.alternatives ?? []).map((alt) => {
+        const parts: string[] = [];
+
+        const deltaMin = Math.round(alt.gameMinutes - primary.gameMinutes);
+        if (deltaMin !== 0) {
+            parts.push(
+                deltaMin < 0
+                    ? t("map.altFaster", { n: -deltaMin })
+                    : t("map.altSlower", { n: deltaMin }),
+            );
+        }
+
+        const deltaTolls = alt.tollCount - primary.tollCount;
+        if (deltaTolls < 0) {
+            parts.push(t("map.altFewerTollGates", { n: -deltaTolls }));
+        }
+
+        const deltaFerries = alt.ferryCount - primary.ferryCount;
+        if (deltaFerries < 0) {
+            parts.push(t("map.altFewerFerryCrossings", { n: -deltaFerries }));
+        }
+
+        const deltaKm = alt.km - primary.km;
+        if (Math.abs(deltaKm) >= 1) {
+            const converted = Math.abs(Math.round(kmToUserUnits(deltaKm)));
+            parts.push(
+                deltaKm < 0
+                    ? t("map.altShorter", { n: converted })
+                    : t("map.altLonger", { n: converted }),
+            );
+        }
+
+        return {
+            kind: alt.kind,
+            name:
+                alt.kind === "tolls"
+                    ? t("map.altFewerTolls")
+                    : t("map.altFewerFerries"),
+            meta: parts.join(" · ") || t("map.altSameRoute"),
+        };
+    });
+});
+
+const onAlternativeClick = (kind: string) => {
+    if (!props.isNavigating) {
+        props.onSelectAlternative(kind);
+    }
+};
 
 const emit = defineEmits<{
     (e: "update:isSheetHidden", value: boolean): void;
@@ -141,6 +201,29 @@ watch(
                         <Icon name="lucide:map-pin-plus" size="22" />
                         <span>{{ t("map.addStop") }}</span>
                     </HudButton>
+                </div>
+
+                <div
+                    v-if="!isNavigating && alternativeDeltas.length > 0"
+                    class="alt-row"
+                >
+                    <button
+                        class="alt-chip alt-chip-primary"
+                        @click.prevent="onAlternativeClick('primary')"
+                    >
+                        <span class="alt-name">{{
+                            t("map.altRecommended")
+                        }}</span>
+                    </button>
+                    <button
+                        v-for="alt in alternativeDeltas"
+                        :key="alt.kind"
+                        class="alt-chip"
+                        @click.prevent="onAlternativeClick(alt.kind)"
+                    >
+                        <span class="alt-name">{{ alt.name }}</span>
+                        <span class="alt-meta">{{ alt.meta }}</span>
+                    </button>
                 </div>
 
                 <div class="action-buttons">

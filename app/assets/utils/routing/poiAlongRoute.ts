@@ -4,8 +4,12 @@
 
 export interface PoiHit {
     coords: [number, number];
+    /** Actual POI coordinates — where a marker or bubble should sit. */
+    poiCoords: [number, number];
     /** Distance from the search start, in route km. */
     kmAhead: number;
+    /** Off-route spur distance from the route to the POI, in km. */
+    detourKm: number;
 }
 
 const SAMPLE_STEP = 10;
@@ -18,6 +22,18 @@ function fastDistKm(lng1: number, lat1: number, lng2: number, lat2: number) {
     const dx = (lng1 - lng2) * kx;
 
     return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Off-route spur time in minutes. When no plausible average speed is known
+ * (telemetry not connected yet), assume a 60 km/h truck crawl.
+ */
+export function estimateDetourMinutes(
+    detourKm: number,
+    avgSpeedKmh: number,
+): number {
+    const speed = avgSpeedKmh > 5 ? avgSpeedKmh : 60;
+    return Math.max(1, Math.round((detourKm / speed) * 60));
 }
 
 /**
@@ -88,17 +104,26 @@ export function findNearestPoiAhead(
         if (kmAtPoint > maxKmAhead) break;
 
         let nearestSqDist = Infinity;
+        let nearestPoi: [number, number] = [lng, lat];
         for (const [poiLng, poiLat] of candidates) {
             // Degree deltas converted to km before squaring: the detour
             // threshold is in km, so comparing degree² would false-match.
             const dxKm = (poiLng - lng) * 111.0 * 0.65;
             const dyKm = (poiLat - lat) * 111.0;
             const sq = dxKm * dxKm + dyKm * dyKm;
-            if (sq < nearestSqDist) nearestSqDist = sq;
+            if (sq < nearestSqDist) {
+                nearestSqDist = sq;
+                nearestPoi = [poiLng, poiLat];
+            }
         }
 
         if (nearestSqDist <= maxDetourKm * maxDetourKm) {
-            best = { coords: [lng, lat], kmAhead: Math.max(0, kmAtPoint) };
+            best = {
+                coords: [lng, lat],
+                poiCoords: nearestPoi,
+                kmAhead: Math.max(0, kmAtPoint),
+                detourKm: Math.sqrt(nearestSqDist),
+            };
         }
     }
 

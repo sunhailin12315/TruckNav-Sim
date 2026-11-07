@@ -9,6 +9,9 @@ export const useMapCamera = (map: Ref<Map | null>) => {
     const isCameraLocked = ref(false);
     const isAutoFollowEnabled = ref(false);
     const isNavigating = ref(false);
+    // Route overview (preview) mode: the camera is handed to the route
+    // bounding box for a few seconds, then returns to the truck.
+    const isRoutePreview = ref(false);
 
     let targetCoords: [number, number] | null = null;
     let targetHeading: number = 0;
@@ -25,6 +28,9 @@ export const useMapCamera = (map: Ref<Map | null>) => {
     let easeTimeout: ReturnType<typeof setTimeout> | null = null;
 
     let autoLockTimer: ReturnType<typeof setTimeout> | null = null;
+    let previewAutoExitTimer: ReturnType<typeof setTimeout> | null = null;
+    // Auto-follow preference to restore when the route overview ends.
+    let previewRestoreAutoFollow = false;
 
     let markerEl: HTMLDivElement | null = null;
 
@@ -129,6 +135,13 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         breakLockEvents.forEach((event) => {
             map.value!.on(event, (e) => {
                 if (e.originalEvent && !isEasing) {
+                    // Interacting during a route overview ends it; the
+                    // standard unlock / re-lock handling takes over from
+                    // here with the user's original follow preference.
+                    if (isRoutePreview.value) {
+                        exitRoutePreview(false);
+                    }
+
                     isCameraLocked.value = false;
                     if (autoLockTimer) clearTimeout(autoLockTimer);
 
@@ -145,7 +158,7 @@ export const useMapCamera = (map: Ref<Map | null>) => {
             if (e.originalEvent && !isCameraLocked.value && !isEasing) {
                 if (autoLockTimer) clearTimeout(autoLockTimer);
 
-                if (isAutoFollowEnabled.value) {
+                if (isAutoFollowEnabled.value && !isRoutePreview.value) {
                     autoLockTimer = setTimeout(() => {
                         resumeCameraLock();
                     }, 1500);
@@ -242,12 +255,56 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         if (!map.value || !currentTruckCoords) return;
         isNavigating.value = false;
 
+        exitRoutePreview(false);
         resumeCameraLock(false);
+    };
+
+    /**
+     * Overview mode: ease to the route bounding box, hold for a few seconds,
+     * then ease back to the truck. User interaction cancels the preview.
+     * The user's original auto-follow preference is restored on exit.
+     */
+    const enterRoutePreview = (
+        bounds: [[number, number], [number, number]],
+    ) => {
+        if (!map.value) return;
+
+        if (previewAutoExitTimer) clearTimeout(previewAutoExitTimer);
+        if (autoLockTimer) clearTimeout(autoLockTimer);
+
+        previewRestoreAutoFollow = isAutoFollowEnabled.value;
+        isRoutePreview.value = true;
+        isCameraLocked.value = false;
+        isAutoFollowEnabled.value = true;
+
+        map.value.fitBounds(bounds, {
+            padding: { top: 220, bottom: 320, left: 100, right: 100 },
+            pitch: 0,
+            duration: 700,
+        });
+
+        previewAutoExitTimer = setTimeout(() => {
+            exitRoutePreview();
+        }, 8000);
+    };
+
+    const exitRoutePreview = (resumeFollow = true) => {
+        if (!isRoutePreview.value) return;
+
+        isRoutePreview.value = false;
+        isAutoFollowEnabled.value = previewRestoreAutoFollow;
+        if (previewAutoExitTimer) {
+            clearTimeout(previewAutoExitTimer);
+            previewAutoExitTimer = null;
+        }
+
+        if (resumeFollow) resumeCameraLock(previewRestoreAutoFollow);
     };
 
     onUnmounted(() => {
         stopRenderLoop();
         if (easeTimeout) clearTimeout(easeTimeout);
+        if (previewAutoExitTimer) clearTimeout(previewAutoExitTimer);
         if (markerEl) markerEl.remove();
     });
 
@@ -255,6 +312,7 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         isCameraLocked,
         isNavigating,
         isAutoFollowEnabled,
+        isRoutePreview,
         initMarker,
         updateMarkerSize,
         updateMarkerImage,
@@ -265,5 +323,7 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         toggleAutoFollow,
         lockCamera,
         startNavigationMode,
+        enterRoutePreview,
+        exitRoutePreview,
     };
 };

@@ -176,3 +176,49 @@ $compact-bar-height: 35px;
         }
     }
 }
+
+.alt-row {
+    display: flex;
+    gap: 8px;
+    margin: -12px 0 18px 0;
+    overflow-x: auto;
+
+    .alt-chip {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+
+        padding: 6px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.06);
+
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--theme-color);
+        }
+
+        &.alt-chip-primary {
+            border-color: var(--theme-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .alt-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: $white-font-text;
+            white-space: nowrap;
+        }
+
+        .alt-meta {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+        }
+    }
+}

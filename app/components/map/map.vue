@@ -85,6 +85,7 @@ const {
     isCameraLocked,
     isAutoFollowEnabled,
     isNavigating,
+    isRoutePreview,
     initCameraListeners,
     followTruck,
     startNavigationMode,
@@ -93,6 +94,8 @@ const {
     updateMarkerSize,
     updateMarkerImage,
     toggleAutoFollow,
+    enterRoutePreview,
+    exitRoutePreview,
 } = useMapCamera(map);
 
 const {
@@ -117,6 +120,9 @@ const {
     findBestWaypointInsertionIndex,
     urbanAheadTrigger,
     serviceSuggestion,
+    routeAlternatives,
+    primaryRouteSummary,
+    currentRoutePath,
 } = useRouteController(map, adjacency, nodeCoords, stopNavigationMode);
 
 // Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
@@ -181,7 +187,8 @@ watch(urbanAheadTrigger, () => {
 });
 
 // Rest / fuel suggestion: marker lives on the map until cleared by the
-// planner; the toast + beep announce it once.
+// planner; the toast + beep announce it once. The detour cost mirrors the
+// AMap-style "+X min / +Y km" bubble so the driver can judge the stop.
 const suggestionNotificationTrigger = ref(0);
 const suggestionText = computed(() => {
     const suggestion = serviceSuggestion.value;
@@ -190,7 +197,11 @@ const suggestionText = computed(() => {
         suggestion.kind === "rest"
             ? t("map.restAhead")
             : t("map.fuelAhead");
-    return `${label} · ${suggestion.kmAhead} km`;
+    const detour = t("map.detourInfo", {
+        km: suggestion.detourKm.toFixed(1),
+        min: suggestion.detourMinutes,
+    });
+    return `${label} · ${suggestion.kmAhead} km · ${detour}`;
 });
 watch(serviceSuggestion, (suggestion) => {
     if (!suggestion) return;
@@ -210,12 +221,13 @@ watch(
             truckHeading.value,
             scale.value,
             averageSpeed.value,
+            true,
         );
     },
 );
 
 // Settings Controller
-const { activeSettings, settings } = useSettings();
+const { activeSettings, settings, updateProfile } = useSettings();
 const { t } = useTranslations();
 
 // Maneuver instructions are translated at render time from the step type
@@ -532,6 +544,7 @@ onMounted(async () => {
                 truckHeading.value,
                 currentScale,
                 averageSpeed.value,
+                true,
             );
         });
 
@@ -636,6 +649,43 @@ const toggleSettingsPanel = () => {
 const onCancelRoute = () => {
     clearRouteState();
     stopNavigationMode();
+};
+
+// Route overview: ease the camera out to the whole route for a few seconds,
+// then hand it back to the truck (AMap's Preview mode). Tapping again — or
+// dragging the map — exits early.
+const onRouteOverview = () => {
+    if (isRoutePreview.value) {
+        exitRoutePreview();
+        return;
+    }
+
+    const path = currentRoutePath.value;
+    if (!path || path.length < 2) return;
+
+    const bounds = new maplibregl.LngLatBounds();
+    for (const [lng, lat] of path) {
+        bounds.extend([lng, lat]);
+    }
+
+    enterRoutePreview([
+        [bounds.getWest(), bounds.getSouth()],
+        [bounds.getEast(), bounds.getNorth()],
+    ]);
+};
+
+// Picking an alternative re-plans with that preference set — the same
+// switch the ferry/toll settings use, so reroutes keep the choice.
+const onSelectAlternative = (kind: string) => {
+    const alt = routeAlternatives.value?.find((a) => a.kind === kind);
+    if (!alt) return;
+
+    if (activeSettings.value.avoidTolls !== alt.flags.avoidTolls) {
+        updateProfile("avoidTolls", alt.flags.avoidTolls);
+    }
+    if (activeSettings.value.avoidFerries !== alt.flags.avoidFerries) {
+        updateProfile("avoidFerries", alt.flags.avoidFerries);
+    }
 };
 </script>
 
@@ -820,6 +870,17 @@ const onCancelRoute = () => {
                             <Icon v-else name="lucide:locate" class="icon" />
                         </HudButton>
 
+                        <Transition name="fade">
+                            <HudButton
+                                v-if="isRouteActive"
+                                :is-active="isRoutePreview"
+                                :class="{ 'green-icon': isRoutePreview }"
+                                :onClick="onRouteOverview"
+                            >
+                                <Icon name="lucide:map" class="icon" />
+                            </HudButton>
+                        </Transition>
+
                         <HudButton
                             :is-active="isClickingEnabled"
                             :class="
@@ -897,6 +958,9 @@ const onCancelRoute = () => {
                             :route-eta="routeEta"
                             :speed-limit="speedLimit"
                             :truck-speed="truckSpeed"
+                            :alternatives="routeAlternatives"
+                            :primary-summary="primaryRouteSummary"
+                            :on-select-alternative="onSelectAlternative"
                             @update:add-stop-clicked="toggleAddStopClicked"
                         />
                     </Transition>

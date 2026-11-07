@@ -449,6 +449,11 @@ self.onmessage = async (e: MessageEvent) => {
 
             const tollNodes = avoidTolls ? buildTollNodeSet() : null;
 
+            // Counting set: built whenever toll POIs are known, so every
+            // route (not only toll-avoided ones) can report gate counts.
+            const countableTollNodes =
+                tollPointsGeo.length > 0 ? buildTollNodeSet() : tollNodes;
+
             let currentStartId = startId;
             let currentHeading = heading;
             let currentStartType = startType;
@@ -600,6 +605,24 @@ self.onmessage = async (e: MessageEvent) => {
                 sequenceExits[i] = extNum;
             }
 
+            // Route costs reported alongside the geometry: ferry legs come
+            // straight off the edge flags; toll gates count as zone entries
+            // (a node inside a toll-gate radius whose predecessor isn't).
+            let ferryCount = 0;
+            for (const edge of combinedEdges) {
+                if (edge && edge.isFerry) ferryCount++;
+            }
+
+            let tollCount = 0;
+            if (countableTollNodes) {
+                let prevInZone = false;
+                for (const nodeId of combinedNodeSequence) {
+                    const inZone = countableTollNodes.has(nodeId);
+                    if (inZone && !prevInZone) tollCount++;
+                    prevInZone = inZone;
+                }
+            }
+
             self.postMessage(
                 {
                     type: "RESULT",
@@ -614,6 +637,8 @@ self.onmessage = async (e: MessageEvent) => {
                         sequenceManeuvers,
                         sequenceExits,
                         snappedNodeIds,
+                        ferryCount,
+                        tollCount,
                         endId: combinedNodeSequence[
                             combinedNodeSequence.length - 1
                         ],

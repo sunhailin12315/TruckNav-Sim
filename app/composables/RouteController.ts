@@ -16,8 +16,15 @@ import {
 } from "~/assets/utils/routing/directions";
 import {
     findNearestPoiAhead,
+    estimateDetourMinutes,
     type PoiHit,
 } from "~/assets/utils/routing/poiAlongRoute";
+import {
+    buildRouteAlternatives,
+    summarizeRouteResult,
+    type RouteAlternativeFlags,
+    type RouteAlternativeSummary,
+} from "~/assets/utils/routing/routeAlternatives";
 
 import RouteWorker from "~/workers/route.worker?worker&inline";
 
@@ -82,8 +89,17 @@ export const useRouteController = (
         kind: "rest" | "fuel";
         kmAhead: number;
         coords: [number, number];
+        detourKm: number;
+        detourMinutes: number;
     } | null>(null);
     let lastPlanningCheck = 0;
+
+    // Alternative routes (fewer tolls / fewer ferries), computed in the
+    // background right after a route is planned. Deviation reroutes do not
+    // recompute them: the primary route must stay latency-free.
+    const routeAlternatives = ref<RouteAlternativeSummary[] | null>(null);
+    const primaryRouteSummary = ref<RouteAlternativeSummary | null>(null);
+    let alternativesToken = 0;
 
     function querySpritePoints(sprite: string): [number, number][] {
         if (!map.value) return [];
@@ -187,6 +203,7 @@ export const useRouteController = (
     function updateServicePlanning(
         fuelRangeKm: number,
         restStopMinutes: number,
+        avgSpeedKmh: number,
     ) {
         const now = Date.now();
         if (now - lastPlanningCheck < PLANNING_CHECK_INTERVAL_MS) return;
@@ -216,7 +233,12 @@ export const useRouteController = (
                     serviceSuggestion.value = {
                         kind: "rest",
                         kmAhead: Math.round(hit.kmAhead),
-                        coords: hit.coords,
+                        coords: hit.poiCoords,
+                        detourKm: +hit.detourKm.toFixed(1),
+                        detourMinutes: estimateDetourMinutes(
+                            hit.detourKm,
+                            avgSpeedKmh,
+                        ),
                     };
                     updateSuggestionMarker();
                 }
@@ -237,7 +259,12 @@ export const useRouteController = (
                     serviceSuggestion.value = {
                         kind: "fuel",
                         kmAhead: Math.round(hit.kmAhead),
-                        coords: hit.coords,
+                        coords: hit.poiCoords,
+                        detourKm: +hit.detourKm.toFixed(1),
+                        detourMinutes: estimateDetourMinutes(
+                            hit.detourKm,
+                            avgSpeedKmh,
+                        ),
                     };
                     updateSuggestionMarker();
                 }
@@ -400,11 +427,98 @@ export const useRouteController = (
         accumulateTollPoints(true);
     }
 
+    /**
+     * Computes the "fewer tolls" / "fewer ferries" variants of the just
+     * planned route in the background. Fire-and-forget: results land in
+     * `routeAlternatives` when ready, or silently vanish if a newer route
+     * (or a deviation reroute) invalidated them first.
+     */
+    function computeAlternativesInWorker(
+        startId: number,
+        waypointsNodeGroups: number[][],
+        truckHeading: number,
+        startType: string,
+        ownedDlcs: number[],
+        sdkScale: number,
+        avgSpeed: number,
+        baseFlags: RouteAlternativeFlags,
+    ) {
+        const token = ++alternativesToken;
+
+        const variants: {
+            kind: "tolls" | "ferries";
+            avoidTolls: boolean;
+            avoidFerries: boolean;
+        }[] = [
+            {
+                kind: "tolls",
+                avoidTolls: !baseFlags.avoidTolls,
+                avoidFerries: baseFlags.avoidFerries,
+            },
+            {
+                kind: "ferries",
+                avoidTolls: baseFlags.avoidTolls,
+                avoidFerries: !baseFlags.avoidFerries,
+            },
+        ];
+
+        void (async () => {
+            for (const variant of variants) {
+                try {
+                    const result = await calculateMultiRouteInWorker(
+                        startId,
+                        toRaw(waypointList.value),
+                        waypointsNodeGroups,
+                        truckHeading,
+                        startType,
+                        ownedDlcs,
+                        sdkScale,
+                        avgSpeed,
+                        variant.avoidFerries,
+                        variant.avoidTolls,
+                    );
+
+                    if (token !== alternativesToken || !result) continue;
+
+                    const summary = summarizeRouteResult(
+                        variant.kind,
+                        {
+                            avoidTolls: variant.avoidTolls,
+                            avoidFerries: variant.avoidFerries,
+                        },
+                        result.stats,
+                        result.displayPath?.length ?? 0,
+                        result.tollCount ?? 0,
+                        result.ferryCount ?? 0,
+                    );
+                    if (!summary) continue;
+
+                    const primary = primaryRouteSummary.value;
+                    if (!primary) continue;
+
+                    const next = buildRouteAlternatives(
+                        primary,
+                        [
+                            ...(routeAlternatives.value ?? []),
+                            summary,
+                        ],
+                    );
+                    routeAlternatives.value = next;
+                } catch (e) {
+                    console.error(
+                        `Alternative route (${variant.kind}) failed: ${e}`,
+                    );
+                }
+            }
+        })();
+    }
+
     async function handleMultiRouteCalculation(
         truckCoords: [number, number],
         truckHeading: number,
         sdkScale: number,
         avgSpeed: number,
+        computeAlternatives = false,
     ) {
         if (
             waypointList.value.length === 0 ||
@@ -414,6 +528,10 @@ export const useRouteController = (
         ) {
             return;
         }
+
+        routeAlternatives.value = null;
+        primaryRouteSummary.value = null;
+        alternativesToken++;
 
         isCalculating.value = true;
         routeFound.value = null;
@@ -531,6 +649,32 @@ export const useRouteController = (
                     "lastDestination",
                     waypointList.value[waypointList.value.length - 1]!,
                 );
+
+                const primaryFlags: RouteAlternativeFlags = {
+                    avoidTolls: activeSettings.value.avoidTolls,
+                    avoidFerries: activeSettings.value.avoidFerries,
+                };
+                primaryRouteSummary.value = summarizeRouteResult(
+                    "primary",
+                    primaryFlags,
+                    result.stats,
+                    result.displayPath.length,
+                    result.tollCount ?? 0,
+                    result.ferryCount ?? 0,
+                );
+
+                if (computeAlternatives && startNodeId.value !== null) {
+                    computeAlternativesInWorker(
+                        startNodeId.value,
+                        waypointsNodeGroups,
+                        truckHeading,
+                        startConfig.type as "road" | "yard",
+                        userDlcs,
+                        sdkScale,
+                        avgSpeed,
+                        primaryFlags,
+                    );
+                }
             } else {
                 routeFound.value = false;
             }
@@ -682,6 +826,7 @@ export const useRouteController = (
             truckHeading,
             sdkScale,
             avgSpeed,
+            true,
         );
     }
 
@@ -704,6 +849,7 @@ export const useRouteController = (
                 truckHeading,
                 sdkScale,
                 avgSpeed,
+                true,
             );
         }
     }
@@ -1336,6 +1482,7 @@ export const useRouteController = (
         updateServicePlanning(
             context?.fuelRangeKm ?? 0,
             context?.restStopMinutes ?? 0,
+            avgSpeed,
         );
 
         // Keep the session toll-gate cache growing while the map moves.
@@ -1423,6 +1570,10 @@ export const useRouteController = (
         lastPlanningCheck = 0;
         updateSuggestionMarker();
 
+        routeAlternatives.value = null;
+        primaryRouteSummary.value = null;
+        alternativesToken++;
+
         waypointList.value = [];
         snappedWaypointNodeIds.value = [];
         isYardStart.value = false;
@@ -1446,6 +1597,8 @@ export const useRouteController = (
         isRouteActive,
         urbanAheadTrigger,
         serviceSuggestion,
+        routeAlternatives,
+        primaryRouteSummary,
         fullRouteDirections,
         nextTurnDistance,
         initWorkerData,

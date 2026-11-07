@@ -88,6 +88,15 @@ onUnmounted(() => {
         </div>
 
         <div v-if="isDelivered" class="chips">
+            <span
+                v-if="info.grade"
+                class="chip grade"
+                :class="{ top: info.grade === 'S' }"
+            >
+                <Icon name="lucide:award" size="14" />
+                {{ t("stats.grade") }} {{ info.grade }}
+            </span>
+
             <span v-if="info.earnedXp > 0" class="chip xp">
                 <Icon name="lucide:sparkles" size="14" />
                 {{ info.earnedXp }} {{ t("job.xp") }}

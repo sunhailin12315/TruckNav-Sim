@@ -10,6 +10,7 @@ import {
 } from "~/assets/utils/telemetry/helpers";
 import { currencySymbolFor, formatMoney } from "~/assets/utils/shared/format";
 import type { AchievementDef } from "~/assets/utils/gameplay/achievements";
+import { computeDeliveryGrade } from "~/assets/utils/gameplay/score";
 import type {
     TruckState,
     GameState,
@@ -37,6 +38,7 @@ const gameState = reactive<GameState>({
 
 const navigationState = reactive<NavigationState>({
     fuel: 0,
+    fuelRange: 0,
     speedLimit: 0,
     restStoptime: "",
     restStopMinutes: 0,
@@ -318,7 +320,7 @@ export function useEtsTelemetry() {
         lastPosition = truckCoords;
         headingOffset = newOffset;
 
-        const { fuel, speedLimit, restStoptime, restStopMinutes } =
+        const { fuel, fuelRange, speedLimit, restStoptime, restStopMinutes } =
             getNavigationState(data);
 
         Object.assign(navigationState, {
@@ -326,6 +328,7 @@ export function useEtsTelemetry() {
             restStopMinutes: restStopMinutes,
             speedLimit: speedLimit,
             fuel: fuel,
+            fuelRange: fuelRange,
         });
 
         const {
@@ -490,6 +493,10 @@ export function useEtsTelemetry() {
                 deliveredAt: formatGameClock(delivered.deliveryTime),
                 autoParker: delivered.autoParker ?? false,
                 autoLoaded: delivered.autoLoaded ?? false,
+                grade: computeDeliveryGrade(
+                    normalizeDamage(delivered.cargoDamage ?? 0),
+                    tripLog.getActiveFinesCount(),
+                ),
             };
             deliveryState.isVisible = true;
 
@@ -590,6 +597,7 @@ export function useEtsTelemetry() {
 
         Object.assign(navigationState, {
             fuel: 0,
+            fuelRange: 0,
             speedLimit: 0,
             restStopMinutes: 0,
             restStoptime: "0",

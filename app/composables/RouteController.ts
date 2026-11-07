@@ -14,11 +14,20 @@ import {
     generateDirectionsList,
     type DirectionStep,
 } from "~/assets/utils/routing/directions";
+import {
+    findNearestPoiAhead,
+    type PoiHit,
+} from "~/assets/utils/routing/poiAlongRoute";
 
 import RouteWorker from "~/workers/route.worker?worker&inline";
 
 const REAL_TIME_DELAY_FACTOR = 0.25;
 const MAX_REAL_TIME_DELAY_MINUTES = 10;
+const PLANNING_CHECK_INTERVAL_MS = 2000;
+const REST_PLANNING_THRESHOLD_MIN = 90;
+const REST_SEARCH_KM_AHEAD = 150;
+const FUEL_SEARCH_KM_AHEAD = 150;
+const POI_MAX_DETOUR_KM = 3;
 
 export const useRouteController = (
     map: Ref<maplibregl.Map | null>,
@@ -58,6 +67,141 @@ export const useRouteController = (
 
     // Incremented once each time the route approaches an urban entry point.
     const urbanAheadTrigger = ref(0);
+
+    // Rest/fuel planning: the next reachable service area or gas station
+    // along the route, drawn as a marker and announced once.
+    const serviceSuggestion = ref<{
+        kind: "rest" | "fuel";
+        kmAhead: number;
+        coords: [number, number];
+    } | null>(null);
+    let lastPlanningCheck = 0;
+
+    function querySpritePoints(sprite: string): [number, number][] {
+        if (!map.value) return [];
+
+        const features = map.value.querySourceFeatures("all-data", {
+            sourceLayer: "spritelocations",
+            filter: ["==", ["get", "sprite"], sprite],
+        });
+
+        const points: [number, number][] = [];
+        for (const feature of features) {
+            const geom = feature.geometry as { type: string; coordinates: unknown };
+            if (geom?.type !== "Point") continue;
+            const coords = geom.coordinates as [number, number];
+            points.push([coords[0]!, coords[1]!]);
+        }
+        return points;
+    }
+
+    function findPoiAhead(
+        kind: "rest" | "fuel",
+        maxKmAhead: number,
+    ): PoiHit | null {
+        const path = currentRoutePath.value;
+        const cache = routeStatsCache.value;
+        if (!path || !cache) return null;
+
+        const sprite = kind === "rest" ? "service_ico" : "gas_ico";
+        return findNearestPoiAhead(
+            path,
+            cache,
+            currentRouteIndex.value,
+            querySpritePoints(sprite),
+            maxKmAhead,
+            POI_MAX_DETOUR_KM,
+        );
+    }
+
+    function updateSuggestionMarker() {
+        if (!map.value || !map.value.getSource("service-suggestion")) return;
+
+        const source = map.value.getSource(
+            "service-suggestion",
+        ) as maplibregl.GeoJSONSource;
+        const suggestion = serviceSuggestion.value;
+
+        source.setData({
+            type: "FeatureCollection",
+            features: suggestion
+                ? [
+                      {
+                          type: "Feature",
+                          geometry: {
+                              type: "Point",
+                              coordinates: suggestion.coords,
+                          },
+                          properties: { kind: suggestion.kind },
+                      },
+                  ]
+                : [],
+        } as any);
+    }
+
+    function updateServicePlanning(
+        fuelRangeKm: number,
+        restStopMinutes: number,
+    ) {
+        const now = Date.now();
+        if (now - lastPlanningCheck < PLANNING_CHECK_INTERVAL_MS) return;
+        lastPlanningCheck = now;
+
+        const cache = routeStatsCache.value;
+        const path = currentRoutePath.value;
+        if (!cache || !path) return;
+
+        const lastIdx = (path.length - 1) * 3;
+        const currentIdx = currentRouteIndex.value * 3;
+        const remGameMinutes = (cache[lastIdx + 1]! - cache[currentIdx + 1]!) * 60;
+        const remKm = cache[lastIdx]! - cache[currentIdx]!;
+
+        const restNeedsStop =
+            restStopMinutes > 0 &&
+            restStopMinutes < REST_PLANNING_THRESHOLD_MIN &&
+            remGameMinutes > restStopMinutes;
+
+        const fuelNeedsStop = fuelRangeKm > 0 && fuelRangeKm < remKm;
+
+        // Rest wins: falling asleep is worse than walking to a pump.
+        if (restNeedsStop) {
+            if (serviceSuggestion.value?.kind !== "rest") {
+                const hit = findPoiAhead("rest", REST_SEARCH_KM_AHEAD);
+                if (hit) {
+                    serviceSuggestion.value = {
+                        kind: "rest",
+                        kmAhead: Math.round(hit.kmAhead),
+                        coords: hit.coords,
+                    };
+                    updateSuggestionMarker();
+                }
+            }
+            return;
+        }
+
+        // Rest taken (or trip short enough): clear the stale suggestion.
+        if (serviceSuggestion.value?.kind === "rest") {
+            serviceSuggestion.value = null;
+            updateSuggestionMarker();
+        }
+
+        if (fuelNeedsStop) {
+            if (serviceSuggestion.value?.kind !== "fuel") {
+                const hit = findPoiAhead("fuel", FUEL_SEARCH_KM_AHEAD);
+                if (hit) {
+                    serviceSuggestion.value = {
+                        kind: "fuel",
+                        kmAhead: Math.round(hit.kmAhead),
+                        coords: hit.coords,
+                    };
+                    updateSuggestionMarker();
+                }
+            }
+        } else if (serviceSuggestion.value?.kind === "fuel") {
+            serviceSuggestion.value = null;
+            updateSuggestionMarker();
+        }
+    }
 
     const currentRouteIndex = ref(0);
     const isWorkerReady = ref(false);
@@ -879,6 +1023,34 @@ export const useRouteController = (
             "all-sprites",
         );
 
+        if (!map.value.getSource("service-suggestion")) {
+            map.value.addSource("service-suggestion", {
+                type: "geojson",
+                data: { type: "FeatureCollection", features: [] },
+            });
+
+            map.value.addLayer(
+                {
+                    id: "service-suggestion-layer",
+                    type: "circle",
+                    source: "service-suggestion",
+                    paint: {
+                        "circle-radius": 9,
+                        "circle-color": [
+                            "match",
+                            ["get", "kind"],
+                            "rest",
+                            "#7dd3fc",
+                            "#f59e0b",
+                        ],
+                        "circle-stroke-color": "#ffffff",
+                        "circle-stroke-width": 2,
+                    },
+                },
+                "all-sprites",
+            );
+        }
+
         if (!map.value.getSource("destination-source")) {
             map.value.addSource("destination-source", {
                 type: "geojson",
@@ -1029,6 +1201,7 @@ export const useRouteController = (
         truckHeading: number,
         sdkScale: number,
         avgSpeed: number,
+        context?: { fuelRangeKm?: number; restStopMinutes?: number },
     ) => {
         if (!currentRoutePath.value || currentRoutePath.value.length < 2)
             return;
@@ -1108,6 +1281,12 @@ export const useRouteController = (
             }
         }
 
+        // Rest / fuel planning against the remaining route.
+        updateServicePlanning(
+            context?.fuelRangeKm ?? 0,
+            context?.restStopMinutes ?? 0,
+        );
+
         if (fullRouteDirections.value.length > 1) {
             const upcomingTurn = fullRouteDirections.value[1];
 
@@ -1186,6 +1365,10 @@ export const useRouteController = (
         routeUrbanKmMarks.value = null;
         nextUrbanMarkIdx = 0;
 
+        serviceSuggestion.value = null;
+        lastPlanningCheck = 0;
+        updateSuggestionMarker();
+
         waypointList.value = [];
         snappedWaypointNodeIds.value = [];
         isYardStart.value = false;
@@ -1208,6 +1391,7 @@ export const useRouteController = (
         isWorkerReady,
         isRouteActive,
         urbanAheadTrigger,
+        serviceSuggestion,
         fullRouteDirections,
         nextTurnDistance,
         initWorkerData,

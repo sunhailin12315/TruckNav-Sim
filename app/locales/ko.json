@@ -74,6 +74,7 @@
         "achievement": "업적 달성",
         "cancelled": "작업 취소됨",
         "delivered": "배달 완료",
+        "grade": "등급",
         "fine": "벌금",
         "ferry": "페리",
         "history": "이벤트 기록",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "외부 경로 감지: 경로 업데이트",
         "followRoute": "경로 따라가기",
+        "restAhead": "휴게소 전방",
+        "fuelAhead": "주유소 전방",
         "urbanAhead": "도시 지역 진입",
         "tappingDisabled": "터치 비활성화",
         "tappingEnabled": "터치 활성화",

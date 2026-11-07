@@ -45,6 +45,7 @@ const {
     speedLimit,
     truckHeading,
     fuel,
+    fuelRange,
     restStoptime,
     restStopMinutes,
     hasInGameMarker,
@@ -114,6 +115,7 @@ const {
     removeWaypointAtIndex,
     findBestWaypointInsertionIndex,
     urbanAheadTrigger,
+    serviceSuggestion,
 } = useRouteController(map, adjacency, nodeCoords, stopNavigationMode);
 
 // Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
@@ -175,6 +177,24 @@ watch(urbanAheadTrigger, () => {
     if (!settings.value.gameplay.urbanWarning) return;
     urbanNotificationTrigger.value++;
     playBeep(600, 150);
+});
+
+// Rest / fuel suggestion: marker lives on the map until cleared by the
+// planner; the toast + beep announce it once.
+const suggestionNotificationTrigger = ref(0);
+const suggestionText = computed(() => {
+    const suggestion = serviceSuggestion.value;
+    if (!suggestion) return "";
+    const label =
+        suggestion.kind === "rest"
+            ? t("map.restAhead")
+            : t("map.fuelAhead");
+    return `${label} · ${suggestion.kmAhead} km`;
+});
+watch(serviceSuggestion, (suggestion) => {
+    if (!suggestion) return;
+    suggestionNotificationTrigger.value++;
+    playBeep(suggestion.kind === "rest" ? 520 : 700, 200, 2);
 });
 
 // Route preference change: recalculate the active route so the new ferry
@@ -519,6 +539,10 @@ function onTelemetryUpdate() {
             truckHeading.value,
             scale.value,
             averageSpeed.value,
+            {
+                fuelRangeKm: fuelRange.value,
+                restStopMinutes: restStopMinutes.value,
+            },
         );
     }
 }
@@ -714,6 +738,29 @@ const onCancelRoute = () => {
                                 name="lucide:building-2"
                                 size="24"
                                 :style="{ color: '#fbc02d' }"
+                            />
+                        </template>
+                    </NotificationGeneral>
+
+                    <NotificationGeneral
+                        :trigger="suggestionNotificationTrigger"
+                        :text="suggestionText"
+                    >
+                        <template #icon>
+                            <Icon
+                                class="notification-icon"
+                                :name="
+                                    serviceSuggestion?.kind === 'rest'
+                                        ? 'lucide:bed-double'
+                                        : 'lucide:fuel'
+                                "
+                                size="24"
+                                :style="{
+                                    color:
+                                        serviceSuggestion?.kind === 'rest'
+                                            ? '#7dd3fc'
+                                            : '#f59e0b',
+                                }"
                             />
                         </template>
                     </NotificationGeneral>

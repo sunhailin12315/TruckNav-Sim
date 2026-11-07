@@ -74,6 +74,7 @@
         "achievement": "Úspěch odemčen",
         "cancelled": "Zakázka zrušena",
         "delivered": "Dodávka dokončena",
+        "grade": "Hodnocení",
         "fine": "Pokuta",
         "ferry": "Trajekt",
         "history": "Historie událostí",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "Externí trasa detekována: Nastaven waypoint",
         "followRoute": "Sledovat cestu",
+        "restAhead": "Odpočinková zóna před námi",
+        "fuelAhead": "Čerpací stanice před námi",
         "urbanAhead": "Vjíždíte do města",
         "tappingDisabled": "Dotyk vypnut",
         "tappingEnabled": "Dotyk zapnut",

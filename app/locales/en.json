@@ -74,6 +74,7 @@
         "achievement": "Achievement Unlocked",
         "cancelled": "Job Cancelled",
         "delivered": "Delivery Complete",
+        "grade": "Grade",
         "fine": "Fine",
         "ferry": "Ferry",
         "history": "Event History",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "External Route Detected: Set Waypoint",
         "followRoute": "Follow Route",
+        "restAhead": "Rest Area Ahead",
+        "fuelAhead": "Gas Station Ahead",
         "urbanAhead": "Entering Urban Area",
         "tappingDisabled": "Tapping Disabled",
         "tappingEnabled": "Tapping Enabled",

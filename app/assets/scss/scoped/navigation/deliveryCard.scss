@@ -110,6 +110,14 @@
             &.bonus {
                 color: var(--theme-color);
             }
+
+            &.grade {
+                font-weight: 700;
+            }
+
+            &.grade.top {
+                color: $green-color;
+            }
         }
     }
 

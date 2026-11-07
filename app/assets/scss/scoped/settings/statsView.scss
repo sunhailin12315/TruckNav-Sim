@@ -137,6 +137,18 @@
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+
+                    .trip-grade {
+                        margin-left: 6px;
+
+                        font-size: 1.15rem;
+                        font-weight: 700;
+                        color: $white-font-text60;
+
+                        &.top {
+                            color: $green-color;
+                        }
+                    }
                 }
 
                 .trip-meta {

@@ -150,6 +150,11 @@ export function useTripLog() {
         return activeTrip !== null;
     }
 
+    /** Fines accumulated by the job in progress (0 when none is active). */
+    function getActiveFinesCount() {
+        return activeTrip ? activeTrip.expenses.finesCount : 0;
+    }
+
     /**
      * Attributes one economy event: always into the global totals, and into
      * the active trip's expenses when the job is running. Returns any
@@ -234,6 +239,7 @@ export function useTripLog() {
         unlocked: toRef(tripLogState, "unlocked"),
         beginTripIfIdle,
         hasActiveTrip,
+        getActiveFinesCount,
         recordEconomyEvent,
         endTrip,
         clearAll,

@@ -74,6 +74,7 @@
         "achievement": "Prestatie ontgrendeld",
         "cancelled": "Opdracht geannuleerd",
         "delivered": "Bezorging voltooid",
+        "grade": "Cijfer",
         "fine": "Boete",
         "ferry": "Veerboot",
         "history": "Gebeurtenissen",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "Externe route gedetecteerd: waypoint instellen",
         "followRoute": "Route volgen",
+        "restAhead": "Rustplaats vooruit",
+        "fuelAhead": "Tankstation vooruit",
         "urbanAhead": "Stadsgebied binnenkomen",
         "tappingDisabled": "Tikken uitgeschakeld",
         "tappingEnabled": "Tikken ingeschakeld",

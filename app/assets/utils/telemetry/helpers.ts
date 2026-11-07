@@ -70,6 +70,10 @@ export function getGameState(data: TelemetryPacket) {
 
 export function getNavigationState(data: TelemetryPacket) {
     const fuel = parseInt(data.truck.current.dashboard.fuelAmount.toFixed(1));
+    const fuelRange = Math.max(
+        0,
+        Math.round(data.truck.current.dashboard.fuelRange),
+    );
     const speedLimit = Math.max(0, Math.round(data.navigation.speedLimitKph));
 
     const totalMinutes = data.common.nextRestStopMinutes;
@@ -80,7 +84,13 @@ export function getNavigationState(data: TelemetryPacket) {
         .toString()
         .padStart(2, "0")}`;
 
-    return { fuel, speedLimit, restStoptime, restStopMinutes: totalMinutes };
+    return {
+        fuel,
+        fuelRange,
+        speedLimit,
+        restStoptime,
+        restStopMinutes: totalMinutes,
+    };
 }
 
 export function getJobState(data: TelemetryPacket, selectedGame: GameType) {

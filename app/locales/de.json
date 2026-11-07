@@ -74,6 +74,7 @@
         "achievement": "Erfolg freigeschaltet",
         "cancelled": "Auftrag abgebrochen",
         "delivered": "Lieferung abgeschlossen",
+        "grade": "Note",
         "fine": "Strafe",
         "ferry": "Fähre",
         "history": "Ereignisverlauf",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "Externe Route erkannt: Wegpunkt setzen",
         "followRoute": "Route folgen",
+        "restAhead": "Rastplatz voraus",
+        "fuelAhead": "Tankstelle voraus",
         "urbanAhead": "Stadtgebiet beginnt",
         "tappingDisabled": "Tippen deaktiviert",
         "tappingEnabled": "Tippen aktiviert",

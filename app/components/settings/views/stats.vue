@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computeTripStats } from "~/assets/utils/gameplay/stats";
 import { ACHIEVEMENTS } from "~/assets/utils/gameplay/achievements";
+import { computeDeliveryGrade } from "~/assets/utils/gameplay/score";
 import {
     currencySymbolFor,
     formatMoney,
@@ -53,6 +54,13 @@ const achievementRows = computed(() =>
 const recentTrips = computed(() =>
     trips.value.slice(0, 20).map((trip) => ({
         id: trip.id,
+        grade:
+            trip.kind === "delivered"
+                ? computeDeliveryGrade(
+                      trip.cargoDamage,
+                      trip.expenses.finesCount,
+                  )
+                : "",
         title:
             trip.kind === "delivered"
                 ? `${trip.sourceCity} → ${trip.destinationCity}`
@@ -192,7 +200,15 @@ onUnmounted(() => {
         <div v-else class="trip-list">
             <div v-for="trip in recentTrips" :key="trip.id" class="trip-row">
                 <div class="trip-main">
-                    <span class="trip-title">{{ trip.title }}</span>
+                    <span class="trip-title">
+                        {{ trip.title }}
+                        <span
+                            v-if="trip.grade"
+                            class="trip-grade"
+                            :class="{ top: trip.grade === 'S' }"
+                            >{{ t("stats.grade") }} {{ trip.grade }}</span
+                        >
+                    </span>
                     <span class="trip-meta">
                         {{ trip.distance }}
                         <template v-if="trip.damage">

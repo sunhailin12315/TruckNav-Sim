@@ -12,6 +12,7 @@ import {
     ACHIEVEMENTS,
     type EconomyTotals,
 } from "~/assets/utils/gameplay/achievements";
+import { computeDeliveryGrade } from "~/assets/utils/gameplay/score";
 import type { TripRecord } from "~/assets/utils/gameplay/tripLog";
 
 const DELIVERY: TripDeliveryData = {
@@ -186,5 +187,17 @@ describe("achievements", () => {
         expect(ids).toContain("old-salt");
         // first-delivery still locked: deliveredCount is 0 here.
         expect(ids).not.toContain("first-delivery");
+    });
+});
+
+describe("computeDeliveryGrade", () => {
+    it("ranks damage and fines into S/A/B/C", () => {
+        expect(computeDeliveryGrade(0, 0)).toBe("S");
+        expect(computeDeliveryGrade(3, 0)).toBe("A");
+        expect(computeDeliveryGrade(10, 0)).toBe("B");
+        expect(computeDeliveryGrade(0, 1)).toBe("B");
+        expect(computeDeliveryGrade(10, 2)).toBe("C");
+        expect(computeDeliveryGrade(25, 0)).toBe("C");
+        expect(computeDeliveryGrade(0, 2)).toBe("C");
     });
 });

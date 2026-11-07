@@ -21,6 +21,8 @@ export interface TruckState {
 
 export interface NavigationState {
     fuel: number;
+    /** Remaining driving range reported by the game dashboard, in km. */
+    fuelRange: number;
     speedLimit: number;
     restStoptime: string;
     restStopMinutes: number;
@@ -43,6 +45,8 @@ export interface JobState {
 
 export type DeliveryKind = "delivered" | "cancelled";
 
+import type { DeliveryGrade } from "~/assets/utils/gameplay/score";
+
 export interface DeliveryInfo {
     kind: DeliveryKind;
     revenue: number;
@@ -53,6 +57,8 @@ export interface DeliveryInfo {
     deliveredAt: string;
     autoParker: boolean;
     autoLoaded: boolean;
+    /** Performance grade, only present on delivered jobs. */
+    grade?: DeliveryGrade;
 }
 
 export interface DeliveryState {

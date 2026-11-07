@@ -161,11 +161,13 @@
 - [x] 5.2 城区提前减速提示（stats cache 附带城区入口 km 标记，1.5km 前预警）
 - [x] 5.4 Discord RPC 增强（送达/罚单/取消状态行，3 分钟 TTL，后续提交）
 
+### ✅ M5 — 沿线服务规划与表现分
+- [x] 3.3 沿路线找休息点（`poiAlongRoute.ts` 纯函数 + `spritelocations` 图层查询，疲劳预算不够时建议前方服务区并打标）
+- [x] 3.4 续航规划（`fuelRange` 对比剩余路线，不足时建议前方加油站打标；rest 优先于 fuel）
+- [x] 5.3 送达表现分（`computeDeliveryGrade` S/A/B/C，进结算卡 chip 与统计页任务行）
+
 ### ⬜ 未实现 / 后续
-- [ ] 3.3 沿路线搜索休息点/加油站打标（服务区 prefab 图层已有，需要沿路线查询）
-- [ ] 3.4 续航规划（`fuelRange` 对比剩余距离，同上路线查询基础设施）
 - [ ] 5.1 避开收费站（需要 QGIS 源数据重跑 `packer.ts` 给边补 toll 标注）
-- [ ] 5.3 送达表现分（数据已在旅程日志里，纯函数可随时加）
 
 ### 待实车验证
 - `remainingDeliveryTime` 日期语义假设（deadline − gameTime）

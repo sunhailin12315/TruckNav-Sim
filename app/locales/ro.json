@@ -74,6 +74,7 @@
         "achievement": "Realizare deblocată",
         "cancelled": "Comandă anulată",
         "delivered": "Livrare finalizată",
+        "grade": "Notă",
         "fine": "Amendă",
         "ferry": "Feribot",
         "history": "Istoric evenimente",
@@ -107,6 +108,8 @@
     "map": {
         "externalRouteDetected": "Ruta externă detectată: Setați punctul de navigare",
         "followRoute": "Continuați traseul",
+        "restAhead": "Zonă de odihnă în față",
+        "fuelAhead": "Benzinărie în față",
         "urbanAhead": "Intrare în zona urbană",
         "tappingDisabled": "Apăsare dezactivată",
         "tappingEnabled": "Apăsare Activată",

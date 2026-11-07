@@ -159,6 +159,19 @@
         "noRouteAvailable": "사용 가능한 경로가 없음",
         "routeFound": "경로 탐색"
     },
+    "driveReport": {
+        "title": "주행 리포트",
+        "sessionDuration": "세션",
+        "deliveredJobs": "작업",
+        "cancelledJobs": "취소",
+        "distance": "거리",
+        "income": "수입",
+        "fines": "벌금",
+        "expenses": "지출",
+        "avgCargoDamage": "평균 손상",
+        "newAchievements": "신규",
+        "empty": "이번 세션에서 완료한 작업이 없습니다."
+    },
     "voice": {
         "aheadOf": "{{m}}미터 앞,"
     },

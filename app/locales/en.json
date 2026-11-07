@@ -159,6 +159,19 @@
         "noRouteAvailable": "No Route Available",
         "routeFound": "Route Found"
     },
+    "driveReport": {
+        "title": "Drive Report",
+        "sessionDuration": "Session",
+        "deliveredJobs": "Jobs",
+        "cancelledJobs": "Cancelled",
+        "distance": "Distance",
+        "income": "Revenue",
+        "fines": "Fines",
+        "expenses": "Expenses",
+        "avgCargoDamage": "Avg Damage",
+        "newAchievements": "New",
+        "empty": "No completed trips this session yet."
+    },
     "voice": {
         "aheadOf": "In {{m}} meters,"
     },

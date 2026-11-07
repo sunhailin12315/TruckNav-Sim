@@ -159,6 +159,19 @@
         "noRouteAvailable": "无可用路线",
         "routeFound": "已找到路线"
     },
+    "driveReport": {
+        "title": "驾驶报告",
+        "sessionDuration": "本次驾驶",
+        "deliveredJobs": "任务",
+        "cancelledJobs": "取消",
+        "distance": "里程",
+        "income": "收入",
+        "fines": "罚款",
+        "expenses": "支出",
+        "avgCargoDamage": "平均货损",
+        "newAchievements": "新成就",
+        "empty": "本次驾驶还没有完成的行程。"
+    },
     "voice": {
         "aheadOf": "前方{{m}}米，"
     },

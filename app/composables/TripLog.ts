@@ -37,6 +37,21 @@ const tripLogState = reactive<TripLogState>({
 // Memory-only: the trip being accumulated right now (lost on app restart).
 let activeTrip: TripAccumulator | null = null;
 
+// Anchors the "this drive" (session) report: trips with an id above
+// sessionMaxTripId were completed during the current app session.
+let sessionStart: { maxTripId: number; wallMs: number } | null = null;
+
+function getSessionStart(): { maxTripId: number; wallMs: number } {
+    if (!sessionStart) {
+        const maxTripId = tripLogState.trips.reduce(
+            (max, trip) => Math.max(max, trip.id),
+            0,
+        );
+        sessionStart = { maxTripId, wallMs: Date.now() };
+    }
+    return sessionStart;
+}
+
 function isTripRecord(value: unknown): value is TripRecord {
     if (!value || typeof value !== "object") return false;
     const record = value as TripRecord;
@@ -237,6 +252,7 @@ export function useTripLog() {
         trips: toRef(tripLogState, "trips"),
         totals: toRef(tripLogState, "totals"),
         unlocked: toRef(tripLogState, "unlocked"),
+        sessionStart: getSessionStart(),
         beginTripIfIdle,
         hasActiveTrip,
         getActiveFinesCount,

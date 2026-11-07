@@ -159,6 +159,19 @@
         "noRouteAvailable": "Niciun traseu disponibil",
         "routeFound": "Traseu găsit"
     },
+    "driveReport": {
+        "title": "Raport de condus",
+        "sessionDuration": "Sesiune",
+        "deliveredJobs": "Transporturi",
+        "cancelledJobs": "Anulate",
+        "distance": "Distanță",
+        "income": "Venituri",
+        "fines": "Amenzi",
+        "expenses": "Cheltuieli",
+        "avgCargoDamage": "Deteriorare medie",
+        "newAchievements": "Noi",
+        "empty": "Niciun transport finalizat în această sesiune."
+    },
     "voice": {
         "aheadOf": "La {{m}} de metri,"
     },

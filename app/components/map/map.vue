@@ -140,10 +140,15 @@ const { unreadCount: unreadEventCount } = useEventFeed();
 const { playBeep, vibrate } = useSoundAlerts();
 
 const isEventDrawerOpen = ref(false);
+const isDriveReportOpen = ref(false);
 const fatigueNotificationTrigger = ref(0);
 
 function toggleEventDrawer() {
     isEventDrawerOpen.value = !isEventDrawerOpen.value;
+}
+
+function toggleDriveReport() {
+    isDriveReportOpen.value = !isDriveReportOpen.value;
 }
 
 // Overspeed edge: one beep when crossing the limit, re-armed once the truck
@@ -791,6 +796,17 @@ const onSelectAlternative = (kind: string) => {
                             ></span>
                             <Icon name="lucide:bell" class="icon" />
                         </HudButton>
+
+                        <HudButton
+                            :is-active="isDriveReportOpen"
+                            :class="{ 'green-icon': isDriveReportOpen }"
+                            :onClick="toggleDriveReport"
+                        >
+                            <Icon
+                                name="lucide:clipboard-list"
+                                class="icon"
+                            />
+                        </HudButton>
                     </div>
 
                     <ManeuverCard
@@ -1045,6 +1061,13 @@ const onSelectAlternative = (kind: string) => {
                 <EventDrawer
                     v-if="isEventDrawerOpen"
                     @close="toggleEventDrawer"
+                />
+            </Transition>
+
+            <Transition name="panel-pop">
+                <DriveReportCard
+                    v-if="isDriveReportOpen"
+                    @close="toggleDriveReport"
                 />
             </Transition>
 

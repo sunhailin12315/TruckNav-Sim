@@ -159,6 +159,19 @@
         "noRouteAvailable": "Keine Route verfügbar",
         "routeFound": "Route gefunden"
     },
+    "driveReport": {
+        "title": "Fahrbericht",
+        "sessionDuration": "Sitzung",
+        "deliveredJobs": "Aufträge",
+        "cancelledJobs": "Abgebrochen",
+        "distance": "Strecke",
+        "income": "Einnahmen",
+        "fines": "Strafen",
+        "expenses": "Ausgaben",
+        "avgCargoDamage": "Ø Ladungsschaden",
+        "newAchievements": "Neu",
+        "empty": "Noch keine abgeschlossenen Aufträge in dieser Sitzung."
+    },
     "voice": {
         "aheadOf": "In {{m}} Metern,"
     },

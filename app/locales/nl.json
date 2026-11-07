@@ -159,6 +159,19 @@
         "noRouteAvailable": "Geen route beschikbaar",
         "routeFound": "Route gevonden"
     },
+    "driveReport": {
+        "title": "Rijrapport",
+        "sessionDuration": "Sessie",
+        "deliveredJobs": "Opdrachten",
+        "cancelledJobs": "Geannuleerd",
+        "distance": "Afstand",
+        "income": "Inkomsten",
+        "fines": "Boetes",
+        "expenses": "Uitgaven",
+        "avgCargoDamage": "Gem. schade",
+        "newAchievements": "Nieuw",
+        "empty": "Nog geen voltooide opdrachten deze sessie."
+    },
     "voice": {
         "aheadOf": "Over {{m}} meter,"
     },

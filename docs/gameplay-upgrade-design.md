@@ -188,6 +188,11 @@
 - [x] 9.3 偏航重算反馈：RouteController 新增 `rerouteTrigger`；toast + soundAlerts 开启时蜂鸣 + 语音"正在重新规划路线"，20s 冷却防刷屏（对标 autoreroute.wav）
 - [x] 9.4 顺带修复存量 i18n 缺口：`settings.urbanWarning` 等键全语言补齐
 
+### ✅ M10 — 驾驶报告卡（对标 DriveReport 卡片）
+- [x] 10.1 纯函数 `computeDriveReport`（stats.ts）：按会话锚点（trip id 单调，过滤天然免疫 500 条环形裁剪）聚合本次驾驶的完成/取消单数、里程、总收入、罚款/收费/渡轮支出、净收入、平均货损，进 vitest
+- [x] 10.2 `TripLog` 暴露 `sessionStart`（首次调用时锚定 maxTripId + 墙钟时间）
+- [x] 10.3 `driveReportCard.vue`：HUD 左侧新增报告按钮（clipboard-list 图标，激活高亮），居中面板（复用结算卡视觉语言）——大字净收入 + chips（任务数/里程/收入/罚款/其他支出/平均货损/本次新增成就）+ 会话时长（30s 刷新）；无行程时显示空态；8 语言文案
+
 ### ⬜ 未实现 / 后续
 - （当前无——若需要全量精确的 toll 边标注，仍可走 packer 重打包替换运行时方案）
 

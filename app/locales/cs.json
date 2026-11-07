@@ -159,6 +159,19 @@
         "noRouteAvailable": "Žádná dostupná trasa!",
         "routeFound": "Trasa nalezena"
     },
+    "driveReport": {
+        "title": "Řidičská zpráva",
+        "sessionDuration": "Relace",
+        "deliveredJobs": "Zakázky",
+        "cancelledJobs": "Zrušeno",
+        "distance": "Vzdálenost",
+        "income": "Příjmy",
+        "fines": "Pokuty",
+        "expenses": "Výdaje",
+        "avgCargoDamage": "Prům. poškození",
+        "newAchievements": "Nové",
+        "empty": "V této relaci zatím žádné dokončené zakázky."
+    },
     "voice": {
         "aheadOf": "Za {{m}} metrů,"
     },

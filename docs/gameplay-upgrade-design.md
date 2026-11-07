@@ -171,6 +171,17 @@
 - 权衡：POI 查询只覆盖已加载瓦片，首次路线计算覆盖不全；开车过程中视口扫过的收费站持续入缓存，reroute 越用越准
 - 如后续拿到 QGIS 源数据，可在 `packer.ts` 给边直接标 toll 字段替换此方案
 
+### ✅ M7 — 高德车机版对标的路线体验（`docs/amap-auto-analysis.md`）
+- [x] 7.1 备选路线对比：规划路线时（点击/加停靠/偏好切换）后台用取反的 `avoidTolls`/`avoidFerries` 各算一条备选；worker 顺带返回 `tollCount`（收费站区域进入计数）/`ferryCount`；底部卡并排显示时间/收费站/渡轮/距离差徽标，点选即更新 profile 开关并重算（偏差重算不触发备选，避免 3 倍计算排队）。纯函数 `routeAlternatives.ts`（汇总 + 0.5% 同路去重）进 vitest
+- [x] 7.2 全程概览（Preview 态）：`MapCamera.enterRoutePreview/exitRoutePreview`——fitBounds 路线包围盒、8s 自动回跟车、用户拖动即退出；导航中 HUD 新增地图按钮，恢复用户原有自动跟随偏好
+- [x] 7.3 沿途建议绕行代价：`findNearestPoiAhead` 返回 `poiCoords`（标记移到 POI 本体）+ `detourKm`，toast 追加"绕行 +X km(约 Y 分钟)"（`estimateDetourMinutes`，无均速时按 60km/h 兜底），进 vitest
+
+### ✅ M8 — 昼夜氛围（对标 day/night 主题对 + 六时态天空）
+- [x] 8.1 settings v5：profile 新增 `dayNightMode: off/auto/day/night`（默认 off），迁移已实装并测试
+- [x] 8.2 纯函数 `dayNight.ts`：连续 `nightFactor`（昼 06–18=0，夜 20–04=1，晨 04–06 / 暮 18–20 线性过渡）+ 四时相 + 夜色推导（夜色由用户配色暗化+蓝黑罩生成，任何自定义主题都适用）；`mixHexColors` 进 colors.ts
+- [x] 8.3 `useDayNight` composable：gameTime（"Wed 21:30"）→ factor → `mapColors`（land/water/road 混合色）；MapLibre 建图用混合色 + `watch(mapColors)` → `setPaintProperty` 实时联动（background/water/country-borders/water-outline/roads），watcher 随 `map.remove` 销毁——顺带修了"改配色必须重进地图"的旧问题
+- [x] 8.4 HUD 夜间联动：`--theme-color`/`--main-text-color` 改由 DayNight 统一写（Settings 只管字体/尺寸变量），夜间主题色与文字自动减光；外观设置新增"昼/夜模式"选择器（USelect，8 语言文案）
+
 ### ⬜ 未实现 / 后续
 - （当前无——若需要全量精确的 toll 边标注，仍可走 packer 重打包替换运行时方案）
 

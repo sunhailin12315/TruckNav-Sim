@@ -1,6 +1,6 @@
 # Truck Nav
 
-**Truck Nav** is an external GPS navigation system for Euro Truck Simulator 2 and American Truck Siulator built using TypeScript. It runs as an APK (Android), EXE (Desktop) or browser-perfect for a phone, tablet or second monitor and provides real-time tracking, live ETAs, and routing based on the in-game map.
+**Truck Nav** is an external GPS navigation system for Euro Truck Simulator 2 and American Truck Simulator built using TypeScript. It runs as an APK (Android), EXE (Desktop) or browser-perfect for a phone, tablet or second monitor and provides real-time tracking, live ETAs, and routing based on the in-game map.
 
 <div align="center">
     <a href="https://discord.gg/C5BTXCF2jC">
@@ -36,7 +36,7 @@ While the core navigation works, the project is far from perfect. Creating the r
 ### 📈 Performance & Compatibility
 > [!NOTE]
 >*  **Performance:** Optimization is ongoing. On older tablets or phones, the map rendering may feel laggy. 
->*  **Map Support:** Currently supports base _**ETS2/ATS + all DLCs** (**up to v1.58**)_. ProMods and other map mods are **NOT** yet supported.
+>*  **Map Support:** Currently supports base _**ETS2/ATS + all DLCs** (**up to v1.61**)_. Community map mods (ProMods, RusMap, Reforma, Coast to Coast, RO-Extended, Grand Utopia and more) are supported — see the status section above.
 
 > [!CAUTION]
 > **Real Company Name Mods:** Not supported anymore with the latest version.

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Vendored from scs-sdk-plugin (MIT, Copyright (c) 2014 Hans Rencken), C# client
+       rev 1.12. Parser offsets match the scs-telemetry.dll shipped in electron/bin.
+       Retargeted from net48 to net8.0: the code itself needs nothing Windows-only
+       except MemoryMappedFile.CreateOrOpen, which net8 supports on Windows. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>SCSSdkClient</AssemblyName>
+    <RootNamespace>SCSSdkClient</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>none</DebugType>
+    <NoWarn>CS1570;CS1591;NU1701;CA1416</NoWarn>
+  </PropertyGroup>
+</Project>

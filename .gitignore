@@ -32,3 +32,10 @@ public/debug-roadnetwork/
 # Downloaded offline TTS model (npm run tts:model)
 electron/tts-models/*
 !electron/tts-models/.gitkeep
+
+# Bridge build outputs (source lives in bridge/, the shipped exe lives in electron/bin/)
+bridge/bin/
+bridge/obj/
+bridge/*/bin/
+bridge/*/obj/
+bridge/publish/

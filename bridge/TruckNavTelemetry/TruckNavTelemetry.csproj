@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    TruckNav telemetry bridge: reads the SCS shared-memory telemetry map and
+    rebroadcasts a JSON packet to every WebSocket client on ws://0.0.0.0:30001.
+
+    1.1.0: add job.remainingDeliveryMinutes — the SIGNED remaining minutes
+    (negative = overdue). The pre-existing remainingDeliveryTime stays exactly
+    as before (unsigned |delta| anchored at the .NET epoch) so old clients
+    keep working.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>TruckNavTelemetry</AssemblyName>
+    <RootNamespace>TruckNavTelemetry</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Version>1.1.0</Version>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fleck" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SCSSdkClient\SCSSdkClient.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>SmokeA</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

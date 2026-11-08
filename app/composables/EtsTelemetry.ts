@@ -8,6 +8,13 @@ import {
     getRemainingDeliveryMinutes,
     getTruckState,
 } from "~/assets/utils/telemetry/helpers";
+import {
+    decodeBridgeMinutes,
+    initialDeliveryDeadlineState,
+    jobSignatureOf,
+    observeDeliveryDeadline,
+    type DeliveryDeadlineState,
+} from "~/assets/utils/telemetry/deliveryDeadline";
 import { currencySymbolFor, formatMoney } from "~/assets/utils/shared/format";
 import type { AchievementDef } from "~/assets/utils/gameplay/achievements";
 import { computeDeliveryGrade } from "~/assets/utils/gameplay/score";
@@ -89,6 +96,8 @@ function formatGameClock(isoTime: string) {
 let lastPosition: [number, number] | null = null;
 let headingOffset = 0;
 let lastRpcSignature = "";
+let deliveryDeadlineState: DeliveryDeadlineState =
+    initialDeliveryDeadlineState;
 
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -339,15 +348,42 @@ export function useEtsTelemetry() {
 
         const jobDetails = getJobDetails(data);
 
+        // Signed remaining minutes. Prefer a newer bridge's explicit field;
+        // otherwise recover the sign from the |delta| encoding with the
+        // game-clock state machine. Only when an active job is on.
+        let remainingMinutes: number | null = null;
+        if (hasActiveJob) {
+            const explicit = data.job.remainingDeliveryMinutes;
+            if (typeof explicit === "number" && Number.isFinite(explicit)) {
+                // 0 = no delivery window (bridge guard for a missing clock);
+                // beyond a week is implausible in-game.
+                remainingMinutes =
+                    explicit === 0 || explicit > 7 * 24 * 60
+                        ? null
+                        : explicit;
+            } else {
+                const unsigned = getRemainingDeliveryMinutes(
+                    data.job.remainingDeliveryTime,
+                );
+                const outcome = observeDeliveryDeadline(
+                    deliveryDeadlineState,
+                    jobSignatureOf(data),
+                    unsigned,
+                    decodeBridgeMinutes(data.common.gameTime),
+                );
+                deliveryDeadlineState = outcome.state;
+                remainingMinutes = outcome.signedMinutes;
+            }
+        } else {
+            deliveryDeadlineState = initialDeliveryDeadlineState;
+        }
+
         Object.assign(jobState, {
             hasActiveJob: hasActiveJob,
             destinationCity: destinationCity,
             destinationCompany: destinationCompany,
             ...jobDetails,
-            remainingMinutes: getRemainingDeliveryMinutes(
-                data.job.remainingDeliveryTime,
-                data.common.gameTime,
-            ),
+            remainingMinutes,
         });
 
         detectDeliveryEnd(data, hasActiveJob);

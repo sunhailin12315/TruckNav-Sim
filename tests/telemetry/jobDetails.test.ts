@@ -5,10 +5,13 @@ import {
 } from "~/assets/utils/telemetry/helpers";
 import type { TelemetryPacket } from "~/types";
 
-const GAME_TIME = "2026-01-10T12:00:00.000Z";
+// The bridge anchors bare minute counts at the .NET DateTime epoch, so
+// "385 minutes left" is sent as "0001-01-01T06:25:00Z". Encode samples the
+// same way instead of hand-writing strings.
+const YEAR_ONE_MS = -62135596800000; // Date.parse("0001-01-01T00:00:00Z")
 
-function minutesFromNow(minutes: number) {
-    return new Date(new Date(GAME_TIME).getTime() + minutes * 60000).toISOString();
+function bridgeRemainingTime(minutes: number) {
+    return new Date(YEAR_ONE_MS + minutes * 60000).toISOString();
 }
 
 function packetWithJob(job: Partial<TelemetryPacket["job"]>): TelemetryPacket {
@@ -34,36 +37,26 @@ function packetWithJob(job: Partial<TelemetryPacket["job"]>): TelemetryPacket {
 }
 
 describe("getRemainingDeliveryMinutes", () => {
-    it("returns the minutes left until the deadline", () => {
-        expect(
-            getRemainingDeliveryMinutes(minutesFromNow(90), GAME_TIME),
-        ).toBe(90);
+    it("decodes the bridge's epoch-anchored minute count", () => {
+        expect(getRemainingDeliveryMinutes(bridgeRemainingTime(385))).toBe(385);
+        expect(getRemainingDeliveryMinutes("0001-01-01T06:25:00Z")).toBe(385);
     });
 
-    it("returns negative minutes for an overdue deadline", () => {
+    it("returns null when no delivery window is set (0 minutes)", () => {
         expect(
-            getRemainingDeliveryMinutes(minutesFromNow(-30), GAME_TIME),
-        ).toBe(-30);
+            getRemainingDeliveryMinutes("0001-01-01T00:00:00Z"),
+        ).toBeNull();
     });
 
-    it("returns null when the deadline is implausibly far away", () => {
+    it("returns null beyond a week (implausible in-game)", () => {
         expect(
-            getRemainingDeliveryMinutes(minutesFromNow(8 * 24 * 60), GAME_TIME),
-        ).toBe(null);
-    });
-
-    it("returns null for a duration misread as a date", () => {
-        // A 1h30m duration encoded as time-since-epoch lands far outside
-        // the plausible window relative to the game time.
-        expect(
-            getRemainingDeliveryMinutes("0001-01-01T01:30:00.000Z", GAME_TIME),
-        ).toBe(null);
+            getRemainingDeliveryMinutes(bridgeRemainingTime(8 * 24 * 60)),
+        ).toBeNull();
     });
 
     it("returns null on missing or malformed input", () => {
-        expect(getRemainingDeliveryMinutes("", GAME_TIME)).toBe(null);
-        expect(getRemainingDeliveryMinutes(minutesFromNow(90), "")).toBe(null);
-        expect(getRemainingDeliveryMinutes("not-a-date", GAME_TIME)).toBe(null);
+        expect(getRemainingDeliveryMinutes("")).toBeNull();
+        expect(getRemainingDeliveryMinutes("not-a-date")).toBeNull();
     });
 });
 

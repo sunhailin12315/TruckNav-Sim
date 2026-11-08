@@ -109,7 +109,12 @@ export interface TrailerDamageData {
  * JOB DATA CATEGORY
  */
 export interface JobData {
-    remainingDeliveryTime: string; // ISO Date String
+    remainingDeliveryTime: string; // Minutes-left count anchored at year 0001 (see getRemainingDeliveryMinutes)
+    /**
+     * Signed remaining minutes to the delivery deadline (negative = overdue),
+     * sent only by newer bridges. Wins over remainingDeliveryTime when set.
+     */
+    remainingDeliveryMinutes?: number;
     cargoLoaded: boolean;
     specialJob: boolean;
     jobType: string;

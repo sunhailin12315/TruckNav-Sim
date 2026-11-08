@@ -197,7 +197,10 @@
 - （当前无——若需要全量精确的 toll 边标注，仍可走 packer 重打包替换运行时方案）
 
 ### 待实车验证
-- `remainingDeliveryTime` 日期语义假设（deadline − gameTime）
 - 渡轮/火车 flag 存活时长与详情到达时序（上升沿 + 4s 窗口是否够）
 - 25km 渡轮惩罚量级、1.5km 城区预警距离的体感调参
 - Electron WebAudio 首帧需用户手势（已有 `resume()` 兜底）
+
+### 已核实（原"待实车验证"项）
+- `remainingDeliveryTime` 语义：bridge 发的不是绝对截止时间，而是**剩余分钟数**被锚在 .NET DateTime 纪元（公元 1 年）伪造成日期（剩 385 分 = `"0001-01-01T06:25:00Z"`）。故前端必须直接解码分钟数，不能 `deadline − gameTime`（两者都锚在公元 1 年，相减恒为巨大负数 → 之前任务一直显示"已超时"/被裁剪隐藏）。见 `helpers.ts:getRemainingDeliveryMinutes`。
+- 逾期检测：旧 bridge 对差值取 `Math.Abs`（负=已超也变正）。已重建 bridge（`bridge/`，v1.1.0）新增带符号字段 `job.remainingDeliveryMinutes`（负=超时）；旧 bridge 下前端用两帧方向恢复状态机兜底（`deliveryDeadline.ts`：剩余分钟随游戏时钟减小→未到期，增大→已超时，一旦定案即锁存绝对截止分钟）。

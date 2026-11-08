@@ -1,5 +1,6 @@
 import { convertAtsToGeo, convertEts2ToGeo } from "../map/converters";
 import { getBearing } from "../map/maths";
+import { decodeBridgeMinutes } from "./deliveryDeadline";
 import type { GameType, TelemetryPacket } from "~/types";
 
 export function getTruckState(
@@ -153,24 +154,26 @@ export function getJobDetails(data: TelemetryPacket) {
 }
 
 /**
- * Remaining minutes until the delivery deadline, computed against the
- * current game time. The plugin reports both as absolute game timestamps,
- * so implausible results (e.g. a bare duration misread as a date) degrade
- * to null instead of showing a bogus countdown.
+ * Remaining minutes until the delivery deadline.
+ *
+ * The bridge does NOT send an absolute deadline date: it encodes the plain
+ * minute count as a fake date at the .NET DateTime epoch (year 0001), e.g.
+ * 385 minutes left arrives as "0001-01-01T06:25:00Z". So the value is read
+ * back as minutes-since-year-1, not subtracted from gameTime. Note the
+ * bridge takes Math.Abs() of the delta, so an already-passed deadline
+ * arrives as a positive count; the sign is recovered per-job by
+ * deliveryDeadline.ts.
  */
 export function getRemainingDeliveryMinutes(
-    deliveryTimeIso: string,
-    gameTimeIso: string,
+    remainingTimeIso: string,
 ): number | null {
-    const deadline = new Date(deliveryTimeIso).getTime();
-    const gameTime = new Date(gameTimeIso).getTime();
+    const minutes = decodeBridgeMinutes(remainingTimeIso);
 
-    if (Number.isNaN(deadline) || Number.isNaN(gameTime)) return null;
+    if (minutes === null) return null;
 
-    const minutes = (deadline - gameTime) / 60000;
-
-    // Plausible window: 24h overdue up to a week of remaining time.
-    if (minutes < -24 * 60 || minutes > 7 * 24 * 60) return null;
+    // 0 means "no delivery window set" (no active job); anything beyond a
+    // week is implausible in-game and treated as missing.
+    if (minutes <= 0 || minutes > 7 * 24 * 60) return null;
 
     return minutes;
 }

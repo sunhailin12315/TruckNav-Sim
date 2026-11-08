@@ -10,6 +10,11 @@ import {
     simplifyPath,
     smoothPath,
 } from "~/assets/utils/routing/algorithm";
+import {
+    finishRouteAtDoor,
+    truckHeadApproach,
+    yardJoinPoint,
+} from "~/assets/utils/routing/approachLines";
 import type { MapScaleConfig } from "~/composables/CityData";
 
 let cityNodes: WorkerCityArea[] | null = null;
@@ -27,6 +32,34 @@ let tollPointsGeo: [number, number][] = [];
 let tollPointsRevision = 0;
 let tollNodeSetBuilt = -1;
 let tollNodeSet: Set<number> | null = null;
+
+// The polyline geometry of one graph edge, looked up in the loaded adjacency.
+// The endpoint wiring (approachLines) slices the edge the truck stands on,
+// identified by its two nodes. Null when the graph does not know the edge.
+function edgeGeometry(
+    fromId: number,
+    toId: number,
+): [number, number][] | null {
+    if (!adjacency || !geometryF32) return null;
+    const edges = adjacency.get(fromId);
+    if (!edges) return null;
+    const edge = edges.find((e) => e.to === toId);
+    if (
+        !edge ||
+        edge.startIndex === undefined ||
+        edge.pointCount === undefined
+    ) {
+        return null;
+    }
+    const points: [number, number][] = [];
+    for (let p = 0; p < edge.pointCount; p++) {
+        points.push([
+            geometryF32[edge.startIndex + p * 2]!,
+            geometryF32[edge.startIndex + p * 2 + 1]!,
+        ]);
+    }
+    return points;
+}
 
 function buildTollNodeSet(): Set<number> | null {
     if (tollNodeSetBuilt === tollPointsRevision) return tollNodeSet;
@@ -70,8 +103,7 @@ function buildTollNodeSet(): Set<number> | null {
     return tollNodeSet;
 }
 
-class TypedNodeCoordsMap {
-    private array: Float64Array;
+class TypedNodeCoordsMap {    private array: Float64Array;
     public size: number;
 
     constructor(array: Float64Array) {
@@ -551,7 +583,44 @@ self.onmessage = async (e: MessageEvent) => {
             }
 
             const simplified = simplifyPath(combinedPathCoords, 0.00003);
-            const finalSmoothedPath = smoothPath(simplified, 4);
+            const smoothed = smoothPath(simplified, 4);
+
+            // Wire the route's real ends onto the drawn line before the stats
+            // cache is built, so remaining km, ETA and the arrival test
+            // measure to the places the drive actually has: in front, the
+            // truck leads the line with the road behind the start node (the
+            // route would else start at the node ahead of it, leaving the
+            // stretch under the wheels behind the line — read as a deviation,
+            // and double-counted in the distance); behind, the line is cut at
+            // the destination's door (it would else run to the snapped node
+            // and report arrival there, however far the place stood). See
+            // approachLines for what makes each splice honest.
+            const startEdge = payload.startEdge;
+            const approachEdgePoints =
+                startEdge && startEdge.fromId !== startEdge.toId
+                    ? edgeGeometry(startEdge.fromId, startEdge.toId)
+                    : null;
+            const headApproach =
+                approachEdgePoints && approachEdgePoints.length >= 2
+                    ? truckHeadApproach(
+                          approachEdgePoints,
+                          payload.truckCoords ?? null,
+                          smoothed[0]!,
+                      )
+                    : [
+                          yardJoinPoint(
+                              smoothed[0]!,
+                              payload.truckCoords ?? null,
+                          ),
+                      ].filter((p): p is [number, number] => p !== null);
+            const doorCut = finishRouteAtDoor(
+                smoothed,
+                waypointsCoords[waypointsCoords.length - 1] ?? null,
+            );
+            const finalSmoothedPath =
+                headApproach.length > 0
+                    ? [...headApproach, ...doorCut]
+                    : doorCut;
 
             const { stats: finalStatsCache, urbanKmMarks } =
                 buildRouteStatsCache(
@@ -589,6 +658,17 @@ self.onmessage = async (e: MessageEvent) => {
                 nodeKms[i] = finalStatsCache[bestIdx * 3]!;
                 nodeDisplayIndices[i] = bestIdx;
             }
+
+            // The final node stands for the destination in the guidance (the
+            // "Arrived" step's km and its spoken marks count down to it), so
+            // map it to the line's true end — the door once it is wired, the
+            // node itself otherwise, where this is a no-op. Without it the
+            // last cue would fire a stub early and the step would advance
+            // before the truck is parked.
+            const lastNode = combinedNodeSequence.length - 1;
+            nodeKms[lastNode] =
+                finalStatsCache[(finalSmoothedPath.length - 1) * 3]!;
+            nodeDisplayIndices[lastNode] = finalSmoothedPath.length - 1;
 
             const sequenceManeuvers = new Int8Array(
                 combinedNodeSequence.length,

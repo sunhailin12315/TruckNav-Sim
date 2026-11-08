@@ -175,6 +175,10 @@ Rust 侧：**同一时刻只允许一个在途请求**；新请求把旧请求�
 > P0.2 朝向投影与吸附（`routeProjection.ts`）、P1.3 角度箭头（`maneuverGlyph.ts` + `directions.ts` 的
 > `angle`/u-turn）、P1.4 引导卡转场、P1.5 POI 网格化与分级可达、P2.6 途经点 ETA（`nextStop.ts` +
 > jobCard 途经行）、P2.8 worker RPC 超时兜底均已实现并配测试；P2.7 TruckersMP 交通层仍为观察项。
+> 追加（2026-11-08）：两端接线 `approachLines.ts` —— §2.2 的 `approachLine` 落地（卡车边缘切片
+> 引导路线头部）+ 终点"到门"裁剪（线尾最近的门点落地、超程裁剪、末端节点映射到最后点）+
+> 到站判定加沿线里程上限护栏（弦距离 + 沿线剩余 km 双条件），修复"离目的地很远就到站 / 开始即
+> 误偏航"；`directions.ts` destination 步补 `cumulativeKm`，最后的接近播报与倒计时得以触发。
 
 ### 明确不抄的
 

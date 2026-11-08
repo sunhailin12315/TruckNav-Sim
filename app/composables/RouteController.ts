@@ -32,6 +32,7 @@ import {
     type RouteAlternativeSummary,
 } from "~/assets/utils/routing/routeAlternatives";
 import { nextStopKm } from "~/assets/utils/routing/nextStop";
+import { isArrived } from "~/assets/utils/routing/approachLines";
 
 import RouteWorker from "~/workers/route.worker?worker&inline";
 
@@ -179,6 +180,10 @@ export const useRouteController = (
     // Incremented whenever a deviation triggers a recalculation, so the UI
     // can announce the replan (AMap's autoreroute cue).
     const rerouteTrigger = ref(0);
+
+    // Incremented when the truck reaches the route end, so the UI can
+    // announce the arrival — distinct from cancelling the route.
+    const arrivalTrigger = ref(0);
 
     // Rest/fuel planning: the next reachable service area or gas station
     // along the route, drawn as a marker and announced once.
@@ -537,6 +542,8 @@ export const useRouteController = (
         waypointsNodeGroups: number[][],
         truckHeading: number,
         startType: string,
+        truckCoords: [number, number],
+        startEdge: { fromId: number; toId: number },
         ownedDlcs: number[],
         sdkScale: number,
         avgSpeed: number,
@@ -570,6 +577,8 @@ export const useRouteController = (
                         waypointsNodeGroups,
                         truckHeading,
                         startType,
+                        truckCoords,
+                        startEdge,
                         ownedDlcs,
                         sdkScale,
                         avgSpeed,
@@ -672,6 +681,8 @@ export const useRouteController = (
                 waypointsNodeGroups,
                 truckHeading,
                 startConfig.type as "road" | "yard",
+                truckCoords,
+                { fromId: startConfig.fromId, toId: startConfig.toId },
                 userDlcs,
                 sdkScale,
                 avgSpeed,
@@ -768,6 +779,8 @@ export const useRouteController = (
                         waypointsNodeGroups,
                         truckHeading,
                         startConfig.type as "road" | "yard",
+                        truckCoords,
+                        { fromId: startConfig.fromId, toId: startConfig.toId },
                         userDlcs,
                         sdkScale,
                         avgSpeed,
@@ -791,6 +804,8 @@ export const useRouteController = (
         waypointsNodeGroups: number[][],
         heading: number,
         startType: string,
+        truckCoords: [number, number],
+        startEdge: { fromId: number; toId: number },
         ownedDlcs: number[],
         sdkScale: number,
         avgSpeed: number,
@@ -849,6 +864,21 @@ export const useRouteController = (
                     startId: Number(startId),
                     waypointsCoords: cleanCoords,
                     waypointsNodeGroups: cleanNodeGroups,
+                    // Where the truck is, and the graph edge behind it: the
+                    // worker leads the drawn line with the road from the
+                    // truck to the route's first node (the route would else
+                    // start at the node ahead of it — which the deviation
+                    // check reads as a wrong turn, and which inflates the
+                    // first distances). A yard start has no edge: it joins
+                    // with a short stub if the line's head is close.
+                    truckCoords: [
+                        Number(truckCoords[0]),
+                        Number(truckCoords[1]),
+                    ],
+                    startEdge: {
+                        fromId: Number(startEdge.fromId),
+                        toId: Number(startEdge.toId),
+                    },
                     heading: heading !== null ? Number(heading) : null,
                     startType,
                     ownedDlcs: cleanDlcs,
@@ -975,14 +1005,21 @@ export const useRouteController = (
         ) as maplibregl.GeoJSONSource;
         if (!source) return;
 
+        const lastIndex = waypointList.value.length - 1;
         const features = waypointList.value.map((coords, idx) => {
+            // Intermediate stops mark the road point the route passes (the
+            // snap); the final stop marks the place itself — with the stub
+            // spliced, that is where the route line now ends, and without it
+            // (a fallback snap) it is still where the driver meant to be.
             let markerCoords = coords;
 
-            const targetNodeId = snappedWaypointNodeIds.value[idx];
-            if (targetNodeId !== undefined) {
-                const snappedCoords = nodeCoords.get(targetNodeId);
-                if (snappedCoords) {
-                    markerCoords = snappedCoords;
+            if (idx !== lastIndex) {
+                const targetNodeId = snappedWaypointNodeIds.value[idx];
+                if (targetNodeId !== undefined) {
+                    const snappedCoords = nodeCoords.get(targetNodeId);
+                    if (snappedCoords) {
+                        markerCoords = snappedCoords;
+                    }
                 }
             }
 
@@ -1560,12 +1597,6 @@ export const useRouteController = (
 
         let activeThreshold = DEVIATION_THRESHOLD_SQ;
 
-        const distToEndSq = getSquaredDist(truckCoords, path[path.length - 1]!);
-        if (distToEndSq < 0.00005) {
-            clearRouteState();
-            return;
-        }
-
         const lastIdx = (path.length - 1) * 3;
         const currentIdx = bestIndex * 3;
 
@@ -1580,6 +1611,27 @@ export const useRouteController = (
         const remKm = totalKm - currentKm;
         const remGameHours = totalGameHours - currentGameHours;
         const remRealHours = totalRealHours - currentRealHours;
+
+        // Arrival, judged against the route's true end (the destination's
+        // door once the worker cuts it, the last reachable node otherwise)
+        // and the destination itself: near the line's end with the trip over,
+        // or parked on the place. The old bare chord test to the path's end
+        // — the *node*, on any road passing it — is what ended runs far short.
+        const destination =
+            waypointList.value[waypointList.value.length - 1] ?? null;
+        if (
+            isArrived(
+                truckCoords,
+                path[path.length - 1]!,
+                destination,
+                remKm,
+            )
+        ) {
+            arrivalTrigger.value++;
+            clearRouteState();
+            return;
+        }
+
         routeDistance.value = Math.round(remKm);
 
         updateRouteEta(remGameHours, remRealHours);
@@ -1729,6 +1781,7 @@ export const useRouteController = (
         isRouteActive,
         urbanAheadTrigger,
         rerouteTrigger,
+        arrivalTrigger,
         serviceSuggestion,
         routeAlternatives,
         primaryRouteSummary,

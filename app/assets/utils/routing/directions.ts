@@ -164,7 +164,10 @@ export function generateDirectionsList(
         }
     }
 
-    // Add Destination
+    // Add Destination. Its km are what the card and the spoken approach
+    // cues count down (map.vue's marks need `cumulativeKm` to be defined);
+    // the step used to carry none, so the final cue never fired and the
+    // distance read stuck at the previous turn until arrival cleared it.
     const totalKm = nodeKms[nodeSequence.length - 1];
     steps[steps.length - 1]!.distance = Math.max(0, totalKm! - lastStepKm);
     steps.push({
@@ -175,6 +178,8 @@ export function generateDirectionsList(
         coords: nodeCoords.get(nodeSequence[nodeSequence.length - 1]!) || [
             0, 0,
         ],
+        cumulativeKm: totalKm,
+        exitCumulativeKm: totalKm,
         nodeIndex: nodeSequence.length - 1,
     });
 

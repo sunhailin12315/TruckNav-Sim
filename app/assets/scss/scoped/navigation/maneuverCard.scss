@@ -1,30 +1,29 @@
+// AMap car-unit style turn card: a floating panel with a big maneuver arrow,
+// an oversized distance and the instruction — then the following turn as a
+// subdued "then" row.
 .card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
     position: absolute;
-    top: calc($game-info-bar-height + 1.8rem);
+    top: calc($game-info-bar-height + 1.2rem);
     left: 50%;
     transform: translate(-50%, 0);
 
+    width: min(480px, calc(100vw - 32px));
+    padding: 12px 18px 10px;
+
+    background-color: $card-bg;
+    border: $card-border;
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
+
+    backdrop-filter: blur(6px);
+
     color: $white-font-text;
-
-    width: 53%;
-    height: 90px;
-
-    background-color: rgb(38, 52, 68, 0.95);
-    border: 1px solid $secondaryColor;
-    border-radius: 8px;
-
-    backdrop-filter: blur(2px);
-
-    font-size: 1.7rem;
+    z-index: 1300;
 
     @media (orientation: landscape) {
-        width: 30%;
         left: 8%;
-        transform: translate(0%, 0);
+        transform: translate(0, 0);
+        width: min(480px, 36%);
 
         @media (max-width: 700px) {
             left: 11%;
@@ -32,28 +31,98 @@
     }
 }
 
-.turn-directions {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-
+.maneuver-main {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 2.1rem;
-    width: 100%;
-    padding: 0.4rem 1.6rem;
-    background-color: rgba($color: #000000, $alpha: 0.15);
+    gap: 1.4rem;
 }
 
-.direction-arrow {
-    width: 32px;
-    height: 32px;
-}
-
-.turn-info {
+.main-arrow {
     display: flex;
-    justify-content: space-between;
-    line-height: 1.23;
-    margin-bottom: 0.4rem;
-    padding: 0.6rem 1.4rem;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 58px;
+    height: 58px;
+
+    :deep(.icon-wrapper) {
+        width: 100%;
+        height: 100%;
+    }
+
+    :deep(svg) {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.maneuver-text {
+    min-width: 0;
+}
+
+.maneuver-distance {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: 0.5px;
+
+    .unit {
+        margin-left: 3px;
+
+        font-size: 1.5rem;
+        font-weight: 700;
+        opacity: 0.85;
+    }
+}
+
+.maneuver-instruction {
+    margin-top: 2px;
+
+    font-size: 1.8rem;
+    font-weight: 700;
+    opacity: 0.95;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.maneuver-next {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 9px;
+    padding-top: 8px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    opacity: 0.78;
+
+    .then-label {
+        font-size: 1.3rem;
+    }
+
+    .next-arrow {
+        display: flex;
+        align-items: center;
+
+        width: 22px;
+        height: 22px;
+
+        :deep(.icon-wrapper) {
+            width: 100%;
+            height: 100%;
+        }
+
+        :deep(svg) {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .next-distance {
+        font-size: 1.35rem;
+        font-weight: 700;
+    }
 }

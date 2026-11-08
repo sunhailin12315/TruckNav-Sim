@@ -159,6 +159,9 @@ export class ElectronCapacitorApp {
                 nodeIntegration: true,
                 contextIsolation: true,
                 preload: preloadPath,
+                // A second-screen navigation HUD must keep rendering (and
+                // keep Vue transitions alive) even when the game covers it.
+                backgroundThrottling: false,
             },
         });
 

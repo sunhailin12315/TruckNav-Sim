@@ -3,10 +3,10 @@
     width: min(400px, calc(100vw - 40px));
     padding: 16px 18px;
 
-    background-color: $primaryDarkerColor;
-    border: 2px solid var(--theme-color);
-    border-radius: 18px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    background-color: $card-bg;
+    border: $card-border;
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
 
     color: $white-font-text;
 
@@ -122,6 +122,6 @@
     }
 
     &.cancelled {
-        border-color: $red-color;
+        // The red header icon already carries the cancelled semantics.
     }
 }

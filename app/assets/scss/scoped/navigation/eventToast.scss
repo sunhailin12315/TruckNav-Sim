@@ -13,9 +13,9 @@
     max-width: min(340px, calc(100vw - 40px));
     padding: 6px 14px;
 
-    border: 2px solid $secondaryColor;
-    border-radius: 8px;
-    background-color: $primaryColor;
+    border: $card-border;
+    border-radius: 10px;
+    background-color: $card-bg;
     color: $white-font-text;
     font-size: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);

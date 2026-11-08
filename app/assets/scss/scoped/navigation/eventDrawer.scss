@@ -20,10 +20,10 @@
 
     padding: 10px;
 
-    background-color: $primaryColor;
-    border: 2px solid var(--theme-color);
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    background-color: $card-bg;
+    border: $card-border;
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
 
     color: $white-font-text;
 

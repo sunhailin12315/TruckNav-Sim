@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "vyjazd na kruhovom objezde",
         "takeExit": "Použij zjazd",
         "turnLeft": "Zahni doľava",
-        "turnRight": "Zahni doprava"
+        "turnRight": "Zahni doprava",
+        "then": "Potom"
     },
     "events": {
         "achievement": "Úspech odomknutý",

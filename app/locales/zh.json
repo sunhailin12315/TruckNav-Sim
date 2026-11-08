@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "在环岛驶出",
         "takeExit": "驶出匝道",
         "turnLeft": "左转",
-        "turnRight": "右转"
+        "turnRight": "右转",
+        "then": "然后"
     },
     "events": {
         "achievement": "解锁成就",

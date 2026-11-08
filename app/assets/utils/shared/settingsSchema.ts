@@ -70,7 +70,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 6;
+export const SETTINGS_SCHEMA_VERSION = 7;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -95,7 +95,8 @@ const LOCALES: readonly LocaleCode[] = [
 const DEFAULT_PROFILE: GameProfile = {
     themeColor: "#fbc02d",
     textColor: "light",
-    routeColor: "#22d3ee",
+    // AMap-style navigation blue for the route line.
+    routeColor: "#3d73f0",
     roadColor: "#4a5f7a",
     backgroundColor: "#24467b",
     landColor: "#272d39",
@@ -175,6 +176,23 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     // v6 adds voiceNavigation / voiceConcise (gameplay); the normalizer
     // fills their defaults.
     5: (raw) => raw,
+    // v7 retunes the default route color to AMap navigation blue; profiles
+    // still on the old default (and only those) follow along.
+    6: (raw) => {
+        const profiles = raw.profiles;
+        if (profiles && typeof profiles === "object") {
+            for (const profile of Object.values(profiles)) {
+                if (
+                    profile &&
+                    typeof profile === "object" &&
+                    (profile as RawRecord).routeColor === "#22d3ee"
+                ) {
+                    (profile as RawRecord).routeColor = "#3d73f0";
+                }
+            }
+        }
+        return raw;
+    },
 };
 
 function oneOf<T extends string>(

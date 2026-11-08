@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "am Kreisverkehr ausfahren",
         "takeExit": "Ausfahrt nehmen",
         "turnLeft": "Links abbiegen",
-        "turnRight": "Rechts abbiegen"
+        "turnRight": "Rechts abbiegen",
+        "then": "Danach"
     },
     "events": {
         "achievement": "Erfolg freigeschaltet",

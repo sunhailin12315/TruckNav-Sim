@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "afrit bij de rotonde",
         "takeExit": "Neem de afrit",
         "turnLeft": "Sla linksaf",
-        "turnRight": "Sla rechtsaf"
+        "turnRight": "Sla rechtsaf",
+        "then": "Daarna"
     },
     "events": {
         "achievement": "Prestatie ontgrendeld",

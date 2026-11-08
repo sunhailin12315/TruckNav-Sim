@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "exit at the roundabout",
         "takeExit": "Take the exit",
         "turnLeft": "Turn left",
-        "turnRight": "Turn right"
+        "turnRight": "Turn right",
+        "then": "Then"
     },
     "events": {
         "achievement": "Achievement Unlocked",

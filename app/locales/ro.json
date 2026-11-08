@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "ieși la sensul giratoriu",
         "takeExit": "Folosește ieșirea",
         "turnLeft": "Virează la stânga",
-        "turnRight": "Virează la dreapta"
+        "turnRight": "Virează la dreapta",
+        "then": "Apoi"
     },
     "events": {
         "achievement": "Realizare deblocată",

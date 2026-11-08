@@ -81,7 +81,8 @@
         "roundaboutExitGeneric": "회전로에서 진출",
         "takeExit": "출구로 진출",
         "turnLeft": "좌회전",
-        "turnRight": "우회전"
+        "turnRight": "우회전",
+        "then": "그 후"
     },
     "events": {
         "achievement": "업적 달성",

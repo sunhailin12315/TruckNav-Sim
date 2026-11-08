@@ -16,6 +16,13 @@ $green-color: #4caf50;
 $warning-color: #f59e0b;
 $blue-color: #7dd3fc;
 
+// AMap-style floating card system: dark translucent surface, hairline edge,
+// deep shadow — accent colors are used for emphasis, never as borders.
+$card-radius: 16px;
+$card-bg: rgba(21, 29, 37, 0.94);
+$card-border: 1px solid rgba(255, 255, 255, 0.08);
+$card-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+
 $ats-color: #d32f2f;
 $ets2-color: #fbc02d;
 

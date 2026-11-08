@@ -214,6 +214,24 @@ describe("settingsSchema", () => {
         });
     });
 
+    it("migrates v6 data up to v7, retuning only the old default route color", () => {
+        const stored = {
+            schemaVersion: 6,
+            profiles: {
+                ets2: { routeColor: "#22d3ee" },
+                ats: { routeColor: "#ff8800" },
+            },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.profiles.ets2.routeColor).toBe("#3d73f0");
+        // A genuinely custom color is never touched.
+        expect(settings.profiles.ats.routeColor).toBe("#ff8800");
+    });
+
     it("normalizes the gameplay block per-field", () => {
         const stored = {
             gameplay: { eventFeed: false, soundAlerts: "yes", junk: 1 },

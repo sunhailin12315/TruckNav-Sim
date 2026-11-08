@@ -177,7 +177,15 @@
         "empty": "Noch keine abgeschlossenen Aufträge in dieser Sitzung."
     },
     "voice": {
-        "aheadOf": "In {{m}} Metern,"
+        "aheadOf": "In {{d}},",
+        "departed": "Navigation gestartet",
+        "arriving": "Sie nähern sich Ihrem Ziel",
+        "arrived": "Sie haben Ihr Ziel erreicht",
+        "kilometers": "{{n}} Kilometer",
+        "meters": "{{n}} Meter",
+        "restAhead": "Rastplatz in {{km}} km, etwa {{min}} Minuten Umweg",
+        "fuelAhead": "Tankstelle in {{km}} km, etwa {{min}} Minuten Umweg",
+        "fatigue": "Die Lenkzeit ist fast aufgebraucht, machen Sie bald eine Pause"
     },
     "settings": {
         "appFont": "App Schriftart",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "Gesprochene Richtungsansagen während der Navigation.",
         "voiceConcise": "Kurze Ansagen",
         "voiceConciseDescription": "Ansagen nur beim nahen Abbiegepunkt.",
+        "voiceNeural": "Offline-Neuronstimme",
+        "voiceNeuralDescription": "Verwendet wenn verfügbar die eingebaute offline neuronale Stimme für höhere Qualität; aus verwendet die Systemstimme.",
         "statsTitle": "Statistiken",
         "textTheme": "Text Design",
         "dayNightMode": "Tag / Nacht",

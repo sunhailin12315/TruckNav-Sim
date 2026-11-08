@@ -177,7 +177,15 @@
         "empty": "No completed trips this session yet."
     },
     "voice": {
-        "aheadOf": "In {{m}} meters,"
+        "aheadOf": "In {{d}},",
+        "departed": "Starting navigation",
+        "arriving": "Approaching your destination",
+        "arrived": "You have arrived at your destination",
+        "kilometers": "{{n}} kilometers",
+        "meters": "{{n}} meters",
+        "restAhead": "Rest area in {{km}} km, about {{min}} min detour",
+        "fuelAhead": "Fuel station in {{km}} km, about {{min}} min detour",
+        "fatigue": "Driving time is almost used up, please plan a rest soon"
     },
     "settings": {
         "appFont": "App Font",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "Spoken turn-by-turn directions while navigating.",
         "voiceConcise": "Concise Announcements",
         "voiceConciseDescription": "Only announce turns at the near-distance call.",
+        "voiceNeural": "Offline Neural Voice",
+        "voiceNeuralDescription": "Uses the built-in offline neural voice when available for higher quality; off uses the system voice.",
         "statsTitle": "Statistics",
         "textTheme": "Text Theme",
         "dayNightMode": "Day / Night",

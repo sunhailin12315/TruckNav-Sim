@@ -177,7 +177,15 @@
         "empty": "이번 세션에서 완료한 작업이 없습니다."
     },
     "voice": {
-        "aheadOf": "{{m}}미터 앞,"
+        "aheadOf": "{{d}} 앞,",
+        "departed": "내비게이션을 시작합니다",
+        "arriving": "목적지에 다가가고 있습니다",
+        "arrived": "목적지에 도착했습니다",
+        "kilometers": "{{n}}킬로미터",
+        "meters": "{{n}}미터",
+        "restAhead": "앞 {{km}}km 휴게소, 우회 약 {{min}}분",
+        "fuelAhead": "앞 {{km}}km 주유소, 우회 약 {{min}}분",
+        "fatigue": "연속 운전 시간이 곧 종료됩니다, 곧 휴식을 취하십시오"
     },
     "settings": {
         "appFont": "앱 글꼴",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "주행 중 음성으로 방향을 안내합니다.",
         "voiceConcise": "간단 안내",
         "voiceConciseDescription": "가까운 거리에서만 안내합니다.",
+        "voiceNeural": "오프라인 신경 음성",
+        "voiceNeuralDescription": "사용 가능한 경우 내장된 오프라인 신경망 음성을 사용합니다. 끄면 시스템 음성을 사용합니다.",
         "statsTitle": "통계",
         "textTheme": "글씨 테마",
         "dayNightMode": "낮 / 밤",

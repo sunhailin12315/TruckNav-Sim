@@ -177,7 +177,15 @@
         "empty": "本次驾驶还没有完成的行程。"
     },
     "voice": {
-        "aheadOf": "前方{{m}}米，"
+        "aheadOf": "前方{{d}}，",
+        "departed": "开始导航",
+        "arriving": "即将到达目的地",
+        "arrived": "您已到达目的地",
+        "kilometers": "{{n}}公里",
+        "meters": "{{n}}米",
+        "restAhead": "前方{{km}}公里有休息区，绕行约{{min}}分钟",
+        "fuelAhead": "前方{{km}}公里有加油站，绕行约{{min}}分钟",
+        "fatigue": "连续驾驶时间即将耗尽，请尽快安排休息"
     },
     "settings": {
         "appFont": "应用字体",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "导航时播报转向指令。",
         "voiceConcise": "简洁播报",
         "voiceConciseDescription": "只在近距离播报一次转向。",
+        "voiceNeural": "离线神经语音",
+        "voiceNeuralDescription": "可用时使用内置离线神经网络语音，音质更高；关闭则使用系统语音。",
         "statsTitle": "统计",
         "textTheme": "文字主题",
         "dayNightMode": "昼 / 夜模式",

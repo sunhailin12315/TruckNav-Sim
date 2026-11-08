@@ -5,6 +5,7 @@
     "private": true,
     "scripts": {
         "version:sync": "node scripts/sync-version.mjs",
+        "tts:model": "node scripts/download-tts-model.mjs",
         "build": "nuxt build",
         "test": "vitest run",
         "test:watch": "vitest",

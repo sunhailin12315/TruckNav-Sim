@@ -17,6 +17,7 @@ const hasVoiceNavigation = computed(
     () => settings.value.gameplay.voiceNavigation,
 );
 const hasVoiceConcise = computed(() => settings.value.gameplay.voiceConcise);
+const hasVoiceNeural = computed(() => settings.value.gameplay.voiceNeural);
 
 function toggleGuidedNavigation() {
     updateProfile(
@@ -43,7 +44,8 @@ function toggleGameplayFlag(
         | "soundAlerts"
         | "urbanWarning"
         | "voiceNavigation"
-        | "voiceConcise",
+        | "voiceConcise"
+        | "voiceNeural",
 ) {
     updateGlobal("gameplay", {
         ...settings.value.gameplay,
@@ -171,6 +173,21 @@ function toggleGameplayFlag(
                 @connect="toggleGameplayFlag('voiceNavigation')"
                 size="normal"
                 :active="hasVoiceNavigation"
+            />
+        </div>
+
+        <div v-if="hasVoiceNavigation" class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:brain-circuit" size="24" />
+                <p>{{ t("settings.voiceNeural") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('voiceNeural')"
+                size="normal"
+                :active="hasVoiceNeural"
             />
         </div>
 

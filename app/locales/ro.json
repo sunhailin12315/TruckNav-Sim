@@ -177,7 +177,15 @@
         "empty": "Niciun transport finalizat în această sesiune."
     },
     "voice": {
-        "aheadOf": "La {{m}} de metri,"
+        "aheadOf": "La {{d}},",
+        "departed": "Navigația a pornit",
+        "arriving": "Vă apropiați de destinație",
+        "arrived": "Ați ajuns la destinație",
+        "kilometers": "{{n}} kilometri",
+        "meters": "{{n}} de metri",
+        "restAhead": "Zonă de odihnă în {{km}} km, ocolire de aproximativ {{min}} min",
+        "fuelAhead": "Stație de alimentare în {{km}} km, ocolire de aproximativ {{min}} min",
+        "fatigue": "Timpul de condus se apropie de limită, faceți o pauză în curând"
     },
     "settings": {
         "appFont": "Fontul Aplicației",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "Direcții vorbite în timpul navigării.",
         "voiceConcise": "Anunțuri scurte",
         "voiceConciseDescription": "Anunță doar la distanța mică.",
+        "voiceNeural": "Voce neuronală offline",
+        "voiceNeuralDescription": "Folosește vocea neuronală offline încorporată când este disponibilă; dezactivat folosește vocea sistemului.",
         "statsTitle": "Statistici",
         "textTheme": "Temă text",
         "dayNightMode": "Zi / Noapte",

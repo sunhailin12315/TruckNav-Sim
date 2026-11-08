@@ -16,7 +16,15 @@
             "from": "bin",
             "to": "bin",
             "filter": ["**/*"]
+        },
+        {
+            "from": "tts-models",
+            "to": "tts-models",
+            "filter": ["**/*"]
         }
+    ],
+    "asarUnpack": [
+        "node_modules/sherpa-onnx/**"
     ],
     "nsis": {
         "include": "installer.nsh",

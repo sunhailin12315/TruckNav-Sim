@@ -28,3 +28,7 @@ ets2-telemetry-server
 
 
 public/debug-roadnetwork/
+
+# Downloaded offline TTS model (npm run tts:model)
+electron/tts-models/*
+!electron/tts-models/.gitkeep

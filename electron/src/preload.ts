@@ -52,4 +52,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     },
 
     getDownloadedMaps: () => ipcRenderer.invoke("get-downloaded-maps"),
+
+    // OFFLINE NEURAL TTS
+    ttsStatus: () => ipcRenderer.invoke("tts:status"),
+    ttsSynthesize: (text: string, locale: string) =>
+        ipcRenderer.invoke("tts:synthesize", text, locale),
 });

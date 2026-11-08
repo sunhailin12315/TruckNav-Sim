@@ -144,6 +144,7 @@ describe("settingsSchema", () => {
             urbanWarning: true,
             voiceNavigation: false,
             voiceConcise: true,
+            voiceNeural: true,
         });
         expect(settings.profiles.ets2.avoidFerries).toBe(false);
     });
@@ -164,6 +165,7 @@ describe("settingsSchema", () => {
             urbanWarning: true,
             voiceNavigation: false,
             voiceConcise: true,
+            voiceNeural: true,
         });
     });
 
@@ -211,7 +213,23 @@ describe("settingsSchema", () => {
             urbanWarning: true,
             voiceNavigation: true,
             voiceConcise: true,
+            voiceNeural: true,
         });
+    });
+
+    it("migrates v7 data up to v8 with the voiceNeural default", () => {
+        const stored = {
+            schemaVersion: 7,
+            gameplay: { voiceNavigation: true, voiceNeural: false },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay.voiceNeural).toBe(false);
+        expect(settings.gameplay.voiceNavigation).toBe(true);
+        expect(settings.gameplay.voiceConcise).toBe(true);
     });
 
     it("migrates v6 data up to v7, retuning only the old default route color", () => {

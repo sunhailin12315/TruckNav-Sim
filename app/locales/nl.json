@@ -177,7 +177,15 @@
         "empty": "Nog geen voltooide opdrachten deze sessie."
     },
     "voice": {
-        "aheadOf": "Over {{m}} meter,"
+        "aheadOf": "Over {{d}},",
+        "departed": "Navigatie gestart",
+        "arriving": "U nadert uw bestemming",
+        "arrived": "U bent aangekomen op uw bestemming",
+        "kilometers": "{{n}} kilometer",
+        "meters": "{{n}} meter",
+        "restAhead": "Rustplaats over {{km}} km, ongeveer {{min}} min omrijden",
+        "fuelAhead": "Tankstation over {{km}} km, ongeveer {{min}} min omrijden",
+        "fatigue": "De rijtijd is bijna op, plan tijdig een rustpauze"
     },
     "settings": {
         "appFont": "App-lettertype",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "Gesproken route-aanwijzingen tijdens navigatie.",
         "voiceConcise": "Korte aankondigingen",
         "voiceConciseDescription": "Aankondigen alleen op de nabije afstand.",
+        "voiceNeural": "Offline neurale stem",
+        "voiceNeuralDescription": "Gebruikt indien beschikbaar de ingebouwde offline neurale stem voor hogere kwaliteit; uit gebruikt de systeemstem.",
         "statsTitle": "Statistieken",
         "textTheme": "Tekstthema",
         "dayNightMode": "Dag / Nacht",

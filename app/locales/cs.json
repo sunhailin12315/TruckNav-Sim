@@ -177,7 +177,15 @@
         "empty": "V této relaci zatím žádné dokončené zakázky."
     },
     "voice": {
-        "aheadOf": "Za {{m}} metrů,"
+        "aheadOf": "Za {{d}},",
+        "departed": "Navigace spuštěna",
+        "arriving": "Blížíte se k cíli",
+        "arrived": "Dojeli jste do cíle",
+        "kilometers": "{{n}} kilometry",
+        "meters": "{{n}} metrů",
+        "restAhead": "Odpočinkové místo za {{km}} km, objíždďka asi {{min}} minut",
+        "fuelAhead": "Čerpací stanice za {{km}} km, objíždďka asi {{min}} minut",
+        "fatigue": "Čas řízení brzy vyprší, naplánujte si brzy přestávku"
     },
     "settings": {
         "appFont": "Font aplikace",
@@ -219,6 +227,8 @@
         "voiceNavigationDescription": "Mluvené pokyny během navigace.",
         "voiceConcise": "Stručné pokyny",
         "voiceConciseDescription": "Pokyny jen na krátkou vzdálenost.",
+        "voiceNeural": "Offline neuronový hlas",
+        "voiceNeuralDescription": "Pokud je k dispozici, použije vestavěný offline neuronový hlas; vypnuto použije systémový hlas.",
         "statsTitle": "Statistiky",
         "textTheme": "Vzhled textu",
         "dayNightMode": "Den / noc",

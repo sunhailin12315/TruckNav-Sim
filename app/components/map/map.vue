@@ -123,6 +123,7 @@ const {
     findBestWaypointInsertionIndex,
     urbanAheadTrigger,
     rerouteTrigger,
+    arrivalTrigger,
     serviceSuggestion,
     routeAlternatives,
     primaryRouteSummary,
@@ -146,6 +147,11 @@ const routeEtaMinutes = computed<number | null>(() => {
 // EVENT FEED
 const { unreadCount: unreadEventCount } = useEventFeed();
 const { playBeep, vibrate } = useSoundAlerts();
+
+// Voice guidance: spoken cues for turns, replans, arrival and driving
+// alerts. Declared before the watchers below that speak inside callbacks.
+const { speak: speakCue, cancel: cancelSpeech, prewarm: prewarmVoice } =
+    useVoiceGuidance();
 
 const isEventDrawerOpen = ref(false);
 const isDriveReportOpen = ref(false);
@@ -187,6 +193,7 @@ watch(restStopMinutes, (minutes) => {
         fatigueNotificationTrigger.value++;
         playBeep(520, 260, 2);
         vibrate([120, 80, 120]);
+        speakCue(t("voice.fatigue"));
     } else if (minutes >= 90) {
         fatigueArmed = true;
     }
@@ -222,10 +229,27 @@ watch(serviceSuggestion, (suggestion) => {
     if (!suggestion) return;
     suggestionNotificationTrigger.value++;
     playBeep(suggestion.kind === "rest" ? 520 : 700, 200, 2);
+    speakCue(
+        suggestion.kind === "rest"
+            ? t("voice.restAhead", {
+                  km: suggestion.kmAhead,
+                  min: suggestion.detourMinutes,
+              })
+            : t("voice.fuelAhead", {
+                  km: suggestion.kmAhead,
+                  min: suggestion.detourMinutes,
+              }),
+    );
 });
 
 // ===== Voice guidance: spoken turn cues + replan announcement (M9) =====
-const { speak: speakCue, cancel: cancelSpeech } = useVoiceGuidance();
+
+// Spoken distance for an announcement mark: whole kilometers at or beyond
+// the 1 km mark, meters below it ("前方2公里" / "前方500米").
+const spokenDistance = (thresholdKm: number) =>
+    thresholdKm >= 1
+        ? t("voice.kilometers", { n: Math.round(thresholdKm) })
+        : t("voice.meters", { n: Math.round(thresholdKm * 1000) });
 
 // Announce the upcoming turn as the distance-to-turn crosses the threshold
 // marks; the spoken set resets whenever a different turn becomes "next".
@@ -257,8 +281,15 @@ watch(
         if (threshold === null) return;
 
         spokenThresholds.push(threshold);
+
+        // The final "turn" is the destination itself: announce the approach
+        // instead of reading the arrived card ("前方500米，已到达目的地").
+        const cue =
+            upcoming.type === "destination"
+                ? t("voice.arriving")
+                : nextInstructionText.value;
         speakCue(
-            `${t("voice.aheadOf", { m: Math.round(threshold * 1000) })} ${nextInstructionText.value}`,
+            `${t("voice.aheadOf", { d: spokenDistance(threshold) })} ${cue}`,
         );
     },
 );
@@ -266,6 +297,12 @@ watch(
 // Guidance ended (or paused): stop any pending speech.
 watch(isNavigating, (navigating) => {
     if (!navigating) cancelSpeech();
+});
+
+// Destination reached: the RouteController bumps the trigger in the same
+// pass that clears the route, before navigation mode stops.
+watch(arrivalTrigger, () => {
+    speakCue(t("voice.arrived"));
 });
 
 // Deviation replan: toast + optional beep + spoken cue, at most once per
@@ -669,6 +706,15 @@ function onStartNavigation() {
     if (!truckCoords.value) return;
 
     startNavigationMode(truckCoords.value, truckHeading.value, truckSpeed.value);
+    speakCue(t("voice.departed"));
+    // Warm the neural engine (model session) and the fixed cues while the
+    // driver still has the whole announcement lead time ahead.
+    prewarmVoice([
+        t("voice.departed"),
+        t("voice.arriving"),
+        t("voice.arrived"),
+        t("map.rerouting"),
+    ]);
 
     isSheetHidden.value = true;
 }

@@ -32,7 +32,8 @@
         "electron-window-state": "^5.0.3",
         "express": "^5.2.1",
         "extract-zip": "^2.0.1",
-        "native-reg": "^1.1.1"
+        "native-reg": "^1.1.1",
+        "sherpa-onnx": "1.10.46"
     },
     "devDependencies": {
         "@types/express": "^5.0.6",

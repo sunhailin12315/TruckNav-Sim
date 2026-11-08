@@ -50,6 +50,8 @@ export interface GameplaySettings {
     voiceNavigation: boolean;
     /** Voice guidance announces only the near-distance call. */
     voiceConcise: boolean;
+    /** Prefer the offline neural voice over the OS speech engine when available. */
+    voiceNeural: boolean;
 }
 
 export interface AppSettingsState {
@@ -70,7 +72,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 7;
+export const SETTINGS_SCHEMA_VERSION = 8;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -149,6 +151,7 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
         urbanWarning: true,
         voiceNavigation: false,
         voiceConcise: true,
+        voiceNeural: true,
     },
 };
 
@@ -193,6 +196,8 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
         }
         return raw;
     },
+    // v8 adds voiceNeural (gameplay); the normalizer fills its default.
+    7: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -253,6 +258,10 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.voiceConcise === "boolean"
                 ? source.voiceConcise
                 : defaults.voiceConcise,
+        voiceNeural:
+            typeof source.voiceNeural === "boolean"
+                ? source.voiceNeural
+                : defaults.voiceNeural,
     };
 }
 

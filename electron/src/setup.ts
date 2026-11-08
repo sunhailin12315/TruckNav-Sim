@@ -266,9 +266,11 @@ export class ElectronCapacitorApp {
 // Set a CSP up for our application based on the custom scheme
 export function setupContentSecurityPolicy(customScheme: string): void {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        // media-src 'self' blob: — the neural TTS cues play from blob: URLs;
+        // without it they fall back to default-src and the OS voice.
         const policy = electronIsDev
-            ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data:; connect-src *; worker-src 'self' blob:; img-src * data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com;`
-            : `default-src ${customScheme}://* 'unsafe-inline' data:; connect-src *; worker-src 'self' blob:; img-src * data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;`;
+            ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data:; connect-src *; worker-src 'self' blob:; media-src 'self' blob:; img-src * data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com;`
+            : `default-src ${customScheme}://* 'unsafe-inline' data:; connect-src *; worker-src 'self' blob:; media-src 'self' blob:; img-src * data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;`;
 
         callback({
             responseHeaders: {

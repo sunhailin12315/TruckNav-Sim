@@ -31,6 +31,7 @@ import * as registry from "native-reg";
 
 import { getSettings, saveSettings } from "./settingsManager";
 import type { AppSettings } from "./settingsConstants";
+import { registerNeuralTts, runNeuralTtsSelfTest } from "./neuralTts";
 import {
     clearDiscordRpc,
     destroyDiscordRpc,
@@ -149,6 +150,7 @@ if (!gotTheLock) {
             startTelemetryServer();
             startWebServer();
             setupContentSecurityPolicy(myCapacitorApp.getCustomURLScheme());
+            runNeuralTtsSelfTest();
             if (appSettings.rpcEnabled) {
                 await initDiscordRpc();
             }
@@ -491,6 +493,9 @@ async function getAvailablePort(startingPort: number): Promise<number> {
 ipcMain.handle("get-settings", () => {
     return getSettings();
 });
+
+// Offline neural TTS (sherpa-onnx in this process; WAV over IPC).
+registerNeuralTts();
 
 ipcMain.handle(
     "update-setting",

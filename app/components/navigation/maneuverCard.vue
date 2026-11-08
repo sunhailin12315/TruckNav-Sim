@@ -225,4 +225,4 @@ watch(thenTurn, (turn) => {
     </div>
 </template>
 
-<style scoped src="~/assets/scss/scoped/navigation/maneuverCard.scss"></style>
+<style scoped lang="scss" src="~/assets/scss/scoped/navigation/maneuverCard.scss"></style>

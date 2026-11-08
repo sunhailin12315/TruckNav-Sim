@@ -82,7 +82,9 @@
         "takeExit": "Folosește ieșirea",
         "turnLeft": "Virează la stânga",
         "turnRight": "Virează la dreapta",
-        "then": "Apoi"
+        "then": "Apoi",
+        "uTurn": "Faceți un renvers",
+        "now": "Acum"
     },
     "events": {
         "achievement": "Realizare deblocată",
@@ -117,7 +119,8 @@
         "overdue": "Depășit",
         "unknownDestination": "Destinație necunoscută",
         "unknownSource": "Sursă necunoscută",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "Următoarea oprire"
     },
     "map": {
         "externalRouteDetected": "Ruta externă detectată: Setați punctul de navigare",

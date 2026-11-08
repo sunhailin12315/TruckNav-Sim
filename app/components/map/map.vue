@@ -105,6 +105,8 @@ const {
     handleRouteClick,
     updateRouteProgress,
     clearRouteState,
+    snappedTruckCoords,
+    nextStopEta,
     destinationName,
     routeDistance,
     routeEta,
@@ -304,6 +306,7 @@ const MANEUVER_TEXT_KEYS: Partial<Record<DirectionStep["type"], string>> = {
     depart: "directions.depart",
     left: "directions.turnLeft",
     right: "directions.turnRight",
+    "u-turn": "directions.uTurn",
     "slight-left": "directions.keepLeft",
     "slight-right": "directions.keepRight",
     "exit-highway": "directions.takeExit",
@@ -639,8 +642,9 @@ onUnmounted(() => {
 function onTelemetryUpdate() {
     if (!truckCoords.value || !map.value) return;
 
-    followTruck(truckCoords.value, truckHeading.value);
-
+    // Progress first, so the snap computed this tick is what the camera
+    // and marker render; deviation detection inside stays on the raw
+    // position.
     if (isRouteActive.value) {
         updateRouteProgress(
             truckCoords.value,
@@ -653,12 +657,18 @@ function onTelemetryUpdate() {
             },
         );
     }
+
+    followTruck(
+        snappedTruckCoords.value ?? truckCoords.value,
+        truckHeading.value,
+        truckSpeed.value,
+    );
 }
 
 function onStartNavigation() {
     if (!truckCoords.value) return;
 
-    startNavigationMode(truckCoords.value, truckHeading.value);
+    startNavigationMode(truckCoords.value, truckHeading.value, truckSpeed.value);
 
     isSheetHidden.value = true;
 }
@@ -833,6 +843,7 @@ const onSelectAlternative = (kind: string) => {
                                 :income="income"
                                 :remaining-minutes="remainingMinutes"
                                 :eta-minutes="routeEtaMinutes"
+                                :next-stop="nextStopEta"
                                 :source-city-name="sourceCityName"
                                 :source-company-name="sourceCompanyName"
                                 :destination-city-name="destinationCityName"

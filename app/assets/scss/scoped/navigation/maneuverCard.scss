@@ -126,3 +126,87 @@
         font-weight: 700;
     }
 }
+
+// Step changes (WestPlay GuidanceCard's way, docs/westplay-reference-study.md
+// §2.7): the step done slides up and away as the next rises in its place; the
+// then row opens and closes; the card fades when the route ends. The 560 ms
+// and 320 ms match STEP_CHANGE_MS / CLOSE_MS in maneuverCard.vue.
+.maneuver-steps {
+    position: relative;
+}
+
+.maneuver-step.entering {
+    animation: maneuver-step-in 560ms both;
+}
+
+.maneuver-step.leaving {
+    position: absolute;
+    inset: 0;
+
+    animation: maneuver-step-out 560ms both;
+
+    pointer-events: none;
+}
+
+@keyframes maneuver-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes maneuver-step-out {
+    from {
+        opacity: 1;
+        transform: none;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-14px);
+    }
+}
+
+// The then row's slot grows and shrinks as it comes and goes.
+.maneuver-then-slot {
+    display: grid;
+    grid-template-rows: 0fr;
+
+    opacity: 0;
+
+    transition:
+        grid-template-rows 280ms ease,
+        opacity 280ms ease;
+
+    > .maneuver-next {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    &.open {
+        grid-template-rows: 1fr;
+
+        opacity: 1;
+    }
+}
+
+.card.closing {
+    animation: maneuver-card-out 320ms both;
+}
+
+@keyframes maneuver-card-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        // Transform stays alone here: the card centres itself with one, and
+        // an animation touching it would jump it sideways.
+        opacity: 0;
+    }
+}

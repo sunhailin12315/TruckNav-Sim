@@ -82,7 +82,9 @@
         "takeExit": "Neem de afrit",
         "turnLeft": "Sla linksaf",
         "turnRight": "Sla rechtsaf",
-        "then": "Daarna"
+        "then": "Daarna",
+        "uTurn": "Keer om",
+        "now": "Nu"
     },
     "events": {
         "achievement": "Prestatie ontgrendeld",
@@ -117,7 +119,8 @@
         "overdue": "Te laat",
         "unknownDestination": "Onbekende bestemming",
         "unknownSource": "Onbekende startlocatie",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "Volgende stop"
     },
     "map": {
         "externalRouteDetected": "Externe route gedetecteerd: waypoint instellen",

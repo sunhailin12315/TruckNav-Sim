@@ -11,6 +11,9 @@ const props = defineProps<{
     sourceCompanyName: string;
     destinationCityName: string;
     destinationCompanyName: string;
+    /** The next user waypoint still ahead: its name (nearest city), km and
+     * its share of the route's remaining minutes. */
+    nextStop?: { name: string | null; kmAhead: number; minutes: number } | null;
 }>();
 
 const { activeSettings, settings } = useSettings();
@@ -70,6 +73,17 @@ const deadlineLevel = computed<"ok" | "warn" | "danger" | "overdue">(() => {
 
 const damagePercent = computed(() => Math.round(props.cargoDamage));
 
+const { kmToUserUnits, distanceUnit } = useUnitConversion();
+
+const nextStopLabel = computed(() => {
+    const stop = props.nextStop;
+    if (!stop) return null;
+    const h = Math.floor(stop.minutes / 60);
+    const m = Math.round(stop.minutes % 60);
+    const eta = h > 0 ? `${h}h ${String(m).padStart(2, "0")}min` : `${m}min`;
+    return `${t("job.nextStop")} · ${stop.name ?? "—"} · ${kmToUserUnits(stop.kmAhead)} ${distanceUnit.value} · ~${eta}`;
+});
+
 const destinationLine = computed(() => {
     const city = props.destinationCityName || props.destinationCompanyName;
     return city || t("job.unknownDestination");
@@ -117,6 +131,11 @@ const sourceLine = computed(() => {
                     class="route-arrow"
                 />
                 <span class="route-destination">{{ destinationLine }}</span>
+            </div>
+
+            <div v-if="nextStopLabel" class="stop-row">
+                <Icon name="lucide:map-pin" size="15" class="stop-icon" />
+                <span class="stop-label">{{ nextStopLabel }}</span>
             </div>
 
             <div class="stats-row">

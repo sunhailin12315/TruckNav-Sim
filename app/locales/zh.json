@@ -82,7 +82,9 @@
         "takeExit": "驶出匝道",
         "turnLeft": "左转",
         "turnRight": "右转",
-        "then": "然后"
+        "then": "然后",
+        "uTurn": "掉头",
+        "now": "现在"
     },
     "events": {
         "achievement": "解锁成就",
@@ -117,7 +119,8 @@
         "overdue": "已超时",
         "unknownDestination": "未知目的地",
         "unknownSource": "未知出发地",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "途经"
     },
     "map": {
         "addStop": "添加停靠点",

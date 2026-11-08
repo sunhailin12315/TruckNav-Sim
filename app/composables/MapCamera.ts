@@ -1,9 +1,28 @@
 import { ref, onUnmounted } from "vue";
 import type { Ref } from "vue";
 import type { Map } from "maplibre-gl";
+import {
+    AUTO_RECENTRE_MS,
+    DAMP_TAU,
+    damp,
+    dampBearing,
+    bearingDelta,
+    FOLLOW_DELAY_MS,
+    samePose,
+    truckAt,
+    zoomForSpeed,
+    zoomOffsetFor,
+    type TruckSample,
+} from "~/assets/utils/map/cameraMath";
 
 const PADDING_NAV = { top: 180, bottom: 0, left: 0, right: 0 };
 const PADDING_FREE = { top: 0, bottom: 0, left: 0, right: 0 };
+
+/** How long an easeTo runs before the damped loop takes the pose back over. */
+const RESUME_EASE_MS = 500;
+/** How long the sample buffer keeps history: the render delay only ever
+ * looks ~FOLLOW_DELAY_MS back, ~2 s is plenty even at low telemetry rates. */
+const SAMPLE_KEEP_MS = 2000;
 
 export const useMapCamera = (map: Ref<Map | null>) => {
     const isCameraLocked = ref(false);
@@ -13,15 +32,27 @@ export const useMapCamera = (map: Ref<Map | null>) => {
     // bounding box for a few seconds, then returns to the truck.
     const isRoutePreview = ref(false);
 
-    let targetCoords: [number, number] | null = null;
-    let targetHeading: number = 0;
+    // Telemetry poses, newest last; the camera renders FOLLOW_DELAY_MS behind
+    // the newest one so interpolation always has two samples and never
+    // extrapolates (WestPlay camera.ts, docs/westplay-reference-study.md).
+    let samples: TruckSample[] = [];
 
-    let previousCoords: [number, number] | null = null;
-    let previousHeading: number = 0;
-    let lastTargetUpdateTime: number = 0;
+    // The damped pose the camera is actually drawn at.
+    let damped: {
+        center: [number, number];
+        zoom: number;
+        bearing: number;
+    } | null = null;
+
+    // The player's zoom bias against the speed-based zoom: any zoom they
+    // choose while browsing is kept when following resumes (WestPlay's
+    // zoomOffsetFor), and speed zoom continues varying from there.
+    let zoomOffset = 0;
+    let lastSpeedKph = 0;
+    let lastFrameTime = 0;
 
     let currentTruckCoords: [number, number] | null = null;
-    let currentTruckHeading: number = 0;
+    let currentTruckHeading = 0;
 
     let animationFrameId: number | null = null;
     let isEasing = false;
@@ -70,41 +101,83 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         }
     };
 
-    const renderLoop = (timestamp: number) => {
+    const syncDampedFromMap = () => {
+        const m = map.value;
+        if (!m) return;
+        damped = {
+            center: [m.getCenter().lng, m.getCenter().lat],
+            zoom: m.getZoom(),
+            bearing: m.getBearing(),
+        };
+    };
+
+    const renderLoop = () => {
         const now = performance.now();
+        const dt = lastFrameTime > 0 ? Math.min(now - lastFrameTime, 250) : 16;
+        lastFrameTime = now;
 
-        if (map.value && targetCoords && previousCoords && currentTruckCoords) {
-            const elapsed = now - lastTargetUpdateTime;
-            let progress = Math.min(elapsed / 120, 1);
+        // Keep only the history the render delay can reach.
+        while (
+            samples.length > 2 &&
+            samples[1]!.time <= now - SAMPLE_KEEP_MS
+        ) {
+            samples.shift();
+        }
 
-            currentTruckCoords[0] =
-                previousCoords[0] +
-                (targetCoords[0] - previousCoords[0]) * progress;
-            currentTruckCoords[1] =
-                previousCoords[1] +
-                (targetCoords[1] - previousCoords[1]) * progress;
-            currentTruckHeading =
-                previousHeading + (targetHeading - previousHeading) * progress;
+        const pose = truckAt(samples, now - FOLLOW_DELAY_MS);
+        const isTargetAtOrigin =
+            !!pose && pose.coords[0] === 0 && pose.coords[1] === 0;
 
-            const isTargetAtOrigin =
-                targetCoords[0] === 0 && targetCoords[1] === 0;
+        if (map.value && pose && !isTargetAtOrigin) {
+            if (isCameraLocked.value && !isEasing) {
+                if (!damped) syncDampedFromMap();
 
-            if (isCameraLocked.value && !isEasing && !isTargetAtOrigin) {
-                map.value.jumpTo({
-                    center: [currentTruckCoords[0], currentTruckCoords[1]],
-                    bearing: isAutoFollowEnabled.value
-                        ? currentTruckHeading
-                        : 0,
-                    padding: isNavigating.value ? PADDING_NAV : PADDING_FREE,
-                });
+                const d = damped!;
+                const targetZoom = zoomForSpeed(pose.speedKph) + zoomOffset;
+                const next = {
+                    center: [
+                        damp(
+                            d.center[0],
+                            pose.coords[0],
+                            dt,
+                            DAMP_TAU.center,
+                        ),
+                        damp(
+                            d.center[1],
+                            pose.coords[1],
+                            dt,
+                            DAMP_TAU.center,
+                        ),
+                    ] as [number, number],
+                    zoom: damp(d.zoom, targetZoom, dt, DAMP_TAU.zoom),
+                    bearing: dampBearing(
+                        d.bearing,
+                        isAutoFollowEnabled.value ? pose.heading : 0,
+                        dt,
+                        DAMP_TAU.bearing,
+                    ),
+                };
+                // Moving the map to the same pose still makes it draw a
+                // whole frame; skip once the damping has settled.
+                if (!samePose(d, next)) {
+                    map.value.jumpTo({
+                        center: next.center,
+                        zoom: next.zoom,
+                        bearing: next.bearing,
+                        padding: isNavigating.value
+                            ? PADDING_NAV
+                            : PADDING_FREE,
+                    });
+                }
+                damped = next;
             }
 
-            if (markerEl && !isTargetAtOrigin) {
-                const pos = map.value.project(currentTruckCoords);
+            if (markerEl) {
+                const pos = map.value.project(pose.coords);
                 const pitch = map.value.getPitch();
                 const bearing = map.value.getBearing();
 
-                const screenRot = currentTruckHeading - bearing;
+                const screenRot = pose.heading - bearing;
 
                 markerEl.style.transform = `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px) rotateX(${pitch}deg) rotateZ(${screenRot}deg)`;
             }
@@ -148,10 +221,28 @@ export const useMapCamera = (map: Ref<Map | null>) => {
                     if (isAutoFollowEnabled.value) {
                         autoLockTimer = setTimeout(() => {
                             resumeCameraLock();
-                        }, 1500);
+                        }, AUTO_RECENTRE_MS);
                     }
                 }
             });
+        });
+
+        // A zoom the player chose themselves (drag pinch or wheel) becomes
+        // the bias the speed-based zoom varies around when following
+        // resumes. Programmatic jumpTo carries no originalEvent, so the
+        // camera's own zooming never overwrites it.
+        map.value.on("zoom", (e) => {
+            if (
+                e.originalEvent &&
+                !isEasing &&
+                !isRoutePreview.value &&
+                currentTruckCoords
+            ) {
+                zoomOffset = zoomOffsetFor(
+                    map.value!.getZoom(),
+                    lastSpeedKph,
+                );
+            }
         });
 
         map.value.on("move", (e) => {
@@ -161,7 +252,7 @@ export const useMapCamera = (map: Ref<Map | null>) => {
                 if (isAutoFollowEnabled.value && !isRoutePreview.value) {
                     autoLockTimer = setTimeout(() => {
                         resumeCameraLock();
-                    }, 1500);
+                    }, AUTO_RECENTRE_MS);
                 }
             }
         });
@@ -176,7 +267,12 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         if (easeTimeout) clearTimeout(easeTimeout);
         easeTimeout = setTimeout(() => {
             isEasing = false;
-        }, 500);
+            // The ease landed wherever the player had left the map: take
+            // that pose as the damping's start, and keep their zoom as the
+            // bias the speed-based zoom varies around.
+            syncDampedFromMap();
+            zoomOffset = zoomOffsetFor(map.value!.getZoom(), lastSpeedKph);
+        }, RESUME_EASE_MS);
 
         map.value.easeTo({
             center: currentTruckCoords,
@@ -198,27 +294,22 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         }
     };
 
-    const followTruck = (coords: [number, number], heading: number) => {
-        if (!map.value) return;
+    const followTruck = (
+        coords: [number, number],
+        heading: number,
+        speedKph = lastSpeedKph,
+    ) => {
+        lastSpeedKph = speedKph;
+        samples.push({ time: performance.now(), coords, heading, speedKph });
 
         if (currentTruckCoords) {
-            previousCoords = [...currentTruckCoords] as [number, number];
-            previousHeading = currentTruckHeading;
+            // Keep the ease target unwrapped, so resumeCameraLock's easeTo
+            // always turns the short way round (350° -> 10° goes +20°).
+            currentTruckHeading += bearingDelta(currentTruckHeading, heading);
         } else {
-            previousCoords = [...coords] as [number, number];
-            previousHeading = heading;
-            currentTruckCoords = [...coords] as [number, number];
             currentTruckHeading = heading;
         }
-
-        targetCoords = [...coords] as [number, number];
-
-        let hDiff = heading - previousHeading;
-        while (hDiff < -180) hDiff += 360;
-        while (hDiff > 180) hDiff -= 360;
-        targetHeading = previousHeading + hDiff;
-
-        lastTargetUpdateTime = performance.now();
+        currentTruckCoords = [...coords] as [number, number];
     };
 
     const lockCamera = () => {
@@ -226,25 +317,33 @@ export const useMapCamera = (map: Ref<Map | null>) => {
         isCameraLocked.value = true;
     };
 
-    const startNavigationMode = (coords: [number, number], heading: number) => {
+    const startNavigationMode = (
+        coords: [number, number],
+        heading: number,
+        speedKph = 0,
+    ) => {
         if (!map.value) return;
         isNavigating.value = true;
         isCameraLocked.value = true;
         isAutoFollowEnabled.value = true;
-        targetCoords = coords;
-        targetHeading = heading;
+        currentTruckCoords = coords;
+        currentTruckHeading = heading;
+        // A fresh guide starts at the speed's own zoom, no inherited bias.
+        zoomOffset = 0;
+        lastSpeedKph = speedKph;
 
         isEasing = true;
         if (easeTimeout) clearTimeout(easeTimeout);
 
         easeTimeout = setTimeout(() => {
             isEasing = false;
-        }, 300);
+            syncDampedFromMap();
+        }, RESUME_EASE_MS);
 
         map.value.easeTo({
             center: coords,
-            bearing: isNavigating.value ? heading : 0,
-            zoom: 11,
+            bearing: heading,
+            zoom: zoomForSpeed(speedKph),
             pitch: map.value.getPitch(),
             duration: 350,
             padding: PADDING_NAV,

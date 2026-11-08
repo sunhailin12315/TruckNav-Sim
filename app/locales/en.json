@@ -82,7 +82,9 @@
         "takeExit": "Take the exit",
         "turnLeft": "Turn left",
         "turnRight": "Turn right",
-        "then": "Then"
+        "then": "Then",
+        "uTurn": "Make a U-turn",
+        "now": "Now"
     },
     "events": {
         "achievement": "Achievement Unlocked",
@@ -117,7 +119,8 @@
         "overdue": "Overdue",
         "unknownDestination": "Unknown Destination",
         "unknownSource": "Unknown Source",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "Next stop"
     },
     "map": {
         "externalRouteDetected": "External Route Detected: Set Waypoint",

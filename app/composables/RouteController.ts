@@ -7,6 +7,11 @@ import {
     getSquaredDist,
 } from "~/assets/utils/map/maths";
 import {
+    projectAlongPath,
+    snapCoords,
+    snapWeightOf,
+} from "~/assets/utils/map/routeProjection";
+import {
     deleteMapLibreData,
     setMapLibreData,
 } from "~/assets/utils/map/helpers";
@@ -17,6 +22,7 @@ import {
 import {
     findNearestPoiAhead,
     estimateDetourMinutes,
+    reachFor,
     type PoiHit,
 } from "~/assets/utils/routing/poiAlongRoute";
 import {
@@ -25,6 +31,7 @@ import {
     type RouteAlternativeFlags,
     type RouteAlternativeSummary,
 } from "~/assets/utils/routing/routeAlternatives";
+import { nextStopKm } from "~/assets/utils/routing/nextStop";
 
 import RouteWorker from "~/workers/route.worker?worker&inline";
 
@@ -36,6 +43,9 @@ const REST_SEARCH_KM_AHEAD = 150;
 const FUEL_SEARCH_KM_AHEAD = 150;
 const POI_MAX_DETOUR_KM = 3;
 const TOLL_ACCUMULATE_INTERVAL_MS = 10000;
+// How long the route worker has to answer before the caller is told there
+// was no answer (WestPlay's ANSWER_WITHIN, scaled to whole-route Dijkstras).
+const WORKER_ANSWER_WITHIN_MS = 30_000;
 
 // Session-wide toll-gate POI cache: the map only exposes POIs from tiles
 // loaded so far, so points accumulate as the driver's viewport sweeps the
@@ -76,6 +86,89 @@ export const useRouteController = (
     const startNodeId = ref<number | null>(null);
     const endNodeId = ref<number | null>(null);
     const lastMathPos = ref<[number, number] | null>(null);
+
+    // The truck's place eased onto the route line (snapToRoute): between
+    // 18 m and 10 m of the route the marker glides onto it, beyond it stays
+    // raw. Deviation detection always sees the raw position; only the
+    // display snaps. Null when no route, or beyond the snap reach.
+    const snappedTruckCoords = ref<[number, number] | null>(null);
+
+    // The next user waypoint still ahead of the truck, its share of the
+    // remaining time by distance (WestPlay's nextStop): the job card's
+    // "next stop" line. Null without waypoints, or once all are behind.
+    const nextStopEta = ref<{
+        name: string | null;
+        kmAhead: number;
+        minutes: number;
+    } | null>(null);
+
+    // Each waypoint's cumulative route km, projected once per route (not
+    // per tick); the projection runs without a heading filter, which only
+    // makes sense near the truck.
+    let waypointKmCache: {
+        path: [number, number][];
+        stops: string;
+        kms: number[];
+    } | null = null;
+
+    function waypointStopKms(): number[] {
+        const path = currentRoutePath.value;
+        const stops = waypointList.value;
+        if (!path) return [];
+        const key = stops
+            .map((s) => `${s[0]?.toFixed(5)},${s[1]?.toFixed(5)}`)
+            .join("|");
+        if (
+            waypointKmCache &&
+            waypointKmCache.path === path &&
+            waypointKmCache.stops === key
+        ) {
+            return waypointKmCache.kms;
+        }
+        const cache = routeStatsCache.value;
+        const kms = stops.map((stop) => {
+            if (!cache) return 0;
+            const projection = projectAlongPath(
+                path,
+                0,
+                path.length - 1,
+                stop,
+                null,
+            );
+            return projection ? (cache[projection.index * 3] ?? 0) : 0;
+        });
+        waypointKmCache = { path, stops: key, kms };
+        return kms;
+    }
+
+    function updateNextStopEta(
+        currentKm: number,
+        remainingKm: number,
+        remainingGameMinutes: number,
+    ) {
+        const stops = waypointList.value;
+        if (stops.length === 0) {
+            nextStopEta.value = null;
+            return;
+        }
+        const stop = nextStopKm(
+            waypointStopKms(),
+            currentKm,
+            remainingKm,
+            remainingGameMinutes,
+        );
+        if (!stop) {
+            nextStopEta.value = null;
+            return;
+        }
+        const at = stops[stop.index]!;
+        const name = getGameLocationName(at[0], at[1]);
+        nextStopEta.value = {
+            name: name && name !== "Loading data..." ? name : null,
+            kmAhead: stop.distanceKm,
+            minutes: stop.minutes,
+        };
+    }
 
     const isCalculating = ref(false);
     const routeFound = ref<boolean | null>(null);
@@ -169,13 +262,15 @@ export const useRouteController = (
         if (!path || !cache) return null;
 
         const sprite = kind === "rest" ? "service_ico" : "gas_ico";
+        // Roadside stops sit beside the road: their reach is the sprite's
+        // own, not the generic town-level allowance.
         return findNearestPoiAhead(
             path,
             cache,
             currentRouteIndex.value,
             querySpritePoints(sprite),
             maxKmAhead,
-            POI_MAX_DETOUR_KM,
+            reachFor(sprite),
         );
     }
 
@@ -709,18 +804,32 @@ export const useRouteController = (
             }
 
             // Tag each request so overlapping calculations cannot consume
-            // each other's RESULT messages.
+            // each other's RESULT messages, and settle stale ones: a worker
+            // that never answers (busy, or the graph still loading) times
+            // out to null rather than leaving the promise and its handler
+            // hanging — the one-at-a-time discipline of WestPlay's
+            // route_change.rs, timeout included.
             const requestId = ++workerRequestId;
+            let settled = false;
 
             const handler = (e: MessageEvent) => {
                 if (
                     e.data.type === "RESULT" &&
                     e.data.requestId === requestId
                 ) {
-                    worker!.removeEventListener("message", handler);
-                    resolve(e.data.payload);
+                    finish(e.data.payload);
                 }
             };
+
+            const finish = (payload: any) => {
+                if (settled) return;
+                settled = true;
+                worker!.removeEventListener("message", handler);
+                clearTimeout(timer);
+                resolve(payload);
+            };
+
+            const timer = setTimeout(() => finish(null), WORKER_ANSWER_WITHIN_MS);
 
             worker.addEventListener("message", handler);
 
@@ -1416,26 +1525,38 @@ export const useRouteController = (
         lastMathPos.value = truckCoords;
 
         const path = currentRoutePath.value;
-        let bestIndex = currentRouteIndex.value;
-        let minSqDist = Infinity;
+        const searchLimit = Math.min(
+            path.length - 1,
+            currentRouteIndex.value + 500,
+        );
+        const startSearch = Math.max(0, currentRouteIndex.value - 5);
 
-        const searchLimit = Math.min(path.length - 1, bestIndex + 500);
-        const startSearch = Math.max(0, bestIndex - 5);
-
-        for (let i = startSearch; i < searchLimit; i++) {
-            const distSq = getSqDistToSegment(
-                truckCoords,
-                path[i]!,
-                path[i + 1]!,
-            );
-
-            if (distSq < minSqDist) {
-                minSqDist = distSq;
-                bestIndex = i;
-            }
-        }
-
+        // Nearest segment running the truck's way (drives the index and the
+        // snap), falling back to the raw nearest when none does — a U-turn
+        // on the route never projects onto its own way back.
+        const projection = projectAlongPath(
+            path,
+            startSearch,
+            searchLimit,
+            truckCoords,
+            truckHeading,
+        );
+        const bestIndex = projection?.index ?? 0;
+        const minSqDist = projection
+            ? projection.distanceDeg * projection.distanceDeg
+            : Infinity;
         currentRouteIndex.value = bestIndex;
+
+        // The snap: between 18 m and 10 m of the line (game ground) the
+        // marker eases onto the route, beyond it stays where it is, so
+        // leaving (or joining) the route never jumps.
+        const snapWeight = projection
+            ? snapWeightOf(projection.distanceDeg)
+            : 0;
+        snappedTruckCoords.value =
+            projection && snapWeight > 0
+                ? snapCoords(truckCoords, projection.at, snapWeight)
+                : null;
 
         let activeThreshold = DEVIATION_THRESHOLD_SQ;
 
@@ -1462,6 +1583,9 @@ export const useRouteController = (
         routeDistance.value = Math.round(remKm);
 
         updateRouteEta(remGameHours, remRealHours);
+
+        // The next user waypoint's ETA, by its share of the remaining time.
+        updateNextStopEta(currentKm, remKm, remGameHours * 60);
 
         // Urban-entry warning: fire once when the next city area is close.
         const urbanMarks = routeUrbanKmMarks.value;
@@ -1570,6 +1694,7 @@ export const useRouteController = (
         currentRoutePath.value = null;
         routeUrbanKmMarks.value = null;
         nextUrbanMarkIdx = 0;
+        snappedTruckCoords.value = null;
 
         serviceSuggestion.value = null;
         lastPlanningCheck = 0;
@@ -1588,6 +1713,8 @@ export const useRouteController = (
 
         nextTurnDistance.value = 0;
         lastMathPos.value = null;
+        nextStopEta.value = null;
+        waypointKmCache = null;
     }
 
     return {
@@ -1618,5 +1745,7 @@ export const useRouteController = (
         findBestStartConfiguration,
         updateRouteProgress,
         clearRouteState,
+        snappedTruckCoords,
+        nextStopEta,
     };
 };

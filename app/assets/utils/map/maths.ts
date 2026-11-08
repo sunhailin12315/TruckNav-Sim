@@ -1,5 +1,11 @@
 export const DEVIATION_THRESHOLD_SQ = 0.0005;
 
+/** A path segment heading more than this far against the way the truck faces
+ * (the cosine: about 120°) runs the other way: where the route comes back
+ * along the same road (a U-turn round a roundabout), its way back lies right
+ * on its way there, and only the heading tells them apart. */
+export const AGAINST_COS = -0.5;
+
 export function toRad(deg: number) {
     return (deg * Math.PI) / 180;
 }

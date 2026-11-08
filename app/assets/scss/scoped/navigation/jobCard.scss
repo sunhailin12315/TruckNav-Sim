@@ -211,3 +211,32 @@
         }
     }
 }
+
+// The next user waypoint still ahead (WestPlay's nextStop line): name, how
+// far, and its share of the remaining minutes.
+.stop-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 8px;
+    padding-top: 8px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    .stop-icon {
+        opacity: 0.7;
+    }
+
+    .stop-label {
+        min-width: 0;
+
+        font-size: 1.25rem;
+        font-weight: 600;
+        opacity: 0.85;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

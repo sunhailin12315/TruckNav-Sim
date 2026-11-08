@@ -82,7 +82,9 @@
         "takeExit": "Ausfahrt nehmen",
         "turnLeft": "Links abbiegen",
         "turnRight": "Rechts abbiegen",
-        "then": "Danach"
+        "then": "Danach",
+        "uTurn": "Wenden",
+        "now": "Jetzt"
     },
     "events": {
         "achievement": "Erfolg freigeschaltet",
@@ -117,7 +119,8 @@
         "overdue": "Überfällig",
         "unknownDestination": "Unbekanntes Ziel",
         "unknownSource": "Unbekannter Startort",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "Nächster Stopp"
     },
     "map": {
         "externalRouteDetected": "Externe Route erkannt: Wegpunkt setzen",

@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
     estimateDetourMinutes,
     findNearestPoiAhead,
+    findPoisAlongRoute,
+    POI_REACH_DEFAULT_KM,
+    reachFor,
 } from "~/assets/utils/routing/poiAlongRoute";
 
 // Straight west-east line, 10 km per point.
@@ -90,5 +93,55 @@ describe("estimateDetourMinutes", () => {
 
     it("never reports zero minutes", () => {
         expect(estimateDetourMinutes(0.3, 90)).toBe(1);
+    });
+});
+
+describe("findPoisAlongRoute", () => {
+    it("returns every hit sorted by km ahead", () => {
+        const { path, cache } = buildPath(101);
+        // Two stops at km 700 and km 200; the list leads with the nearer.
+        const pois: [number, number][] = [
+            [0.07, 0.0002],
+            [0.02, 0.0002],
+        ];
+
+        const hits = findPoisAlongRoute(path, cache, 0, pois, 1000, 0.1);
+
+        expect(hits.length).toBe(2);
+        expect(hits[0]!.kmAhead).toBeCloseTo(200, 6);
+        expect(hits[1]!.kmAhead).toBeCloseTo(700, 6);
+    });
+
+    it("is exact between the vertices the old scan sampled past", () => {
+        // A stop hanging off segment 7→8's middle: the old scan stepped
+        // every 10th vertex and could miss here entirely.
+        const { path, cache } = buildPath(101);
+        const pois: [number, number][] = [[0.0075, 0.0003]];
+
+        const hits = findPoisAlongRoute(path, cache, 0, pois, 1000, 0.1);
+
+        expect(hits.length).toBe(1);
+        expect(hits[0]!.kmAhead).toBeGreaterThan(70);
+        expect(hits[0]!.kmAhead).toBeLessThan(80);
+        expect(hits[0]!.detourKm).toBeCloseTo(0.0333, 3);
+    });
+
+    it("skips stops at or behind the truck", () => {
+        const { path, cache } = buildPath(101);
+        const pois: [number, number][] = [[0.001, 0]];
+
+        expect(
+            findPoisAlongRoute(path, cache, 20, pois, 1000, 0.1),
+        ).toEqual([]);
+    });
+});
+
+describe("reachFor", () => {
+    it("gives roadside stops a short reach and the rest the town reach", () => {
+        expect(reachFor("gas_ico")).toBeLessThan(POI_REACH_DEFAULT_KM);
+        expect(reachFor("service_ico")).toBeLessThan(POI_REACH_DEFAULT_KM);
+        expect(reachFor("toll_ico")).toBeLessThan(reachFor("gas_ico"));
+        expect(reachFor("company_ico")).toBe(POI_REACH_DEFAULT_KM);
+        expect(reachFor("whatever")).toBe(POI_REACH_DEFAULT_KM);
     });
 });

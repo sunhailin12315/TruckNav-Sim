@@ -82,7 +82,9 @@
         "takeExit": "Použij zjazd",
         "turnLeft": "Zahni doľava",
         "turnRight": "Zahni doprava",
-        "then": "Potom"
+        "then": "Potom",
+        "uTurn": "Otočte sa",
+        "now": "Teraz"
     },
     "events": {
         "achievement": "Úspech odomknutý",
@@ -117,7 +119,8 @@
         "overdue": "Po termíne",
         "unknownDestination": "Neznámy cieľ",
         "unknownSource": "Neznámy štart",
-        "xp": "XP"
+        "xp": "XP",
+        "nextStop": "Ďalšia zastávka"
     },
     "map": {
         "externalRouteDetected": "Externá trasa detekovaná: Nastavený waypoint",

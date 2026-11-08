@@ -1,5 +1,10 @@
 const MERCATOR_R = 300000.0;
 
+/** How many degrees of this map's own longitude one metre of game ground is:
+ * the whole geometry stack (deviation thresholds, snap distances) thinks in
+ * game metres, the paths are stored in degrees. */
+export const DEG_PER_GAME_M = 180.0 / (Math.PI * MERCATOR_R);
+
 /**
  * Euro Truck Simulator 2 (Flat Canvas)
  */

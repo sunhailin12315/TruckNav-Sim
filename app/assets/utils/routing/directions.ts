@@ -1,3 +1,5 @@
+import { getBearing } from "~/assets/utils/map/maths";
+
 export interface DirectionStep {
     id: number;
     type:
@@ -9,6 +11,7 @@ export interface DirectionStep {
         | "slight-right"
         | "sharp-left"
         | "sharp-right"
+        | "u-turn"
         | "ferry"
         | "roundabout"
         | "destination"
@@ -17,8 +20,10 @@ export interface DirectionStep {
     distance: number;
     coords: [number, number];
     exitCoords?: [number, number];
-    debugAngle?: number;
-    debugPrefabId?: number;
+    /** The turn's own angle at the junction (signed degrees, right
+     * positive), as the way out turns from the way in — the arrow glyph is
+     * drawn from it. Absent on depart / destination / roundabout. */
+    angle?: number;
     exitCount?: number;
     cumulativeKm?: number;
     exitCumulativeKm?: number;
@@ -26,6 +31,21 @@ export interface DirectionStep {
     // resolve display-path positions through the worker's nodeDisplayIndices
     // instead of scanning the whole path by coordinates.
     nodeIndex?: number;
+}
+
+/** How sharp a left/right has to be before it reads as a U-turn. */
+const U_TURN_MIN_ABS_DEG = 135;
+
+/** The signed angle (right positive, -180..180) the way out takes from the
+ * way in at the junction `curr`, or undefined where a side is unknown. */
+export function turnAngle(
+    prev: [number, number] | undefined,
+    curr: [number, number] | undefined,
+    next: [number, number] | undefined,
+): number | undefined {
+    if (!prev || !curr || !next) return undefined;
+    const diff = getBearing(curr, next) - getBearing(prev, curr);
+    return (((diff % 360) + 540) % 360) - 180;
 }
 
 export function generateDirectionsList(
@@ -67,14 +87,31 @@ export function generateDirectionsList(
             let turnText = "";
             let exitCount = sequenceExits[i]!;
 
+            // The junction's own angle from the geometry: the arrow is drawn
+            // pointing the way the road actually goes, and a sharp enough
+            // left/right reads as a U-turn.
+            const angle = turnAngle(
+                i > 0 ? nodeCoords.get(nodeSequence[i - 1]!) : undefined,
+                nodeCoords.get(curr!),
+                nodeCoords.get(next!),
+            );
+
             switch (maneuver) {
                 case 1:
-                    turnType = "left";
-                    turnText = "Turn left";
+                    turnType =
+                        angle !== undefined &&
+                        Math.abs(angle) >= U_TURN_MIN_ABS_DEG
+                            ? "u-turn"
+                            : "left";
+                    turnText = turnType === "u-turn" ? "Make a U-turn" : "Turn left";
                     break;
                 case 2:
-                    turnType = "right";
-                    turnText = "Turn right";
+                    turnType =
+                        angle !== undefined &&
+                        Math.abs(angle) >= U_TURN_MIN_ABS_DEG
+                            ? "u-turn"
+                            : "right";
+                    turnText = turnType === "u-turn" ? "Make a U-turn" : "Turn right";
                     break;
                 case 3: {
                     turnType = "roundabout";
@@ -114,6 +151,7 @@ export function generateDirectionsList(
                     type: turnType,
                     text: turnText,
                     distance: 0,
+                    angle,
                     cumulativeKm: nodeKms[i],
                     exitCumulativeKm: nodeKms[i + 1],
                     coords: nodeCoords.get(curr!) || [0, 0],

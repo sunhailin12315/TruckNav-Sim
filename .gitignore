@@ -18,6 +18,9 @@ logs
 .fleet
 .idea
 
+# ZCode client local config (personal environment, not project state)
+.zcode/
+
 # Local env files
 .env
 .env.*

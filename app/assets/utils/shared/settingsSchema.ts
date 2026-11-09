@@ -10,6 +10,8 @@ export type UnitSystem = "metric" | "imperial";
 export type TextTheme = "light" | "dark";
 export type RouteTimeMode = "game" | "real";
 export type DayNightMode = "off" | "auto" | "day" | "night";
+/** Timbre preset for the driver-assist beeps; see beepStyles.ts. */
+export type BeepStyle = "classic" | "soft" | "chip" | "chirp";
 export type UiComponent =
     | "speed"
     | "fuel"
@@ -44,6 +46,8 @@ export interface GameplaySettings {
     eventFeed: boolean;
     /** Beeps and vibration for overspeed, fatigue and feed events. */
     soundAlerts: boolean;
+    /** Timbre preset used by all beeps when soundAlerts is on. */
+    beepStyle: BeepStyle;
     /** Toast when the route is about to enter an urban area. */
     urbanWarning: boolean;
     /** Spoken turn-by-turn guidance via Web Speech synthesis. */
@@ -52,6 +56,12 @@ export interface GameplaySettings {
     voiceConcise: boolean;
     /** Prefer the offline neural voice over the OS speech engine when available. */
     voiceNeural: boolean;
+    /**
+     * Explicit TTS voice by voiceURI, or AUTO_VOICE. A picked voice wins
+     * over the neural engine; if it disappears the guidance falls back to
+     * the automatic path.
+     */
+    voiceName: string;
 }
 
 export interface AppSettingsState {
@@ -72,7 +82,7 @@ export interface AppSettingsState {
     gameplay: GameplaySettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 8;
+export const SETTINGS_SCHEMA_VERSION = 10;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -82,6 +92,16 @@ const UI_COMPONENTS: readonly UiComponent[] = [
     "speedLimit",
     "topBar",
 ];
+
+export const BEEP_STYLES: readonly BeepStyle[] = [
+    "classic",
+    "soft",
+    "chip",
+    "chirp",
+];
+
+/** Sentinel for voiceName: pick the language-matched voice automatically. */
+export const AUTO_VOICE = "auto";
 
 const LOCALES: readonly LocaleCode[] = [
     "en",
@@ -145,13 +165,16 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
     locale: "en",
     routeTimeMode: "game",
     // The visual feed is quiet enough to ship on; sound stays opt-in.
+    // "classic" is the square-wave GPS beep the alerts shipped with.
     gameplay: {
         eventFeed: true,
         soundAlerts: false,
+        beepStyle: "classic",
         urbanWarning: true,
         voiceNavigation: false,
         voiceConcise: true,
         voiceNeural: true,
+        voiceName: AUTO_VOICE,
     },
 };
 
@@ -198,6 +221,10 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     },
     // v8 adds voiceNeural (gameplay); the normalizer fills its default.
     7: (raw) => raw,
+    // v9 adds beepStyle (gameplay); the normalizer fills its default.
+    8: (raw) => raw,
+    // v10 adds voiceName (gameplay); the normalizer fills its default.
+    9: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -246,6 +273,11 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.soundAlerts === "boolean"
                 ? source.soundAlerts
                 : defaults.soundAlerts,
+        beepStyle: oneOf(
+            source.beepStyle,
+            BEEP_STYLES,
+            defaults.beepStyle,
+        ),
         urbanWarning:
             typeof source.urbanWarning === "boolean"
                 ? source.urbanWarning
@@ -262,6 +294,13 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.voiceNeural === "boolean"
                 ? source.voiceNeural
                 : defaults.voiceNeural,
+        // Free-form voiceURI: any non-empty string is kept (a voice that
+        // later disappears is handled at speak time, not by migration).
+        voiceName:
+            typeof source.voiceName === "string" &&
+            source.voiceName.length > 0
+                ? source.voiceName
+                : defaults.voiceName,
     };
 }
 

@@ -1,4 +1,9 @@
 import type { LocaleCode } from "~/assets/utils/shared/settingsSchema";
+import {
+    AUTO_VOICE,
+    selectVoiceFrom,
+    voicesForLocale,
+} from "~/assets/utils/guidance/voiceSelection";
 
 // BCP-47 tag per app locale for speech synthesis; falls back to en-US.
 const SPEECH_LANGS: Record<LocaleCode, string> = {
@@ -33,32 +38,35 @@ const electronTts = (): ElectronNeuralTts | null => {
 };
 
 // Windows/Electron ships one SAPI default voice that may not match the
-// spoken language — an English engine reading Chinese stays silent. Pick a
-// system voice matching the cue language: exact tag first, then the bare
-// language prefix, then the engine default. Voices load asynchronously, so
-// refresh the cache whenever the engine reports a change.
+// spoken language — an English engine reading Chinese stays silent. The
+// user can pin a voice (voiceName setting); otherwise pick a system voice
+// matching the cue language: exact tag first, then the bare language
+// prefix, then the engine default. Voices load asynchronously, so refresh
+// the cache whenever the engine reports a change.
 let cachedVoice: SpeechSynthesisVoice | null = null;
 let cachedVoiceKey = "";
 
-const normalized = (lang: string) => lang.replace("_", "-").toLowerCase();
-
-const pickVoice = (lang: string): SpeechSynthesisVoice | null => {
-    if (lang === cachedVoiceKey && cachedVoice) return cachedVoice;
+const pickVoice = (lang: string, wantedUri: string): SpeechSynthesisVoice | null => {
+    const cacheKey = `${lang}|${wantedUri}`;
+    if (cacheKey === cachedVoiceKey && cachedVoice) return cachedVoice;
 
     const voices = window.speechSynthesis.getVoices();
     if (!voices.length) return null;
 
-    const want = normalized(lang);
-    const matched =
-        voices.find((v) => normalized(v.lang) === want) ??
-        voices.find((v) =>
-            normalized(v.lang).startsWith(`${want.split("-")[0]}-`),
-        ) ??
-        null;
+    cachedVoice = selectVoiceFrom(voices, lang, wantedUri);
+    cachedVoiceKey = cacheKey;
+    return cachedVoice;
+};
 
-    cachedVoice = matched;
-    cachedVoiceKey = lang;
-    return matched;
+// Reactive voice list for the settings picker: the engine fills it late
+// (voiceschanged), so it's a ref refreshed on every change event plus the
+// first read attempt.
+const voiceList = ref<SpeechSynthesisVoice[]>([]);
+
+const refreshVoiceList = () => {
+    if (!import.meta.client || !("speechSynthesis" in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) voiceList.value = [...voices];
 };
 
 // ===== Neural cue cache: synthesis is slow, cue texts are templated =====
@@ -126,11 +134,14 @@ export const useVoiceGuidance = () => {
     let speakToken = 0;
 
     if (import.meta.client && supported) {
-        // Warm the voice list and keep the cache fresh as voices arrive.
+        // Warm the voice list and keep the cache + the settings picker's
+        // options fresh as voices arrive.
         window.speechSynthesis.onvoiceschanged = () => {
             cachedVoice = null;
             cachedVoiceKey = "";
+            refreshVoiceList();
         };
+        refreshVoiceList();
     }
 
     const clearPendingSpeak = () => {
@@ -139,6 +150,16 @@ export const useVoiceGuidance = () => {
             speakTimer = null;
         }
     };
+
+    // Voices worth offering for the app locale right now (language prefix
+    // match, or everything when the system has none) — for the picker.
+    const localeVoices = computed(() => {
+        const locale = settings.value.locale;
+        return voicesForLocale(
+            voiceList.value,
+            SPEECH_LANGS[locale] ?? "en-US",
+        );
+    });
 
     const stopAudio = () => {
         if (currentAudio) {
@@ -183,6 +204,7 @@ export const useVoiceGuidance = () => {
         const wantsNeural =
             settings.value.gameplay.voiceNavigation &&
             settings.value.gameplay.voiceNeural &&
+            settings.value.gameplay.voiceName === AUTO_VOICE &&
             !neuralDisabled &&
             NEURAL_LOCALES.has(locale) &&
             electronTts() !== null;
@@ -216,7 +238,10 @@ export const useVoiceGuidance = () => {
                 try {
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = lang;
-                    utterance.voice = pickVoice(lang);
+                    utterance.voice = pickVoice(
+                        lang,
+                        settings.value.gameplay.voiceName,
+                    );
                     utterance.rate = 1.05;
                     synth.speak(utterance);
                 } catch (e) {
@@ -252,8 +277,11 @@ export const useVoiceGuidance = () => {
                 speakSystem(text, SPEECH_LANGS[locale] ?? "en-US");
             }
         };
+        // A pinned voice outranks the neural engine: what the user picked
+        // is what they want to hear, neural or not.
         const wantsNeural =
             settings.value.gameplay.voiceNeural &&
+            settings.value.gameplay.voiceName === AUTO_VOICE &&
             !neuralDisabled &&
             NEURAL_LOCALES.has(locale) &&
             electronTts() !== null;
@@ -279,5 +307,24 @@ export const useVoiceGuidance = () => {
         speakSystem(text, SPEECH_LANGS[locale] ?? "en-US");
     };
 
-    return { speak, cancel, supported, prewarm };
+    /** Speak one sample cue for the settings UI, regardless of the
+     * voiceNavigation toggle — the user clicked to hear the voice. The
+     * system engine path previews the *selected* voice directly (pinned or
+     * auto-matched), which is exactly what the picker is demonstrating. */
+    const previewVoice = (text: string) => {
+        cancel();
+        speakToken++;
+        const locale = settings.value.locale;
+        speakSystem(text, SPEECH_LANGS[locale] ?? "en-US");
+    };
+
+    return {
+        speak,
+        cancel,
+        supported,
+        prewarm,
+        previewVoice,
+        availableVoices: voiceList,
+        localeVoices,
+    };
 };

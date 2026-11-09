@@ -181,6 +181,13 @@ export const useRouteController = (
     // can announce the replan (AMap's autoreroute cue).
     const rerouteTrigger = ref(0);
 
+    // Incremented when a deviation-triggered recalculation succeeds, closing
+    // the reroute cue: "recalculating…" → "route recalculated, follow the
+    // new route". Only the deviation path arms this; manual recalcs (route
+    // clicks, waypoint edits, preference changes) stay silent.
+    const rerouteCompletedTrigger = ref(0);
+    let pendingRerouteAnnounce = false;
+
     // Incremented when the truck reaches the route end, so the UI can
     // announce the arrival — distinct from cancelling the route.
     const arrivalTrigger = ref(0);
@@ -754,6 +761,10 @@ export const useRouteController = (
                 }
 
                 routeFound.value = true;
+                if (pendingRerouteAnnounce) {
+                    pendingRerouteAnnounce = false;
+                    rerouteCompletedTrigger.value++;
+                }
                 currentRouteIndex.value = 0;
                 updateProfile(
                     "lastDestination",
@@ -789,10 +800,14 @@ export const useRouteController = (
                 }
             } else {
                 routeFound.value = false;
+                // Failed replan: drop the armed completion cue, otherwise a
+                // later unrelated recalc would announce it out of context.
+                pendingRerouteAnnounce = false;
             }
         } catch (e) {
             console.error(`Route calculation failed: ${e}`);
             isRouteActive.value = false;
+            pendingRerouteAnnounce = false;
         } finally {
             isCalculating.value = false;
         }
@@ -1722,6 +1737,7 @@ export const useRouteController = (
                 lastRecalcTime.value = now;
                 console.log("Deviation detected! Recalculating...");
                 rerouteTrigger.value++;
+                pendingRerouteAnnounce = true;
                 handleMultiRouteCalculation(
                     truckCoords,
                     truckHeading,
@@ -1735,6 +1751,8 @@ export const useRouteController = (
 
     function clearRouteState() {
         if (!map.value) return;
+
+        pendingRerouteAnnounce = false;
 
         deleteMapLibreData(map.value, "route-line");
         deleteMapLibreData(map.value, "destination-source");
@@ -1781,6 +1799,7 @@ export const useRouteController = (
         isRouteActive,
         urbanAheadTrigger,
         rerouteTrigger,
+        rerouteCompletedTrigger,
         arrivalTrigger,
         serviceSuggestion,
         routeAlternatives,

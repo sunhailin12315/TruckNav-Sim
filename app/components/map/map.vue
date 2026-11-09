@@ -123,6 +123,7 @@ const {
     findBestWaypointInsertionIndex,
     urbanAheadTrigger,
     rerouteTrigger,
+    rerouteCompletedTrigger,
     arrivalTrigger,
     serviceSuggestion,
     routeAlternatives,
@@ -135,6 +136,7 @@ const {
 // exist (a TDZ here blanks the whole map view).
 const { activeSettings, settings, updateProfile } = useSettings();
 const { t } = useTranslations();
+const { kmToUserUnits } = useUnitConversion();
 
 // Parses the formatted ETA ("2h 30min" / "~ 3h 0min") into minutes so the
 // job card can flag deadlines the current route won't make.
@@ -165,8 +167,10 @@ function toggleDriveReport() {
     isDriveReportOpen.value = !isDriveReportOpen.value;
 }
 
-// Overspeed edge: one beep when crossing the limit, re-armed once the truck
-// is back at or under the limit (no beeping while hovering just above).
+// Overspeed edge: one beep + spoken cue when crossing the limit, re-armed
+// once the truck is back at or under the limit (no beeping while hovering
+// just above). The beep alone only says "something's wrong" — the speech
+// names the numbers so the driver knows what to correct.
 let overspeedArmed = true;
 watch([truckSpeed, speedLimit], () => {
     const speeding =
@@ -176,6 +180,12 @@ watch([truckSpeed, speedLimit], () => {
         overspeedArmed = false;
         playBeep(700, 200);
         vibrate([80, 60, 80]);
+        speakCue(
+            t("voice.speedOver", {
+                speed: Math.round(kmToUserUnits(truckSpeed.value)),
+                limit: Math.round(kmToUserUnits(speedLimit.value)),
+            }),
+        );
     } else if (
         !speeding &&
         truckSpeed.value <= speedLimit.value
@@ -209,8 +219,11 @@ watch(urbanAheadTrigger, () => {
 });
 
 // Rest / fuel suggestion: marker lives on the map until cleared by the
-// planner; the toast + beep announce it once. The detour cost mirrors the
-// AMap-style "+X min / +Y km" bubble so the driver can judge the stop.
+// planner; the toast + spoken cue announce it once — voice only, no beep:
+// these are suggestions (L3), and a double beep at alert loudness would
+// flatten the hierarchy with overspeed/fatigue warnings. The detour cost
+// mirrors the AMap-style "+X min / +Y km" bubble so the driver can judge
+// the stop.
 const suggestionNotificationTrigger = ref(0);
 const suggestionText = computed(() => {
     const suggestion = serviceSuggestion.value;
@@ -228,7 +241,6 @@ const suggestionText = computed(() => {
 watch(serviceSuggestion, (suggestion) => {
     if (!suggestion) return;
     suggestionNotificationTrigger.value++;
-    playBeep(suggestion.kind === "rest" ? 520 : 700, 200, 2);
     speakCue(
         suggestion.kind === "rest"
             ? t("voice.restAhead", {
@@ -306,9 +318,12 @@ watch(arrivalTrigger, () => {
 });
 
 // Deviation replan: toast + optional beep + spoken cue, at most once per
-// episode (the recalc itself is throttled upstream at 5 s).
+// episode (the recalc itself is throttled upstream at 5 s). The completion
+// cue closes the "recalculating…" one only when that cue actually played —
+// a deduped (silent) replan must not announce a spoken finish on its own.
 const rerouteNotificationTrigger = ref(0);
 let lastRerouteAnnouncedAt = 0;
+let rerouteStartAnnounced = false;
 watch(rerouteTrigger, () => {
     const now = Date.now();
     if (now - lastRerouteAnnouncedAt < 20000) return;
@@ -317,6 +332,13 @@ watch(rerouteTrigger, () => {
     rerouteNotificationTrigger.value++;
     if (settings.value.gameplay.soundAlerts) playBeep(500, 180);
     speakCue(t("map.rerouting"));
+    rerouteStartAnnounced = true;
+});
+
+watch(rerouteCompletedTrigger, () => {
+    if (!rerouteStartAnnounced) return;
+    rerouteStartAnnounced = false;
+    speakCue(t("voice.rerouteDone"));
 });
 
 // Route preference change: recalculate the active route so the new ferry
@@ -706,7 +728,32 @@ function onStartNavigation() {
     if (!truckCoords.value) return;
 
     startNavigationMode(truckCoords.value, truckHeading.value, truckSpeed.value);
-    speakCue(t("voice.departed"));
+
+    // Start cue carries the trip summary when the route is known; short
+    // routes fold into a minutes-only duration ("预计45分钟").
+    const etaMin = routeEtaMinutes.value;
+    const hours = etaMin ? Math.floor(etaMin / 60) : 0;
+    speakCue(
+        routeDistance.value > 0 && etaMin !== null
+            ? t("voice.departedFull", {
+                  distance:
+                      activeSettings.value.units === "metric"
+                          ? t("voice.kilometers", {
+                                n: kmToUserUnits(routeDistance.value),
+                            })
+                          : t("voice.miles", {
+                                n: kmToUserUnits(routeDistance.value),
+                            }),
+                  duration:
+                      hours > 0
+                          ? t("voice.hoursMinutes", {
+                                h: hours,
+                                m: etaMin % 60,
+                            })
+                          : t("voice.minutes", { n: etaMin }),
+              })
+            : t("voice.departed"),
+    );
     // Warm the neural engine (model session) and the fixed cues while the
     // driver still has the whole announcement lead time ahead.
     prewarmVoice([
@@ -714,6 +761,7 @@ function onStartNavigation() {
         t("voice.arriving"),
         t("voice.arrived"),
         t("map.rerouting"),
+        t("voice.rerouteDone"),
     ]);
 
     isSheetHidden.value = true;

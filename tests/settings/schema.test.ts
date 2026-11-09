@@ -141,10 +141,12 @@ describe("settingsSchema", () => {
         expect(settings.gameplay).toEqual({
             eventFeed: true,
             soundAlerts: false,
+            beepStyle: "classic",
             urbanWarning: true,
             voiceNavigation: false,
             voiceConcise: true,
             voiceNeural: true,
+            voiceName: "auto",
         });
         expect(settings.profiles.ets2.avoidFerries).toBe(false);
     });
@@ -162,10 +164,12 @@ describe("settingsSchema", () => {
         expect(settings.gameplay).toEqual({
             eventFeed: false,
             soundAlerts: true,
+            beepStyle: "classic",
             urbanWarning: true,
             voiceNavigation: false,
             voiceConcise: true,
             voiceNeural: true,
+            voiceName: "auto",
         });
     });
 
@@ -210,10 +214,12 @@ describe("settingsSchema", () => {
         expect(settings.gameplay).toEqual({
             eventFeed: false,
             soundAlerts: false,
+            beepStyle: "classic",
             urbanWarning: true,
             voiceNavigation: true,
             voiceConcise: true,
             voiceNeural: true,
+            voiceName: "auto",
         });
     });
 
@@ -248,6 +254,45 @@ describe("settingsSchema", () => {
         expect(settings.profiles.ets2.routeColor).toBe("#3d73f0");
         // A genuinely custom color is never touched.
         expect(settings.profiles.ats.routeColor).toBe("#ff8800");
+    });
+
+    it("migrates v8 data up to v9 with the beepStyle default", () => {
+        const stored = {
+            schemaVersion: 8,
+            gameplay: { soundAlerts: true, beepStyle: "synthwave" },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay.soundAlerts).toBe(true);
+        // Unknown style ids fall back to the shipped preset.
+        expect(settings.gameplay.beepStyle).toBe("classic");
+    });
+
+    it("migrates v9 data up to v10 with the voiceName default", () => {
+        const stored = {
+            schemaVersion: 9,
+            gameplay: { voiceName: "Microsoft Hazel Desktop" },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        // A stored voiceURI is kept verbatim; the auto sentinel is a string.
+        expect(settings.gameplay.voiceName).toBe("Microsoft Hazel Desktop");
+        expect(loadSettingsFromRaw('{"schemaVersion":9}').settings.gameplay.voiceName).toBe("auto");
+    });
+
+    it("keeps a stored beepStyle through normalization", () => {
+        const stored = {
+            schemaVersion: 9,
+            gameplay: { beepStyle: "chirp" },
+        };
+        const { settings } = loadSettingsFromRaw(JSON.stringify(stored));
+        expect(settings.gameplay.beepStyle).toBe("chirp");
     });
 
     it("normalizes the gameplay block per-field", () => {

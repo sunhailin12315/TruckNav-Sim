@@ -434,7 +434,10 @@ export function useEtsTelemetry() {
         label: string,
     ) {
         pushEvent(kind, amount, label, gameState.gameTime);
-        playBeep(660, 120);
+        // L4 telemetry events (fines, tolls, ferries, deliveries, awards)
+        // are the lowest-signal layer: a short tick, so long sessions stay
+        // quiet and the beep never masks a turn cue's tail.
+        playBeep(660, 60);
         vibrate(30);
     }
 

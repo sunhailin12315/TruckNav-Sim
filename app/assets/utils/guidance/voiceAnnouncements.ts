@@ -2,11 +2,15 @@
 // is announced as the distance-to-turn crosses fixed marks (far to near).
 // Pure and testable; the caller owns localization and speech synthesis.
 
-/** Distance marks (route-km) at which the upcoming turn is announced. */
-export const TURN_ANNOUNCEMENT_THRESHOLDS_KM = [2, 0.5, 0.2] as const;
+/**
+ * Distance marks (route-km) at which the upcoming turn is announced.
+ * Truck lead times: a loaded 80 km/h rig covers 1 km in ~45 s, so the near
+ * mark sits at 1 km rather than the 200 m a car navigation would use.
+ */
+export const TURN_ANNOUNCEMENT_THRESHOLDS_KM = [5, 3, 1] as const;
 
-/** Concise mode's single mark: ~15 s of lead at truck speeds. */
-export const CONCISE_TURN_ANNOUNCEMENT_KM = [0.3] as const;
+/** Concise mode's single mark: ~25 s of lead at truck speeds. */
+export const CONCISE_TURN_ANNOUNCEMENT_KM = [0.5] as const;
 
 /**
  * Picks the announcement to fire for the upcoming turn: the farthest

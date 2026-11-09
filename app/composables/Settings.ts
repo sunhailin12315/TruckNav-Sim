@@ -1,12 +1,16 @@
 import {
+    AUTO_VOICE,
     DEFAULT_SETTINGS,
     defaultSettings,
     loadSettingsFromRaw,
 } from "~/assets/utils/shared/settingsSchema";
 
+export { AUTO_VOICE };
+
 export type {
     ActiveComponents,
     AppSettingsState,
+    BeepStyle,
     DayNightMode,
     GameProfile,
     GameplaySettings,

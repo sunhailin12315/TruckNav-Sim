@@ -55,6 +55,15 @@ export const useSettings = () => {
             `${settings.value.compactTripFontSize}rem`,
         );
 
+        // Drives $game-info-bar-height (job card, maneuver card, event toasts):
+        // collapses when the top bar component is disabled.
+        document.documentElement.style.setProperty(
+            "--top-bar-height",
+            !settings.value.activeUiComponents.includes("topBar")
+                ? "0px"
+                : "40px",
+        );
+
         // Upstream app sizing: whole-interface scale in percent.
         const scaleMultiplier = (settings.value.uiScale || 100) / 100;
         document.documentElement.style.setProperty(

@@ -1,6 +1,13 @@
 <script lang="ts" setup>
 const props = defineProps<{ requireGame?: boolean }>();
 const isConnected = defineModel<boolean>({ default: false });
+const emit = defineEmits(["connected"]);
+
+// Fork callers listen for @connected to advance the pairing flow; upstream
+// callers bind the v-model instead — keep both interfaces alive.
+watch(isConnected, (connected) => {
+    if (connected) emit("connected");
+});
 
 const { settings, updateGlobal } = useSettings();
 const { t } = useTranslations();

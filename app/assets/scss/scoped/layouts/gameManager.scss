@@ -1,13 +1,9 @@
 .section-mobile-menu {
-    opacity: 0;
-    position: relative;
+    height: calc(100dvh - env(safe-area-inset-top));
+    padding: 8px 16px;
+
     color: $white-font-text;
 
-    display: flex;
-    flex-direction: column;
-    background-color: $primaryBackgroundColor;
-
-    overflow: hidden;
     display: flex;
     flex-direction: column;
 }

@@ -74,7 +74,8 @@ export const ets2Expansions: Record<
 
     11: {
         name: "Iceland",
-        imagePath: "",
+        // No official cover yet; reuse the Nordic Horizons art like upstream.
+        imagePath: "nordic-horizons.webp",
         releaseDate: "Nov 11, 2026",
         icon: "flag:is-4x3",
     },

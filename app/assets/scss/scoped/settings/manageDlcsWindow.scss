@@ -1,53 +1,64 @@
+.manage-dlcs-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    ::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.32);
+}
+
 .manage-dlcs-window {
     color: $white-font-text;
 
-    display: grid;
-    gap: 0.8rem;
-
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
 }
 
 .dlc {
+    font-size: 2rem;
     display: flex;
-    flex-direction: column;
-    background: $primaryColor;
+    justify-content: space-between;
 
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
-    border-radius: $default-border-radius;
+    border: 2px solid $secondaryColor;
+    border-radius: 6px;
+
+    &.is-selected {
+        border-color: var(--theme-color);
+        background-color: rgba($secondaryColor, 20%);
+    }
 
     @include for-tablet {
         flex-direction: column;
     }
-
-    border: 1px solid $primaryLightButtonColor;
-
-    &.is-selected {
-        border-color: color-mix(in srgb, var(--theme-color) 16%, transparent);
-
-        background-color: color-mix(
-            in srgb,
-            var(--theme-color) 10%,
-            transparent
-        );
-
-        .check {
-            color: $green-color;
-        }
-    }
-}
-
-.check {
-    margin-top: 1px;
-    width: 1.9rem;
-    height: 1.9rem;
 }
 
 .dlc-details-wrapper {
     display: flex;
     gap: 1rem;
-    flex: 1;
 
     @include for-tablet {
         flex-direction: column;
@@ -55,49 +66,91 @@
     }
 }
 
-.dlc-details {
-    display: flex;
-    justify-content: space-between;
-    flex-direction: column;
-    flex: 1;
+.dlc-image {
+    position: relative;
+    aspect-ratio: 310.5 / 150.13;
+    border-radius: 6px;
+    width: 310.5px;
 
-    gap: 0.2rem;
-    padding: 0.8rem 1rem;
-}
-
-.top-wrapper {
-    display: flex;
-    justify-content: space-between;
-
-    gap: 1.2rem;
-}
-
-.flag-wrapper {
-    display: flex;
-    gap: 0.6rem;
-
-    .state-tag {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        width: 3.4rem;
-
-        background-color: $primaryBackgroundColor;
-        padding: 1px 6px;
-
-        font-size: 1.3rem;
-        border-radius: $default-border-radius;
+    @include for-tablet {
+        width: 100%;
     }
 }
 
-.flag-icon {
-    border-radius: 3px;
+.dlc-cover {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.skeleton-loader {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: $primaryDarkerColor;
+
+    background: linear-gradient(
+        90deg,
+        $primaryDarkerColor 0%,
+        $primaryDarkerColor 20%,
+        $primaryColor 50%,
+        $primaryDarkerColor 80%,
+        $primaryDarkerColor 100%
+    );
+
+    background-size: 200% 100%;
+
+    border-radius: 6px;
+    animation: shimmer 3s infinite ease-out;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.dlc-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-top: 0.8rem;
+
+    @include for-tablet {
+        padding-left: 0.8rem;
+    }
 }
 
 .dlc-release-date {
     color: $white-font-text;
     opacity: 0.7;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
+    font-weight: 450;
     letter-spacing: 0.4px;
+
+    @include for-tablet {
+        font-size: 1.2rem;
+    }
+}
+
+.checkmarks {
+    align-self: end;
+
+    margin: 0 0.8rem 0.8rem 0;
+    width: 26px;
+    height: 26px;
+    color: $secondaryColor;
+    &.is-selected {
+        color: var(--theme-color);
+    }
 }

@@ -111,7 +111,7 @@ const connectedValue = computed(() => {
         <div class="input-ip">
             <div class="form-details">
                 <div class="form-info-wrapper">
-                    <form action="">
+                    <form action="" @submit.prevent="connect">
                         <div class="label-wrapper">
                             <div class="label-left">
                                 <label for="ip">{{

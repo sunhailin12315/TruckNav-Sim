@@ -48,3 +48,4 @@ public/maps/
 
 # Map scan worker bundle (generated; needs TRUCKNAV_SCAN_TOOLS_DIR)
 electron/resources/scan/
+_packages/

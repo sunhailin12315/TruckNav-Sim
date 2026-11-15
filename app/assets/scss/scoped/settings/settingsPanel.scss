@@ -4,141 +4,171 @@ $button-padding: 8px 10px;
  * GENERAL
  */
 .settings-panel {
-    position: fixed;
-    background-color: $primaryBackgroundColor;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    background-color: $primaryColor;
+    height: 100dvh;
+    width: 100dvw;
+
+    padding-top: 1.8rem;
+    font-weight: 600;
 
     display: flex;
     flex-direction: column;
-
-    padding-top: calc(env(safe-area-inset-top) + 1.2rem);
-
-    z-index: $ui-priority-index;
 }
 
-.wrapper {
-    justify-content: space-between;
-}
-
-.settings-panel-content {
+.settings-wrapper {
     flex: 1;
     min-height: 0;
-    height: 100%;
-
     display: flex;
     flex-direction: column;
-
-    margin-bottom: calc(var(--bottom-pill-tabs-height));
 }
 
-.main-content {
-    display: flex;
-    flex-direction: column;
+.setting {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    color: $white-font-text;
 
-    flex: 1;
-    min-height: 0;
-    height: 100%;
-
-    justify-content: space-between;
-}
-
-.footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    padding-top: 1.4rem;
-
-    font-size: 1.2rem;
-    color: rgba($color: $white-font-text-muted, $alpha: 0.6);
-    line-height: 1.25;
-
-    @media (orientation: landscape), (min-width: 768px) {
-        align-items: end;
-        margin-bottom: calc(-1 * var(--bottom-pill-tabs-height));
-    }
+    font-size: 1.8rem;
 }
 
 .menu-list {
     overflow-y: auto;
 
-    gap: 2rem;
-
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 27rem), 1fr));
-    @include scrollbar-wrapper-design;
-}
-
-.category-wrapper {
     display: flex;
+
     flex-direction: column;
+    gap: 1.6rem;
 
-    gap: 0.4rem;
-}
+    &.main {
+        gap: 2.6rem;
+    }
 
-.items-wrapper {
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 3.2rem;
+    margin-bottom: 3.2rem;
 
-    gap: 1.2rem;
-}
-
-.items-wrapper-stacked {
-    border-radius: $default-border-radius;
-    overflow: hidden;
-
-    padding: 0.2rem 0;
-
-    background-color: $primaryColor;
+    /* Hide scrollbar for browsers */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .selector {
-    min-width: 15rem;
-    max-width: 20rem;
+    min-width: 150px;
+    max-width: 200px;
 
-    background: $primaryLightButtonColor;
-    border-radius: $default-border-radius;
+    background: $default-background-color-dark;
+    border-radius: 5px;
 
     padding: $button-padding;
 
+    font-weight: 700;
     font-size: 1.6rem;
     color: $white-font-text;
 
     cursor: pointer;
 }
 
-.title-text {
+.settings-title {
+    padding-left: 2rem;
+
+    font-size: 1.4rem;
+
     display: flex;
+    align-content: center;
     align-items: center;
-    gap: 1.2rem;
+    gap: 1.8rem;
+
+    width: 100%;
 }
 
 .icon-btn {
-    min-width: 2.6rem;
-    min-height: 2.6rem;
+    min-width: 26px;
+    min-height: 26px;
 
     display: flex;
     align-items: center;
     cursor: pointer;
 }
 
+.title-icon {
+    min-width: 38px;
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .panel-title {
     font-size: 2rem;
+    font-weight: 600;
 }
 
 .panel-description {
     opacity: 0.7;
+    font-weight: 500;
 }
 
-.setting-button-text {
+.separator {
+    height: 2px;
+    width: 100%;
+    background-color: $secondaryColor;
+    border-radius: 3px;
+
+    margin-bottom: 1.8rem;
+    margin-top: 1.8rem;
+}
+
+.small-separator {
+    height: 1px;
+    width: 90%;
+    align-self: center;
+    flex-shrink: 0;
+    background-color: $secondaryColor;
+    opacity: 0.7;
+    border-radius: 3px;
+}
+
+.settings-btn {
     display: flex;
+
     align-items: center;
     justify-content: center;
+    border-radius: 5px;
+    transition: 0s;
+    font-weight: 700;
+    box-shadow: none;
+    padding: $button-padding;
+    font-size: 1.6rem;
 
-    color: $white-font-text-muted;
-    font-size: 1.5rem;
+    transition: 0.2s ease all;
+
+    &.default-color {
+        background-color: $default-background-color-dark;
+        color: $white-font-text;
+    }
+
+    &.increase-decrease {
+        display: flex;
+        padding: 0;
+
+        font-size: 2rem;
+        width: 3.2rem;
+        height: 3.2rem;
+
+        align-items: center;
+        justify-content: center;
+    }
+
+    &:active {
+        opacity: 0.5;
+        transform: translateY(1px);
+    }
+}
+
+.cancel-timer-icon {
+    color: $red-color;
 }
 
 .actual-truck-preview {
@@ -151,104 +181,25 @@ $button-padding: 8px 10px;
 .option {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    user-select: none;
-
-    background-color: $primaryColor;
-    padding: 1rem 1rem;
-    border-radius: $default-border-radius;
-
-    font-size: 1.8rem;
-
-    .icon-wrapper {
-        display: flex;
-        align-items: center;
-
-        background-color: $primaryLightButtonColor;
-        padding: 6px;
-        border-radius: $default-border-radius;
-    }
-
-    .icon {
-        width: 2rem;
-        height: 2rem;
-        background-color: var(--theme-color);
-    }
-
-    .chevron {
-        width: 1.6rem;
-        height: 1.6rem;
-        background-color: $white-font-text-muted;
-
-        &.translate-y {
-            transform: translateY(1px);
-        }
-    }
-
-    &.stacked {
-        border-radius: 0px;
-        padding: 1rem 1rem;
-    }
-}
-
-.setting {
-    display: flex;
-    align-items: center;
-
-    font-size: 1.6rem;
-    flex-direction: row;
     justify-content: space-between;
-    user-select: none;
-}
-
-.main-setting {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.option-text {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.option-text-wrapper {
-    display: flex;
-    flex-direction: column;
-
-    gap: 0.3rem;
-    line-height: 1.05;
-}
-
-.option-description {
-    font-size: 1.4rem;
-    color: $white-font-text-muted;
 }
 
 .option-title {
     display: flex;
     gap: 0.8rem;
     align-items: center;
-}
 
-.option-action {
-    display: flex;
-    align-items: center;
-
-    gap: 0.4rem;
-}
-
-.settings-btn {
-    padding: 0.4rem 1rem;
+    span {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 .picker-footer {
     display: flex;
     align-items: center;
 
-    background: $primaryBackgroundColor;
+    background: $primaryDarkerColor;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
@@ -262,69 +213,23 @@ $button-padding: 8px 10px;
 
 .increase-option {
     display: flex;
-    gap: 0.6rem;
+    gap: 1.2rem;
     align-items: center;
-
-    padding: 1px 4px;
-
-    background-color: $primaryLightButtonColor;
-    border-radius: $default-border-radius;
-}
-
-.increase-btn {
-    padding: 5px 2px;
-    background-color: $primaryLightButtonColor;
-
-    color: $white-font-text;
-    box-shadow: none;
-}
-
-.increase-current-size {
-    font-variant-numeric: tabular-nums;
-
-    display: flex;
-    align-items: baseline;
-    gap: 0.2rem;
-
-    .unit {
-        font-size: 1.2rem;
-        color: $white-font-text-muted;
-    }
 }
 
 .change-color-btn {
-    width: 3rem;
-    height: 3rem;
-
-    margin: 0.15rem 0;
-
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-
-    background-color: var(--swatch-color);
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.edit-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .color-picker {
-    background-color: $primaryBackgroundColor;
+    background-color: $secondaryColor;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     padding: 4px;
-
-    [data-slot="selector"] {
-        overflow: hidden;
-        box-shadow: inset 0 -4px 0 #000;
-    }
-
-    [data-color-picker-background] {
-        height: calc(100% + 2px);
-    }
 }
 
 .small-reset {
@@ -332,148 +237,8 @@ $button-padding: 8px 10px;
     width: 100%;
 
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-/**
- * LANGUAGE PANEL
- */
-
-.languages {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-
     gap: 0.8rem;
 }
-
-.language {
-    position: relative;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 0.6rem;
-
-    padding: 1rem;
-    font-size: 1.7rem;
-
-    background-color: $primaryColor;
-
-    border-radius: $default-border-radius;
-    color: rgba($white-font-text, 0.7);
-
-    border: 1px solid $primaryAccentColor;
-
-    &.active {
-        border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
-
-        background-color: color-mix(
-            in srgb,
-            var(--theme-color) 7%,
-            transparent
-        );
-
-        color: $white-font-text;
-    }
-
-    .checkmark {
-        position: absolute;
-        right: 6px;
-        top: 7px;
-
-        color: $green-color;
-        width: 1.8rem;
-        height: 1.8rem;
-    }
-
-    .flag-icon {
-        width: 3.8rem;
-        border-radius: $default-border-radius;
-        box-shadow: 0px 2px 8px rgba($color: #000000, $alpha: 0.15);
-    }
-}
-
-.flag {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: $default-border-radius;
-}
-
-/**
- * FONTS PANEL
- */
-
-.fonts-content {
-    display: flex;
-    flex-direction: column;
-
-    gap: 0.8rem;
-}
-
-.fonts {
-    display: grid;
-
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
-    gap: 0.8rem;
-}
-
-.font {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-
-    padding: 0.8rem;
-
-    background-color: $primaryColor;
-
-    border-radius: $default-border-radius;
-
-    border: 1px solid $primaryAccentColor;
-
-    font-size: 1.7rem;
-
-    &.active {
-        border-color: color-mix(in srgb, var(--theme-color) 60%, transparent);
-
-        background-color: color-mix(
-            in srgb,
-            var(--theme-color) 5%,
-            transparent
-        );
-
-        color: $white-font-text;
-    }
-}
-
-.font-showcase {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.font-lorem {
-    display: flex;
-    align-items: end;
-    gap: 0.4rem;
-
-    font-size: 1.5rem;
-    color: $white-font-text-muted;
-
-    font-variant-numeric: tabular-nums;
-}
-
-.dot {
-    width: 3px;
-    height: 3px;
-    align-self: center;
-}
-
 /**
  * DLC SETTINGS
  */
@@ -481,4 +246,8 @@ $button-padding: 8px 10px;
     display: flex;
     align-items: center;
     gap: 1rem;
+
+    @include for-phone {
+        font-size: 1.2rem;
+    }
 }

@@ -1,3 +1,8 @@
+// Fork-side breakpoints used by the mixins above.
+$small-screens: 900px;
+$tablets: 650px;
+$phones: 420px;
+$narrow-phones: 360px;
 $narrow-phone-max: 350px;
 $phone-landscape-max-height: 500px;
 $tablet-min-width: 768px;
@@ -48,4 +53,23 @@ $desktop-min-width: 1024px;
     );
 
     padding-bottom: 1.8rem;
+}
+
+// Fork-side mixins still used by restored settings stylesheets.
+@mixin for-phone {
+    @media (max-width: $phones) {
+        @content;
+    }
+}
+
+@mixin for-small-screens {
+    @media (max-width: $small-screens) {
+        @content;
+    }
+}
+
+@mixin for-narrow-phones {
+    @media (max-width: $narrow-phones) {
+        @content;
+    }
 }

@@ -16,17 +16,39 @@ export async function initializeMap(
     // Day/night atmosphere: the user palette blended toward night by the
     // in-game clock (off mode = factor 0 = plain user colors).
     const { mapColors } = useDayNight();
+    const { isMobile } = usePlatform();
 
     const baseUrl = window.location.origin;
 
     const maplibregl = (await import("maplibre-gl")).default;
     const { Protocol, PMTiles } = await import("pmtiles");
 
-    const protocol = new Protocol();
+    const protocol = new Protocol({
+        metadata: true,
+    });
     maplibregl.addProtocol("pmtiles", protocol.tile);
 
     async function loadPmtiles(fileName: string, key: string) {
         const folder = getActiveMapFolder(settings.value);
+
+        if (isMobile.value) {
+            try {
+                const localServerUrl = `http://localhost:8765/maps/${folder}/map-data/tiles/${fileName}.mp3`;
+                const pmtilesInstance = new PMTiles(localServerUrl);
+                pmtilesInstance.source.getKey = () => key;
+
+                const testCheck = await fetch(localServerUrl, {
+                    headers: { Range: "bytes=0-10" },
+                });
+                if (!testCheck.ok) throw new Error("Local server failed");
+
+                protocol.add(pmtilesInstance);
+                return;
+            } catch {
+                console.warn("[PMTiles] Local server failed. Fallback to blob");
+            }
+        }
+
         const url = await getMapFileUrl(
             folder,
             `map-data/tiles/${fileName}.mp3`,
@@ -110,16 +132,6 @@ export async function initializeMap(
                     "background-color": mapColors.value.water,
                 },
             },
-            {
-                id: "lines",
-                type: "line",
-                source: `${settings.value.selectedGame}`,
-                "source-layer": `${settings.value.selectedGame}`,
-                paint: {
-                    "line-color": "#3d546e",
-                    "line-width": 2,
-                },
-            },
         ],
     };
 
@@ -174,28 +186,36 @@ export async function initializeMap(
             container,
             style,
             center: getEtsCenter(),
-            zoom: 6,
-            minZoom: 5,
+            zoom: 7,
+            minZoom: 5.5,
             maxZoom: 13,
             maxPitch: 60,
-            fadeDuration: 0,
+            fadeDuration: 250,
             attributionControl: false,
             collectResourceTiming: false,
             maxBounds: getEtsBounds(),
+
+            pixelRatio: Math.min(window.devicePixelRatio, 1.4),
+
+            maxTileCacheSize: 250,
         },
 
         ats: {
             container,
             style,
             center: [0, 0],
-            zoom: 6,
-            minZoom: 5,
+            zoom: 7,
+            minZoom: 5.5,
             maxZoom: 13,
             maxPitch: 60,
-            fadeDuration: 0,
+            fadeDuration: 250,
             attributionControl: false,
             collectResourceTiming: false,
             maxBounds: isMods ? modsAtsBounds : baseAtsBounds,
+
+            pixelRatio: Math.min(window.devicePixelRatio, 1.4),
+
+            maxTileCacheSize: 250,
         },
     };
 
@@ -242,8 +262,6 @@ export async function initializeMap(
         // @ts-ignore
         if (e.tile) console.error("  Failing Tile:", e.tile);
     });
-
-    //// =================> LATER ATS UPDATE <=================
 
     map.on("load", async () => {
         map.addSource("all-data", {
@@ -320,42 +338,41 @@ export async function initializeMap(
                     9,
                     2,
                     10,
-                    6,
-                    11,
                     9,
+                    11,
+                    16,
+                    13,
+                    24,
                 ],
                 "line-opacity": 1,
             },
         });
 
         // POLYGONS FOR PARKING ETC
-        map.addLayer(
-            {
-                id: "maparea-zones",
-                type: "fill",
-                source: "all-data",
-                "source-layer": "mapareas",
-                paint: {
-                    "fill-color": [
-                        "match",
-                        ["get", "color"],
-                        0,
-                        "#3d546e",
-                        1,
-                        "#4a5f7a",
-                        2,
-                        "#556b7f",
-                        3,
-                        "#6b7f93",
-                        4,
-                        "#7d93a7",
-                        "#3d546e",
-                    ],
-                    "fill-opacity": 0.5,
-                },
+        map.addLayer({
+            id: "maparea-zones",
+            type: "fill",
+            source: "all-data",
+            "source-layer": "mapareas",
+            paint: {
+                "fill-color": [
+                    "match",
+                    ["get", "color"],
+                    0,
+                    "#3d546e",
+                    1,
+                    "#4a5f7a",
+                    2,
+                    "#556b7f",
+                    3,
+                    "#6b7f93",
+                    4,
+                    "#7d93a7",
+                    "#3d546e",
+                ],
+                "fill-opacity": 0.5,
             },
-            "lines",
-        );
+        });
 
         // PREFABS FOR SERVICE AREAS     ETC
         const color0 = blendWithBg(
@@ -400,36 +417,31 @@ export async function initializeMap(
             "source-layer": "ets2villages",
             layout: {
                 "text-field": ["get", "name"],
-                "text-font": [
-                    activeSettings.value.fontFamily || "Commissioner",
-                ],
+                "text-font": [activeSettings.value.fontFamily || "Jakarta"],
                 "text-size": 13,
                 "text-anchor": "center",
                 "text-offset": [0, 0],
-                "text-allow-overlap": true,
-                "text-ignore-placement": true,
+                "text-allow-overlap": false,
+                "text-ignore-placement": false,
             },
             paint: {
                 "text-color": "#ffffff",
             },
-            minzoom: 8.2,
+            minzoom: 9,
         });
 
         // DISPLAYING STATE DELIMITATIONS
-        map.addLayer(
-            {
-                id: "state-borders",
-                type: "line",
-                source: "all-data",
-                "source-layer": "states",
-                paint: {
-                    "line-color": "#3d546e",
-                    "line-width": 2,
-                    "line-opacity": 0.4,
-                },
+        map.addLayer({
+            id: "state-borders",
+            type: "line",
+            source: "all-data",
+            "source-layer": "states",
+            paint: {
+                "line-color": "#3d546e",
+                "line-width": 2,
+                "line-opacity": 0.4,
             },
-            "lines",
-        );
+        });
 
         // ALL SPRITE SHEETS
         map.addLayer({
@@ -473,7 +485,7 @@ export async function initializeMap(
             source: "all-data",
             "source-layer": "spritelocations",
             filter: ["==", ["get", "poiType"], "road"],
-            minzoom: 8,
+            minzoom: 10.2,
             layout: {
                 "icon-image": ["get", "sprite"],
                 "icon-size": [
@@ -499,14 +511,12 @@ export async function initializeMap(
             filter: ["!=", ["get", "capital"], 2],
             layout: {
                 "text-field": ["get", "name"],
-                "text-font": [
-                    activeSettings.value.fontFamily || "Commissioner",
-                ],
+                "text-font": [activeSettings.value.fontFamily || "Jakarta"],
                 "text-size": 15,
                 "text-anchor": "bottom",
                 "text-offset": [0, -0.3],
-                "text-allow-overlap": true,
-                "text-ignore-placement": true,
+                "text-allow-overlap": false,
+                "text-ignore-placement": false,
             },
             paint: {
                 "text-color": "#ffffff",
@@ -515,7 +525,7 @@ export async function initializeMap(
                 "text-halo-width": 0.3,
             },
             minzoom: 6,
-            maxzoom: 8,
+            maxzoom: 12,
         });
 
         // DISPLAYING CAPITAL NAMES
@@ -528,13 +538,11 @@ export async function initializeMap(
             layout: {
                 "text-field": ["get", "name"],
                 "text-size": 18,
-                "text-font": [
-                    activeSettings.value.fontFamily || "Commissioner",
-                ],
+                "text-font": [activeSettings.value.fontFamily || "Jakarta"],
                 "text-anchor": "bottom",
                 "text-offset": [0, -0.3],
-                "text-allow-overlap": true,
-                "text-ignore-placement": true,
+                "text-allow-overlap": false,
+                "text-ignore-placement": false,
             },
             paint: {
                 "text-color": "#ffffff",
@@ -554,13 +562,11 @@ export async function initializeMap(
             layout: {
                 "text-field": ["get", "name"],
                 "text-size": 20,
-                "text-font": [
-                    activeSettings.value.fontFamily || "Commissioner",
-                ],
+                "text-font": [activeSettings.value.fontFamily || "Jakarta"],
                 "text-anchor": "bottom",
                 "text-offset": [0, -0.3],
-                "text-allow-overlap": true,
-                "text-ignore-placement": true,
+                "text-allow-overlap": false,
+                "text-ignore-placement": false,
             },
             paint: {
                 "text-color": "#ffffff",

@@ -141,8 +141,8 @@ async function packData(
         const startIndex = geomPointer;
 
         for (let i = 0; i < pointCount; i++) {
-            geometryData.push(coords[i]![0]);
-            geometryData.push(coords[i]![1]);
+            geometryData.push(coords[i]![0]!);
+            geometryData.push(coords[i]![1]!);
             geomPointer += 2;
         }
 
@@ -210,12 +210,8 @@ async function main() {
         process.exit(1);
     }
 
-    const [brainInputPath, prefabsInputPath, outDir] = cliArgs as [
-        string,
-        string,
-        string,
-    ];
-    await packData(brainInputPath, prefabsInputPath, outDir);
+    const [brainInputPath, prefabsInputPath, outDir] = cliArgs;
+    await packData(brainInputPath!, prefabsInputPath!, outDir!);
 }
 
 main().catch((err) => {

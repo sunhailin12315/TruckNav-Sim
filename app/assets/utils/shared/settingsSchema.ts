@@ -20,7 +20,24 @@ export type UiComponent =
     | "speedLimit"
     | "topBar";
 export type ActiveComponents = UiComponent[];
-export type LocaleCode = "en" | "de" | "nl" | "cs" | "sk" | "ko" | "ro" | "zh";
+export type LocaleCode =
+    | "en"
+    | "de"
+    | "nl"
+    | "cs"
+    | "sk"
+    | "ko"
+    | "ro"
+    | "fr"
+    | "ru"
+    | "zh";
+
+/** Upstream job-route persistence: restores the last job's route on relaunch. */
+export interface SavedJob {
+    key: string;
+    initialMinutes: number;
+    lastRoute: [number, number][] | null;
+}
 
 export interface GameProfile {
     themeColor: string;
@@ -29,12 +46,22 @@ export interface GameProfile {
     backgroundColor: string;
     landColor: string;
     roadColor: string;
+    /** Route arrow color (defaults to the route color when not customized). */
+    arrowColor: string;
+    /** Truck marker glow color and toggles (upstream trip/truck styling). */
+    glowColor: string;
+    glowEnabled: boolean;
+    outerRimEnabled: boolean;
+    rimColor: string;
     /** Day/night atmosphere switching (off = user colors only). */
     dayNightMode: DayNightMode;
     units: UnitSystem;
     ownedDlcs: number[];
     lastDestination: [number, number] | null;
+    lastJob: SavedJob;
     hasTurnNavigation: boolean;
+    /** Draw the upcoming-turn arrows on the route line. */
+    drawTurnNavigation: boolean;
     avoidFerries: boolean;
     avoidTolls: boolean;
     fontFamily: string;
@@ -97,6 +124,10 @@ export interface AppSettingsState {
     hudBtnSize: number;
     truckMarkerSize: number;
     compactTripFontSize: number;
+    /** Whole-interface scale in percent (upstream app sizing, 100 = normal). */
+    uiScale: number;
+    /** Upstream: start navigating automatically when a job is detected. */
+    autoStartNav: boolean;
     activeUiComponents: ActiveComponents;
     locale: LocaleCode;
     routeTimeMode: RouteTimeMode;
@@ -138,6 +169,8 @@ const LOCALES: readonly LocaleCode[] = [
     "cs",
     "sk",
     "ro",
+    "fr",
+    "ru",
     "ko",
     "zh",
 ];
@@ -150,11 +183,18 @@ const DEFAULT_PROFILE: GameProfile = {
     roadColor: "#4a5f7a",
     backgroundColor: "#24467b",
     landColor: "#272d39",
+    arrowColor: "#3d73f0",
+    glowColor: "#fbc02d",
+    glowEnabled: false,
+    outerRimEnabled: true,
+    rimColor: "#ffffff",
     dayNightMode: "off",
     units: "metric",
     ownedDlcs: Array.from({ length: 10 }, (_, i) => i + 1),
     lastDestination: null,
+    lastJob: { key: "", initialMinutes: 0, lastRoute: null },
     hasTurnNavigation: true,
+    drawTurnNavigation: true,
     avoidFerries: false,
     avoidTolls: false,
     fontFamily: "Commissioner",
@@ -182,6 +222,8 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
     hudBtnSize: 30,
     truckMarkerSize: 40,
     compactTripFontSize: 1.8,
+    uiScale: 100,
+    autoStartNav: false,
     activeUiComponents: [
         "speed",
         "speedLimit",
@@ -398,6 +440,17 @@ function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
         backgroundColor: asColor(source.backgroundColor, defaults.backgroundColor),
         landColor: asColor(source.landColor, defaults.landColor),
         roadColor: asColor(source.roadColor, defaults.roadColor),
+        arrowColor: asColor(source.arrowColor, defaults.arrowColor),
+        glowColor: asColor(source.glowColor, defaults.glowColor),
+        glowEnabled:
+            typeof source.glowEnabled === "boolean"
+                ? source.glowEnabled
+                : defaults.glowEnabled,
+        outerRimEnabled:
+            typeof source.outerRimEnabled === "boolean"
+                ? source.outerRimEnabled
+                : defaults.outerRimEnabled,
+        rimColor: asColor(source.rimColor, defaults.rimColor),
         dayNightMode: oneOf(
             source.dayNightMode,
             ["off", "auto", "day", "night"] as const,
@@ -411,10 +464,33 @@ function normalizeProfile(raw: unknown, defaults: GameProfile): GameProfile {
               )
             : [...defaults.ownedDlcs],
         lastDestination: asCoordinate(source.lastDestination),
+        lastJob:
+            source.lastJob && typeof source.lastJob === "object"
+                ? {
+                      key:
+                          typeof (source.lastJob as RawRecord).key === "string"
+                              ? ((source.lastJob as RawRecord).key as string)
+                              : "",
+                      initialMinutes: asFiniteNumber(
+                          (source.lastJob as RawRecord).initialMinutes,
+                          0,
+                      ),
+                      lastRoute: Array.isArray(
+                          (source.lastJob as RawRecord).lastRoute,
+                      )
+                          ? ((source.lastJob as RawRecord)
+                                .lastRoute as [number, number][])
+                          : null,
+                  }
+                : { key: "", initialMinutes: 0, lastRoute: null },
         hasTurnNavigation:
             typeof source.hasTurnNavigation === "boolean"
                 ? source.hasTurnNavigation
                 : defaults.hasTurnNavigation,
+        drawTurnNavigation:
+            typeof source.drawTurnNavigation === "boolean"
+                ? source.drawTurnNavigation
+                : defaults.drawTurnNavigation,
         avoidFerries:
             typeof source.avoidFerries === "boolean"
                 ? source.avoidFerries
@@ -454,6 +530,11 @@ function normalizeSettings(raw: unknown): AppSettingsState {
             source.compactTripFontSize,
             DEFAULT_SETTINGS.compactTripFontSize,
         ),
+        uiScale: asFiniteNumber(source.uiScale, DEFAULT_SETTINGS.uiScale),
+        autoStartNav:
+            typeof source.autoStartNav === "boolean"
+                ? source.autoStartNav
+                : DEFAULT_SETTINGS.autoStartNav,
         activeUiComponents: Array.isArray(source.activeUiComponents)
             ? source.activeUiComponents.filter((id): id is UiComponent =>
                   (UI_COMPONENTS as readonly string[]).includes(id as string),

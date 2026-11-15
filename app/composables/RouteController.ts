@@ -761,6 +761,7 @@ export const useRouteController = (
                 }
 
                 routeFound.value = true;
+                saveCurrentJobRoute();
                 if (pendingRerouteAnnounce) {
                     pendingRerouteAnnounce = false;
                     rerouteCompletedTrigger.value++;
@@ -1075,6 +1076,7 @@ export const useRouteController = (
         displayPath: [number, number][],
     ) {
         if (!map.value) return;
+        if (!activeSettings.value.drawTurnNavigation) return;
 
         const linesFeatures = [];
         const headsFeatures = [];
@@ -1647,7 +1649,7 @@ export const useRouteController = (
             return;
         }
 
-        routeDistance.value = Math.round(remKm);
+        routeDistance.value = isNaN(remKm) ? 0 : Math.round(remKm);
 
         updateRouteEta(remGameHours, remRealHours);
 
@@ -1748,6 +1750,29 @@ export const useRouteController = (
             }
         }
     };
+
+    function saveCurrentJobRoute() {
+        const {
+            sourceCityName,
+            cargoName,
+            income,
+            remainingMinutes,
+        } = useEtsTelemetry();
+        const jobKey = `${sourceCityName.value}|${cargoName.value}|${income.value}`;
+        const prevJob = activeSettings.value.lastJob;
+        let initialMinutes = 0;
+        if (jobKey !== prevJob?.key) {
+            initialMinutes = remainingMinutes.value ?? 0;
+        } else {
+            initialMinutes = prevJob.initialMinutes || 0;
+        }
+
+        updateProfile("lastJob", {
+            key: jobKey,
+            initialMinutes,
+            lastRoute: [...waypointList.value],
+        });
+    }
 
     function clearRouteState() {
         if (!map.value) return;

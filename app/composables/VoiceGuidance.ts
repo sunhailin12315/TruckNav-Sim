@@ -13,6 +13,8 @@ const SPEECH_LANGS: Record<LocaleCode, string> = {
     cs: "cs-CZ",
     sk: "sk-SK",
     ro: "ro-RO",
+    fr: "fr-FR",
+    ru: "ru-RU",
     ko: "ko-KR",
     zh: "zh-CN",
 };

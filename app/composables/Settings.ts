@@ -55,11 +55,42 @@ export const useSettings = () => {
             `${settings.value.compactTripFontSize}rem`,
         );
 
+        // Upstream app sizing: whole-interface scale in percent.
+        const scaleMultiplier = (settings.value.uiScale || 100) / 100;
         document.documentElement.style.setProperty(
-            "--top-bar-height",
-            !settings.value.activeUiComponents.includes("topBar")
-                ? "0px"
-                : "40px",
+            "--ui-scale",
+            scaleMultiplier.toString(),
+        );
+
+        // Static route color for merged upstream styles (gameManager mods UI).
+        document.documentElement.style.setProperty(
+            "--route-color",
+            activeSettings.value.routeColor,
+        );
+
+        document.documentElement.style.setProperty(
+            "--button-font-weight",
+            activeSettings.value.textColor === "dark" ? "700" : "500",
+        );
+
+        document.documentElement.style.setProperty(
+            "--marker-rim-color",
+            activeSettings.value.rimColor,
+        );
+
+        document.documentElement.style.setProperty(
+            "--marker-rim-opacity",
+            activeSettings.value.outerRimEnabled ? "1" : "0",
+        );
+
+        document.documentElement.style.setProperty(
+            "--marker-glow-color",
+            activeSettings.value.glowColor,
+        );
+
+        document.documentElement.style.setProperty(
+            "--marker-glow-opacity",
+            activeSettings.value.glowEnabled ? "15px" : "0",
         );
     };
 
@@ -120,18 +151,20 @@ export const useSettings = () => {
     const resetSettings = () => {
         const game = settings.value.selectedGame || "ets2";
 
-        const currentDest = settings.value.profiles[game].lastDestination;
+        const currentJob = settings.value.profiles[game].lastJob;
 
         const freshProfile = JSON.parse(
             JSON.stringify(DEFAULT_SETTINGS.profiles[game]),
         );
-        freshProfile.lastDestination = currentDest;
+        freshProfile.lastJob = currentJob;
 
         settings.value.hudBtnSize = DEFAULT_SETTINGS.hudBtnSize;
         settings.value.truckMarkerSize = DEFAULT_SETTINGS.truckMarkerSize;
         settings.value.compactTripFontSize =
             DEFAULT_SETTINGS.compactTripFontSize;
         settings.value.routeTimeMode = DEFAULT_SETTINGS.routeTimeMode;
+        settings.value.uiScale = DEFAULT_SETTINGS.uiScale;
+        settings.value.autoStartNav = DEFAULT_SETTINGS.autoStartNav;
 
         settings.value.activeUiComponents = [
             ...DEFAULT_SETTINGS.activeUiComponents,

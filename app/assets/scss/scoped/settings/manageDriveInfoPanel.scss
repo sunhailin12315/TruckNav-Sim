@@ -1,26 +1,48 @@
 .manage-drive-info-wrapper {
     color: $white-font-text;
-    display: flex;
-    flex-direction: column;
-    gap: 1.8rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+    gap: 1rem;
 }
 
 .component {
     display: flex;
     justify-content: space-between;
-    align-items: end;
 
-    padding: 8px 12px;
+    padding: 8px 10px;
 
-    border-radius: 6px;
-
-    &.is-active {
-        outline: 2px solid var(--theme-color);
-    }
+    background-color: $primaryColor;
+    border-radius: $default-border-radius;
+    border: 1px solid $primaryLightButtonColor;
 
     .icon {
-        width: 24px;
-        height: 24px;
+        width: 2rem;
+        height: 2rem;
+
+        color: $white-font-text-muted;
+    }
+
+    &.is-active {
+        border-color: color-mix(in srgb, var(--theme-color) 16%, transparent);
+
+        background-color: color-mix(
+            in srgb,
+            var(--theme-color) 10%,
+            transparent
+        );
+
+        .icon {
+            color: var(--theme-color);
+        }
+    }
+}
+
+.checkmark {
+    color: $primaryLightButtonColor;
+
+    .icon-check {
+        width: 2.2rem;
+        height: 2.2rem;
 
         &.is-active {
             color: var(--theme-color);
@@ -31,13 +53,12 @@
 .info {
     display: flex;
     flex-direction: column;
+    gap: 0.6rem;
 
     .title {
         display: flex;
         align-items: center;
         gap: 0.8rem;
-
-        font-size: 2rem;
     }
 
     .description {

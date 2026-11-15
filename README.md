@@ -14,19 +14,19 @@
     </a>
     <br />
     <br />
-    <img width="300" alt="image" src="https://github.com/user-attachments/assets/6860e478-3c32-4143-97c4-fca8876ce90f" />
-    <img width="300" alt="image" src="https://github.com/user-attachments/assets/a977ea5f-af6f-49e2-adc4-78c8afef9879" />
+    <img width="300" alt="image" src="https://github.com/user-attachments/assets/bc11d479-157b-44f0-88ce-a78cd431b4ac" />
+    <img width="300" alt="image" src="https://github.com/user-attachments/assets/155b1b19-0a91-42d0-bb28-e5546f03052c" />
 </div>
 
-# Current Status: Work in Progress / Demo
+# Current Status: Work in Progress
 
-Please consider this project a **Demo** or **Alpha**.
+Please consider this project a Work in Progress.
 
 While the core navigation works, the project is far from perfect. Creating the routing graph required a massive amount of work in **QGIS** and scripting, fixing road segments, roundabouts, and intersections to ensure the GPS knows where it can and cannot go.
 
-- **ATS / ETS2 Version**: Up to **1.61** ✅
+- **ATS / ETS2 Version**: Up to **1.62** ✅
 - **Supported DLCs**: All official map DLCs ✅
-- **Map Mods**: **ProMods** (ETS2 & Canada) ✅
+- **Map Mods**: Multiple Map Mods✅
 
 # Known Issues & Limitations
 ### ⚠️ Common Quirks
@@ -37,9 +37,9 @@ While the core navigation works, the project is far from perfect. Creating the r
 > [!NOTE]
 >*  **Performance:** Optimization is ongoing. On older tablets or phones, the map rendering may feel laggy. 
 >*  **Map Support:** Currently supports base _**ETS2/ATS + all DLCs** (**up to v1.61**)_. Community map mods (ProMods, RusMap, Reforma, Coast to Coast, RO-Extended, Grand Utopia and more) are supported — see the status section above.
-
 > [!CAUTION]
 > **Real Company Name Mods:** Not supported anymore with the latest version.
+
 # Installation via Desktop (.exe) & Android (.apk)
 
 1. Download the latest setup file from the
@@ -125,7 +125,8 @@ If you are a Linux user and need a solution immediately, please use the communit
 3.  **Routing:** A custom graph built from game files allows the app to calculate the shortest path to your destination.
 
 <div align="center">
-    <img width="895" height="400" alt="close-up-gps" src="https://github.com/user-attachments/assets/4c593709-6f91-4109-9685-bc292ead920e" />
+    <img width="895" height="400" alt="close-up-gps" src="https://github.com/user-attachments/assets/a4245875-2ad1-4065-82fb-174d35c547cf"/>
+   
 </div>
 
 # How You Can Help Improve the Map
@@ -139,7 +140,7 @@ If you test the application and encounter strange behavior, you can help improve
 ### Where to Send Reports
 Send your findings to **ONE** of the options below:
 
-* raresmnt@yahoo.com
+* graflabs.help@outlook.com
 * Discord Server -> #🪲-bugs
 * GitHub -> Issues
 

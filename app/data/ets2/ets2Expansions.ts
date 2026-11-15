@@ -49,4 +49,10 @@ export const ets2Expansions: Record<
         imagePath: "nordic-horizons.webp",
         releaseDate: "Nov 27, 2025",
     },
+
+    11: {
+        name: "Iceland",
+        imagePath: "nordic-horizons.webp",
+        releaseDate: "Nov 10, 2026",
+    },
 };

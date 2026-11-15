@@ -53,6 +53,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     getDownloadedMaps: () => ipcRenderer.invoke("get-downloaded-maps"),
 
+    // MAP SCANNING (local game install -> TruckNav map data)
+    scanStart: (game: "ets2" | "ats") => ipcRenderer.invoke("scan:start", game),
+    scanStatus: () => ipcRenderer.invoke("scan:status"),
+    scanCancel: () => ipcRenderer.invoke("scan:cancel"),
+    scanGameDir: (game: "ets2" | "ats") =>
+        ipcRenderer.invoke("scan:gamemapdir", game),
+    onScanProgress: (callback: (state: unknown) => void) => {
+        const handler = (_event: unknown, state: unknown) => callback(state);
+        ipcRenderer.on("scan:progress", handler);
+        return () => ipcRenderer.removeListener("scan:progress", handler);
+    },
+
     // OFFLINE NEURAL TTS
     ttsStatus: () => ipcRenderer.invoke("tts:status"),
     ttsSynthesize: (text: string, locale: string) =>

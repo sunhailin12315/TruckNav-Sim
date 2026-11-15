@@ -1,8 +1,10 @@
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 
 import {
     downloadMapData,
+    getDownloadedMaps,
+    getMapManifest,
     isMapDownloaded,
     uninstallMapData,
 } from "~/assets/utils/shared/fileManager";
@@ -85,28 +87,136 @@ const availableMods = computed(() => {
     return mods[selectedGame.value] || [];
 });
 
+// Locally generated map folders (e.g. "ets2-scan" from the game scanner),
+// discovered from the device maps directory plus their manifest metadata.
+interface ScannedMod {
+    id: string;
+    name: string;
+    gameVersion: string;
+    scannedAt: string;
+}
+
+const scannedMods = ref<ScannedMod[]>([]);
+
+async function refreshScannedMods() {
+    const baseId = selectedGame.value;
+    const ids = await getDownloadedMaps();
+    const found: ScannedMod[] = [];
+    for (const id of ids) {
+        if (!baseId || !id.startsWith(`${baseId}-`)) continue;
+        const manifest = await getMapManifest(id);
+        if (!manifest || manifest.kind !== "map-scan") continue;
+        found.push({
+            id,
+            name: `${t("map.scanResultName")}${manifest.gameVersion ? ` (${manifest.gameVersion})` : ""}`,
+            gameVersion: manifest.gameVersion ?? "",
+            scannedAt: manifest.scannedAt ?? "",
+        });
+    }
+    scannedMods.value = found;
+}
+
+const availableModsWithScans = computed(() => {
+    const list = [...availableMods.value];
+    for (const scan of scannedMods.value) {
+        list.push({ id: scan.id, name: scan.name, url: "" });
+    }
+    return list;
+});
+
+// --- local game scanning --------------------------------------------------
+
+const electronAPI = (window as any).electronAPI;
+
+interface ScanState {
+    running: boolean;
+    phase: string;
+    percent: number;
+    detail: string | null;
+    error: string | null;
+    result: { nodes: number; edges: number; cities: number; gameVersion: string } | null;
+}
+
+const scanState = ref<ScanState>({
+    running: false,
+    phase: "done",
+    percent: 0,
+    detail: null,
+    error: null,
+    result: null,
+});
+
+const scanPhaseLabel = computed(() => {
+    const map: Record<string, string> = {
+        prepare: t("map.scanPhasePrepare"),
+        sectors: t("map.scanPhaseSectors"),
+        graph: t("map.scanPhaseGraph"),
+        convert: t("map.scanPhaseConvert"),
+        done: "",
+    };
+    return map[scanState.value.phase] ?? scanState.value.phase;
+});
+
+function applyScanState(state: ScanState) {
+    const wasRunning = scanState.value.running;
+    scanState.value = state;
+    if (wasRunning && !state.running) {
+        // finished (or failed): refresh the mod list either way
+        refreshScannedMods().then(() => checkModStatuses());
+    }
+}
+
+async function startScan() {
+    if (!selectedGame.value || !electronAPI?.scanStart) return;
+    await electronAPI.scanStart(selectedGame.value);
+    applyScanState(await electronAPI.scanStatus());
+}
+
+async function cancelScan() {
+    if (!electronAPI?.scanCancel) return;
+    await electronAPI.scanCancel();
+    applyScanState(await electronAPI.scanStatus());
+}
+
+let unsubscribeScanProgress: (() => void) | null = null;
+
 onMounted(async () => {
     if (selectedGame.value) {
         isBaseDownloaded.value = await isMapDownloaded(selectedGame.value);
+        await refreshScannedMods();
         await checkModStatuses();
     }
+    if (electronAPI?.scanStatus) {
+        applyScanState(await electronAPI.scanStatus());
+        // live progress while this component is mounted
+        unsubscribeScanProgress = electronAPI.onScanProgress?.(
+            (state: ScanState) => applyScanState(state),
+        );
+    }
+});
+
+onBeforeUnmount(() => {
+    unsubscribeScanProgress?.();
+    unsubscribeScanProgress = null;
 });
 
 watch(selectedGame, async (newGame) => {
     if (newGame) {
         isBaseDownloaded.value = await isMapDownloaded(newGame);
+        await refreshScannedMods();
         await checkModStatuses();
     }
 });
 
 watch(isModPanelOpen, async (isOpen) => {
     if (isOpen) {
+        await refreshScannedMods();
         await checkModStatuses();
     }
 });
 
 async function checkModStatuses() {
-    for (const mod of availableMods.value) {
+    for (const mod of availableModsWithScans.value) {
         downloadedMods.value[mod.id] = await isMapDownloaded(mod.id);
     }
 }
@@ -296,7 +406,7 @@ function toggleSettingsPanel() {
                         </div>
 
                         <div
-                            v-for="mod in availableMods"
+                            v-for="mod in availableModsWithScans"
                             :key="mod.id"
                             class="mod-item"
                         >
@@ -317,7 +427,8 @@ function toggleSettingsPanel() {
                                 <button
                                     v-if="
                                         !downloadedMods[mod.id] &&
-                                        downloadingId !== mod.id
+                                        downloadingId !== mod.id &&
+                                        mod.url
                                     "
                                     class="nav-btn download-btn"
                                     @click="startDownload(mod.id, mod.url)"
@@ -364,6 +475,56 @@ function toggleSettingsPanel() {
 
                         <div v-if="availableMods.length === 0" class="no-mods">
                             No mods are currently available for this game.
+                        </div>
+
+                        <!-- Local game map scanner (desktop only) -->
+                        <div v-if="isElectron" class="mod-item scan-section">
+                            <div class="mod-info">
+                                <strong>{{ t("map.scanTitle") }}</strong>
+                                <p>{{ t("map.scanDesc") }}</p>
+                                <template v-if="scanState.running">
+                                    <ProgressBar
+                                        :progress="scanState.percent"
+                                        style="margin-top: 8px"
+                                    />
+                                    <p class="scan-phase">
+                                        {{ scanPhaseLabel
+                                        }}{{
+                                            scanState.detail
+                                                ? ` — ${scanState.detail}`
+                                                : ""
+                                        }}
+                                    </p>
+                                </template>
+                                <p v-else-if="scanState.error" class="scan-error">
+                                    {{ scanState.error }}
+                                </p>
+                                <p v-else-if="scanState.result" class="scan-phase">
+                                    {{
+                                        t("map.scanDone", {
+                                            nodes: scanState.result.nodes,
+                                            edges: scanState.result.edges,
+                                        })
+                                    }}
+                                </p>
+                            </div>
+                            <div class="mod-actions">
+                                <button
+                                    v-if="scanState.running"
+                                    class="nav-btn uninstall-btn"
+                                    @click="cancelScan"
+                                >
+                                    <Icon name="lucide:x" size="16" />
+                                </button>
+                                <button
+                                    v-else
+                                    class="nav-btn select-btn"
+                                    :disabled="isDownloading"
+                                    @click="startScan"
+                                >
+                                    {{ t("map.scanStart") }}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </PopupPanel>
@@ -439,6 +600,17 @@ function toggleSettingsPanel() {
                 font-weight: bold;
                 padding: 0 10px;
             }
+        }
+
+        .scan-phase {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .scan-error {
+            color: #ef4444;
+            opacity: 0.9;
         }
     }
 

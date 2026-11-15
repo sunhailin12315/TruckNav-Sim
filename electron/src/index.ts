@@ -33,6 +33,12 @@ import { getSettings, saveSettings } from "./settingsManager";
 import type { AppSettings } from "./settingsConstants";
 import { registerNeuralTts, runNeuralTtsSelfTest } from "./neuralTts";
 import {
+    currentScanState,
+    killScan,
+    registerScanMap,
+    startScan,
+} from "./scanMap";
+import {
     clearDiscordRpc,
     destroyDiscordRpc,
     initDiscordRpc,
@@ -193,6 +199,7 @@ app.on("before-quit", function (event) {
         isQuittingForRpcCleanup = true;
         (app as any).isQuitting = true;
         killTelemetry();
+        killScan();
 
         destroyDiscordRpc()
             .catch(() => {})
@@ -445,6 +452,15 @@ async function startWebServer() {
         res.json({ success });
     });
 
+    server.get("/api/scan-status", (_req, res) => {
+        res.json(currentScanState());
+    });
+
+    server.post("/api/scan-map", (req, res) => {
+        const game = req.body?.game === "ats" ? "ats" : "ets2";
+        res.json(startScan(game));
+    });
+
     currentPort.value = await getAvailablePort(8628);
     const webDir = app.isPackaged
         ? path.join(process.resourcesPath, "app.asar", "app")
@@ -496,6 +512,9 @@ ipcMain.handle("get-settings", () => {
 
 // Offline neural TTS (sherpa-onnx in this process; WAV over IPC).
 registerNeuralTts();
+
+// Local game map scanning (dedicated Node subprocess).
+registerScanMap();
 
 ipcMain.handle(
     "update-setting",

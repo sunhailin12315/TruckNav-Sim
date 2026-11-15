@@ -16,7 +16,8 @@
         "postinstall": "patch-package && nuxt prepare",
         "electron:sync": "npx nuxi generate && npx cap sync electron && cd electron && npm run electron:start && cd ..",
         "electron:make": "npx nuxi generate && npx cap sync electron && cd electron && npm run electron:make && cd ..",
-        "android:sync": "npx nuxi generate && npx cap sync android && npx cap run android --target=52f73682434f"
+        "android:sync": "npx nuxi generate && npx cap sync android && npx cap run android --target=52f73682434f",
+        "build:scan": "node scripts/scan-worker/build.mjs"
     },
     "dependencies": {
         "@capacitor-community/electron": "^5.0.1",

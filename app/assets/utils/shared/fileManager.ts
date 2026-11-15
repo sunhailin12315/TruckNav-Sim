@@ -1,4 +1,4 @@
-import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { FileTransfer } from "@capacitor/file-transfer";
 import { CapacitorZip } from "@capgo/capacitor-zip";
 import { Capacitor } from "@capacitor/core";
@@ -214,6 +214,33 @@ export async function getDownloadedMaps(): Promise<string[]> {
             .map((file) => file.name);
     } catch (e) {
         return [];
+    }
+}
+
+/**
+ * Reads the manifest of a locally generated map folder (e.g. a scan result).
+ * Returns null when the folder has no manifest (downloaded mod / base game).
+ */
+export async function getMapManifest(
+    mapId: string,
+): Promise<Record<string, any> | null> {
+    try {
+        if (isElectron.value || isWeb.value || process.dev) {
+            const base = await getBaseUrl();
+            const res = await axios.get(
+                `${base}/maps/${mapId}/manifest.json`,
+                { timeout: 3000 },
+            );
+            return res.data;
+        }
+        const result = await Filesystem.readFile({
+            path: `maps/${mapId}/manifest.json`,
+            directory: Directory.Data,
+            encoding: Encoding.UTF8,
+        });
+        return JSON.parse(result.data as string);
+    } catch {
+        return null;
     }
 }
 

@@ -48,6 +48,32 @@ export async function initializeMap(
                 ).toFixed(2)} MB)`,
             );
         } catch (error) {
+            // Scanned maps don't ship their own tiles; fall back to the base
+            // game's. Both share the same projection, so the base rendering
+            // lines up with scanned roads (only newly added DLC roads are
+            // missing from the background art).
+            const game = settings.value.selectedGame || "ets2";
+            if (folder !== game) {
+                console.warn(
+                    `no tiles for "${folder}", falling back to base "${game}" tiles`,
+                );
+                const fallbackUrl = await getMapFileUrl(
+                    game,
+                    `map-data/tiles/${fileName}.mp3`,
+                );
+                const response = await fetch(fallbackUrl);
+                if (!response.ok) {
+                    console.error(
+                        `Error loading PMTiles blob (also no base fallback):`,
+                        error,
+                    );
+                    return;
+                }
+                const blob = await response.blob();
+                const pmtilesInstance = new PMTiles(new BlobSource(blob, key));
+                protocol.add(pmtilesInstance);
+                return;
+            }
             console.error("Error loading PMTiles blob:", error);
         }
     }
@@ -69,7 +95,8 @@ export async function initializeMap(
         },
 
         sprite: `${baseUrl}/sprites/${
-            activeSettings.value.activeMod !== "none"
+            activeSettings.value.activeMod !== "none" &&
+            !activeSettings.value.activeMod.endsWith("-scan")
                 ? activeSettings.value.activeMod
                 : settings.value.selectedGame
         }/sprites`,

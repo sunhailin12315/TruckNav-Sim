@@ -21,6 +21,11 @@
             "from": "tts-models",
             "to": "tts-models",
             "filter": ["**/*"]
+        },
+        {
+            "from": "resources/scan",
+            "to": "scan",
+            "filter": ["**/*"]
         }
     ],
     "asarUnpack": [

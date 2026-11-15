@@ -174,7 +174,9 @@
         "expenses": "Ausgaben",
         "avgCargoDamage": "Ø Ladungsschaden",
         "newAchievements": "Neu",
-        "empty": "Noch keine abgeschlossenen Aufträge in dieser Sitzung."
+        "empty": "Noch keine abgeschlossenen Aufträge in dieser Sitzung.",
+        "aiTitle": "KI-Notizen",
+        "aiLoading": "Denkt nach…"
     },
     "voice": {
         "aheadOf": "In {{d}},",
@@ -258,7 +260,45 @@
         "theme": "Design",
         "title": "Einstellungen",
         "truckMarkerSize": "Truck Marker Größe",
-        "units": "Einheiten"
+        "units": "Einheiten",
+        "ai": "KI-Assistent",
+        "aiEnabled": "KI-Assistent",
+        "aiEnabledDescription": "Ergänzt einen KI-Copiloten für Fahrberichte und Sprachhinweise; im ausgeschalteten Zustand werden keine Daten gesendet.",
+        "aiEndpoint": "API-Endpunkt",
+        "aiApiKey": "API-Schlüssel",
+        "aiApiKeyHint": "Bei lokalen Modellen (Ollama) leer lassen",
+        "aiModel": "Modell",
+        "aiTestConnection": "Verbindung testen",
+        "aiTesting": "Teste…",
+        "aiTestOk": "Verbindung ok ({{model}})",
+        "aiTestFail": "Verbindung fehlgeschlagen: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "Fehlt: {{fields}}",
+        "aiField": {
+            "endpoint": "Endpunkt",
+            "apiKey": "API-Schlüssel",
+            "model": "Modell"
+        },
+        "aiDriveReport": "KI-Fahrbericht",
+        "aiDriveReportDescription": "Persönliche Fahrnotiz auf der Fahrbericht-Karte.",
+        "aiVoiceStyle": "Stil der Ansagen",
+        "aiVoiceTemplate": "Vorlagen-Ansagen",
+        "aiVoiceAi": "KI-Ansagen",
+        "aiVoiceStyleHint": "KI-Ansagen werden bei der Routenplanung erzeugt und brauchen Netzwerk sowie aktivierten KI-Copiloten; bei Fehlern wird auf Vorlagen-Ansagen zurückgeschaltet.",
+        "aiEndpointHint": "Lokale Laufzeiten müssen den Ursprung dieser App erlauben — für Ollama z. B. OLLAMA_ORIGINS=* setzen.",
+        "aiInsights": "KI-Hinweise",
+        "aiInsightsDescription": "Ein Satz zur Route nach der Planung und eine kurze Anmerkung bei der Lieferung.",
+        "aiProviderPreset": "Anbieter-Vorlage",
+        "aiPresetCustom": "Benutzerdefiniert",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (lokal)",
+            "lmstudio": "LM Studio (lokal)"
+        },
+        "aiUsage": "KI-Verbrauch (Sitzung)"
     },
     "stats": {
         "delivered": "Geliefert",
@@ -298,5 +338,9 @@
         "speedTitle": "Geschwindigkeit",
         "topBarDescription": "Blendet die komplette obere Leiste mit Fahrinfos aus.",
         "topBarTitle": "Obere Leiste"
+    },
+    "aiNotes": {
+        "routeInsight": "Routen-Hinweis",
+        "deliveryNote": "Liefer-Anmerkung"
     }
 }

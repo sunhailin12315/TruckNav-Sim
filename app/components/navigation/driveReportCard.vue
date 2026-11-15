@@ -9,6 +9,12 @@ const { t } = useTranslations();
 const { settings, activeSettings } = useSettings();
 const { kmToUserUnits } = useUnitConversion();
 const { trips, unlocked, sessionStart } = useTripLog();
+const {
+    driveReportAiEnabled,
+    driveReportAiState,
+    ensureDriveReportNarration,
+    cancelDriveReportNarration,
+} = useAI();
 
 // AMap DriveReport-style summary of the current app session ("this drive"):
 // every trip whose id is above the session anchor, plus achievements that
@@ -52,6 +58,22 @@ onMounted(() => {
 onUnmounted(() => {
     if (durationTimer) clearInterval(durationTimer);
 });
+
+// AI notes: generate once per session anchor while the card is open; a
+// newly completed trip bumps the anchor and refreshes the narration.
+// ensureDriveReportNarration() guards availability itself, so the card
+// just requests it and hides the block on any failure.
+const aiNotesVisible = computed(
+    () =>
+        hasActivity.value &&
+        driveReportAiEnabled.value &&
+        (driveReportAiState.status === "loading" ||
+            driveReportAiState.status === "ready"),
+);
+
+onMounted(ensureDriveReportNarration);
+watch(() => sessionStart.maxTripId, ensureDriveReportNarration);
+onUnmounted(cancelDriveReportNarration);
 
 const sessionDurationLabel = computed(() => {
     const minutes = Math.max(
@@ -149,6 +171,35 @@ const sessionDurationLabel = computed(() => {
                     <Icon name="lucide:sparkles" size="14" />
                     {{ t("driveReport.newAchievements") }} {{ newAchievements }}
                 </span>
+            </div>
+
+            <div v-if="aiNotesVisible" class="ai-notes">
+                <div class="ai-notes-header">
+                    <Icon name="lucide:sparkles" size="14" />
+                    <span>{{ t("driveReport.aiTitle") }}</span>
+                </div>
+
+                <p
+                    v-if="driveReportAiState.status === 'loading'"
+                    class="ai-notes-loading"
+                >
+                    {{ t("driveReport.aiLoading") }}
+                </p>
+
+                <template v-else-if="driveReportAiState.narration">
+                    <p class="ai-notes-summary">
+                        {{ driveReportAiState.narration.summary }}
+                    </p>
+
+                    <p
+                        v-for="(tip, index) in driveReportAiState.narration.tips"
+                        :key="index"
+                        class="ai-notes-tip"
+                    >
+                        <Icon name="lucide:lightbulb" size="14" />
+                        <span>{{ tip }}</span>
+                    </p>
+                </template>
             </div>
         </template>
 

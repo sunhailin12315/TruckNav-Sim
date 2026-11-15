@@ -286,6 +286,65 @@ describe("settingsSchema", () => {
         expect(loadSettingsFromRaw('{"schemaVersion":9}').settings.gameplay.voiceName).toBe("auto");
     });
 
+    it("migrates v10 data up to v11 with the ai defaults", () => {
+        const stored = { schemaVersion: 10, selectedGame: "ets2" };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        // AI ships disabled: it is an enhancement layer, never a dependency.
+        expect(settings.ai).toEqual({
+            aiEnabled: false,
+            aiEndpoint: "https://api.deepseek.com/v1",
+            aiApiKey: "",
+            aiModel: "deepseek-chat",
+            aiDriveReport: true,
+            aiInsights: true,
+            aiVoiceStyle: "template",
+        });
+    });
+
+    it("migrates v11 data up to v12 with the aiInsights default", () => {
+        const stored = { schemaVersion: 11, ai: { aiInsights: false } };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.ai.aiInsights).toBe(false);
+        // The other ai fields fall back to their own defaults.
+        expect(settings.ai.aiEnabled).toBe(false);
+        expect(settings.ai.aiEndpoint).toBe(DEFAULT_SETTINGS.ai.aiEndpoint);
+        expect(loadSettingsFromRaw('{"schemaVersion":11}').settings.ai.aiInsights).toBe(true);
+    });
+
+    it("normalizes the ai block per-field", () => {
+        const stored = {
+            ai: {
+                aiEnabled: true,
+                aiEndpoint: "  ",
+                aiApiKey: 42,
+                aiModel: "qwen-plus",
+                aiVoiceStyle: "shout",
+            },
+        };
+        const { settings } = loadSettingsFromRaw(JSON.stringify(stored));
+
+        expect(settings.ai.aiEnabled).toBe(true);
+        // Blank endpoint and model fall back to the pre-filled defaults.
+        expect(settings.ai.aiEndpoint).toBe(
+            DEFAULT_SETTINGS.ai.aiEndpoint,
+        );
+        expect(settings.ai.aiApiKey).toBe("");
+        expect(settings.ai.aiModel).toBe("qwen-plus");
+        expect(settings.ai.aiVoiceStyle).toBe("template");
+
+        expect(loadSettingsFromRaw('{"ai":42}').settings.ai).toEqual(
+            DEFAULT_SETTINGS.ai,
+        );
+    });
+
     it("keeps a stored beepStyle through normalization", () => {
         const stored = {
             schemaVersion: 9,

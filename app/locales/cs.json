@@ -174,7 +174,9 @@
         "expenses": "Výdaje",
         "avgCargoDamage": "Prům. poškození",
         "newAchievements": "Nové",
-        "empty": "V této relaci zatím žádné dokončené zakázky."
+        "empty": "V této relaci zatím žádné dokončené zakázky.",
+        "aiTitle": "AI poznámky",
+        "aiLoading": "Přemýšlí…"
     },
     "voice": {
         "aheadOf": "Za {{d}},",
@@ -258,7 +260,45 @@
         "theme": "Vzhled",
         "title": "Nastavení",
         "truckMarkerSize": "Velikost ukazatele vozidla",
-        "units": "Jednotky"
+        "units": "Jednotky",
+        "ai": "AI asistent",
+        "aiEnabled": "AI asistent",
+        "aiEnabledDescription": "Přidává AI kopilota pro jízdní reporty a hlasová upozornění; při vypnutí se nic neodesílá.",
+        "aiEndpoint": "API adresa",
+        "aiApiKey": "API klíč",
+        "aiApiKeyHint": "Pro lokální modely (Ollama) nechte prázdné",
+        "aiModel": "Model",
+        "aiTestConnection": "Test připojení",
+        "aiTesting": "Testuji…",
+        "aiTestOk": "Připojení v pořádku ({{model}})",
+        "aiTestFail": "Připojení se nezdařilo: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "Chybí: {{fields}}",
+        "aiField": {
+            "endpoint": "adresa",
+            "apiKey": "API klíč",
+            "model": "model"
+        },
+        "aiDriveReport": "AI jízdní report",
+        "aiDriveReportDescription": "Osobní poznámka řidiče na kartě jízdního reportu.",
+        "aiVoiceStyle": "Styl hlasových pokynů",
+        "aiVoiceTemplate": "Pokyny ze šablon",
+        "aiVoiceAi": "Pokyny od AI",
+        "aiVoiceStyleHint": "Pokyny od AI se generují při plánování trasy a vyžadují síť a zapnuté AI; při chybě se použijí šablony.",
+        "aiEndpointHint": "Lokální runtime musí povolit původ této aplikace — u Ollamy např. nastavte OLLAMA_ORIGINS=*.",
+        "aiInsights": "AI poznámky",
+        "aiInsightsDescription": "Jedna věta o trase po naplánování a krátké hodnocení po dodání.",
+        "aiProviderPreset": "Předvolba poskytovatele",
+        "aiPresetCustom": "Vlastní",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (lokální)",
+            "lmstudio": "LM Studio (lokální)"
+        },
+        "aiUsage": "Spotřeba AI (relace)"
     },
     "stats": {
         "delivered": "Doručeno",
@@ -298,5 +338,9 @@
         "speedTitle": "Rychlost",
         "topBarDescription": "Schová celou horní lištu s informacemi.",
         "topBarTitle": "Vrchní lišta"
+    },
+    "aiNotes": {
+        "routeInsight": "Poznámka k trase",
+        "deliveryNote": "Hodnocení dodání"
     }
 }

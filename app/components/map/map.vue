@@ -155,6 +155,19 @@ const { playBeep, vibrate } = useSoundAlerts();
 const { speak: speakCue, cancel: cancelSpeech, prewarm: prewarmVoice } =
     useVoiceGuidance();
 
+// AI cue style: per-route phrase generation + template fallback lookup.
+const {
+    aiVoiceStyleEnabled,
+    aiInsightsEnabled,
+    ensureVoiceScript,
+    cancelVoiceScript,
+    voiceScriptPhraseFor,
+    routeInsightState,
+    ensureRouteInsight,
+    cancelRouteInsight,
+    deliveryNoteState,
+} = useAI();
+
 const isEventDrawerOpen = ref(false);
 const isDriveReportOpen = ref(false);
 const fatigueNotificationTrigger = ref(0);
@@ -294,15 +307,74 @@ watch(
 
         spokenThresholds.push(threshold);
 
+        // AI cue style: the pre-generated phrase replaces the template
+        // maneuver wording; distances and trigger timing stay rule-based.
+        // Missing phrase (generation slow/failed/over the turn cap) falls
+        // back to the template text seamlessly.
+        const aiPhrase = aiVoiceStyleEnabled.value
+            ? voiceScriptPhraseFor(upcoming)
+            : null;
+
         // The final "turn" is the destination itself: announce the approach
         // instead of reading the arrived card ("前方500米，已到达目的地").
         const cue =
             upcoming.type === "destination"
                 ? t("voice.arriving")
-                : nextInstructionText.value;
+                : (aiPhrase ?? nextInstructionText.value);
         speakCue(
             `${t("voice.aheadOf", { d: spokenDistance(threshold) })} ${cue}`,
         );
+    },
+);
+
+// AI cue style: one script per planned route. Planning and every reroute
+// reassign the directions ref, while driving progress mutates the window
+// in place (shift) — the plain ref watch therefore fires exactly on
+// (re)plans, which is the only moment the script should regenerate.
+watch(
+    [fullRouteDirections, aiVoiceStyleEnabled, () => settings.value.locale],
+    ([dirs, enabled]) => {
+        if (!enabled || dirs.length === 0) {
+            cancelVoiceScript();
+            return;
+        }
+        // Defensive: progress shifts keep the depart step out of slot 0 —
+        // a "new" window that lost it is not a fresh plan.
+        if (dirs[0]?.id !== 0) return;
+        ensureVoiceScript(dirs);
+    },
+);
+
+// Route insight: the one-sentence departure briefing, same plan-detection
+// as the voice script. It renders as a toast and — with the AI cue style
+// on — is spoken through the same pipeline.
+watch(
+    [fullRouteDirections, aiInsightsEnabled, () => settings.value.locale],
+    ([dirs, enabled]) => {
+        if (!enabled || dirs.length === 0) {
+            cancelRouteInsight();
+            return;
+        }
+        if (dirs[0]?.id !== 0) return;
+        ensureRouteInsight(dirs, routeEtaMinutes.value, destinationName.value);
+    },
+);
+
+// AI notes spoken when the AI cue style is on; the toast shows regardless.
+watch(
+    () => [routeInsightState.status, routeInsightState.note] as const,
+    ([status, note]) => {
+        if (status === "ready" && note && aiVoiceStyleEnabled.value) {
+            speakCue(note);
+        }
+    },
+);
+watch(
+    () => [deliveryNoteState.status, deliveryNoteState.note] as const,
+    ([status, note]) => {
+        if (status === "ready" && note && aiVoiceStyleEnabled.value) {
+            speakCue(note);
+        }
     },
 );
 
@@ -1044,6 +1116,8 @@ const onSelectAlternative = (kind: string) => {
                     />
 
                     <EventToast />
+
+                    <AiNoteToast />
 
                     <div class="hud-buttons">
                         <HudButton v-if="isWeb" :onClick="onToggleFullscreen">

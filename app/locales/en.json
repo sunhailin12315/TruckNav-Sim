@@ -174,7 +174,9 @@
         "expenses": "Expenses",
         "avgCargoDamage": "Avg Damage",
         "newAchievements": "New",
-        "empty": "No completed trips this session yet."
+        "empty": "No completed trips this session yet.",
+        "aiTitle": "AI Notes",
+        "aiLoading": "Thinking…"
     },
     "voice": {
         "aheadOf": "In {{d}},",
@@ -258,7 +260,45 @@
         "theme": "Theme",
         "title": "Settings",
         "truckMarkerSize": "Truck Marker Size",
-        "units": "Units"
+        "units": "Units",
+        "ai": "AI Assistant",
+        "aiEnabled": "AI Assistant",
+        "aiEnabledDescription": "Adds an AI copilot for drive reports and spoken cues; nothing is sent while off.",
+        "aiEndpoint": "API Endpoint",
+        "aiApiKey": "API Key",
+        "aiApiKeyHint": "Empty for local runtimes (Ollama)",
+        "aiModel": "Model",
+        "aiTestConnection": "Test Connection",
+        "aiTesting": "Testing…",
+        "aiTestOk": "Connection OK ({{model}})",
+        "aiTestFail": "Connection failed: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "Missing: {{fields}}",
+        "aiField": {
+            "endpoint": "endpoint",
+            "apiKey": "API key",
+            "model": "model"
+        },
+        "aiDriveReport": "AI Drive Report",
+        "aiDriveReportDescription": "Personalized coaching note on the drive-report card.",
+        "aiVoiceStyle": "Voice Cue Style",
+        "aiVoiceTemplate": "Template cues",
+        "aiVoiceAi": "AI cues",
+        "aiVoiceStyleHint": "AI cues are generated when a route is planned and need network plus AI enabled; any failure falls back to template cues.",
+        "aiEndpointHint": "Local runtimes must allow this app's origin — e.g. set OLLAMA_ORIGINS=* for Ollama.",
+        "aiInsights": "AI Insights",
+        "aiInsightsDescription": "One-sentence route insight after planning and a delivery recap on drop-off.",
+        "aiProviderPreset": "Provider preset",
+        "aiPresetCustom": "Custom",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (local)",
+            "lmstudio": "LM Studio (local)"
+        },
+        "aiUsage": "AI usage (this session)"
     },
     "stats": {
         "delivered": "Delivered",
@@ -298,5 +338,9 @@
         "speedTitle": "Speed",
         "topBarDescription": "Hides the whole top bar with drive info.",
         "topBarTitle": "Top Bar"
+    },
+    "aiNotes": {
+        "routeInsight": "Route insight",
+        "deliveryNote": "Delivery note"
     }
 }

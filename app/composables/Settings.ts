@@ -9,6 +9,8 @@ export { AUTO_VOICE };
 
 export type {
     ActiveComponents,
+    AiSettings,
+    AiVoiceStyle,
     AppSettingsState,
     BeepStyle,
     DayNightMode,

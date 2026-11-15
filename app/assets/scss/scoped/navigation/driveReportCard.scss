@@ -115,4 +115,54 @@
         font-size: 1.4rem;
         color: $white-font-text60;
     }
+
+    // AI narration block: quiet panel under the stat chips, hidden entirely
+    // when AI is off, unconfigured or the request failed.
+    .ai-notes {
+        margin-top: 12px;
+        padding: 10px 12px;
+
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+
+        .ai-notes-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            margin-bottom: 6px;
+
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--theme-color);
+        }
+
+        .ai-notes-loading {
+            font-size: 1.3rem;
+            color: $white-font-text60;
+        }
+
+        .ai-notes-summary {
+            font-size: 1.35rem;
+            line-height: 1.45;
+            color: $white-font-text;
+        }
+
+        .ai-notes-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+
+            margin-top: 6px;
+
+            font-size: 1.3rem;
+            line-height: 1.45;
+            color: $white-font-text60;
+
+            svg {
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+        }
+    }
 }

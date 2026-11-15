@@ -174,7 +174,9 @@
         "expenses": "지출",
         "avgCargoDamage": "평균 손상",
         "newAchievements": "신규",
-        "empty": "이번 세션에서 완료한 작업이 없습니다."
+        "empty": "이번 세션에서 완료한 작업이 없습니다.",
+        "aiTitle": "AI 코멘트",
+        "aiLoading": "생각 중…"
     },
     "voice": {
         "aheadOf": "{{d}} 앞,",
@@ -258,7 +260,45 @@
         "theme": "테마",
         "title": "설정",
         "truckMarkerSize": "트럭 아이콘 크기",
-        "units": "유닛"
+        "units": "유닛",
+        "ai": "AI 어시스턴트",
+        "aiEnabled": "AI 어시스턴트",
+        "aiEnabledDescription": "운행 보고서와 음성 안내에 AI 부조종사를 추가합니다. 꺼져 있으면 아무 데이터도 전송하지 않습니다.",
+        "aiEndpoint": "API 주소",
+        "aiApiKey": "API 키",
+        "aiApiKeyHint": "로컬 모델(Ollama)은 비워 두세요",
+        "aiModel": "모델",
+        "aiTestConnection": "연결 테스트",
+        "aiTesting": "테스트 중…",
+        "aiTestOk": "연결 성공 ({{model}})",
+        "aiTestFail": "연결 실패: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "누락됨: {{fields}}",
+        "aiField": {
+            "endpoint": "주소",
+            "apiKey": "API 키",
+            "model": "모델"
+        },
+        "aiDriveReport": "AI 운행 보고서",
+        "aiDriveReportDescription": "운행 보고서 카드에 개인화된 운전 코멘트를 표시합니다.",
+        "aiVoiceStyle": "음성 안내 스타일",
+        "aiVoiceTemplate": "템플릿 안내",
+        "aiVoiceAi": "AI 안내",
+        "aiVoiceStyleHint": "AI 안내는 경로 계획 시 생성되며 네트워크와 AI 사용이 필요합니다. 실패하면 템플릿 안내로 전환됩니다.",
+        "aiEndpointHint": "로컬 런타임은 이 앱의 출처를 허용해야 합니다. Ollama는 OLLAMA_ORIGINS=* 를 설정하세요.",
+        "aiInsights": "AI 인사이트",
+        "aiInsightsDescription": "경로 계획 후 한 문장 요약과 배달 완료 시 한 문장 코멘트를 제공합니다.",
+        "aiProviderPreset": "제공자 프리셋",
+        "aiPresetCustom": "직접 입력",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (로컬)",
+            "lmstudio": "LM Studio (로컬)"
+        },
+        "aiUsage": "AI 사용량 (이 세션)"
     },
     "stats": {
         "delivered": "배달 완료",
@@ -298,5 +338,9 @@
         "speedTitle": "속도",
         "topBarDescription": "상단 바 주행 정보 전체를 숨깁니다.",
         "topBarTitle": "상단 바"
+    },
+    "aiNotes": {
+        "routeInsight": "경로 요약",
+        "deliveryNote": "배달 코멘트"
     }
 }

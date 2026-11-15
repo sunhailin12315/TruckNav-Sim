@@ -206,6 +206,7 @@ export function useEtsTelemetry() {
     const { playBeep, vibrate } = useSoundAlerts();
     const tripLog = useTripLog();
     const { t } = useTranslations();
+    const { ensureDeliveryNote } = useAI();
 
     const isCapacitor = Capacitor.isNativePlatform();
 
@@ -547,6 +548,16 @@ export function useEtsTelemetry() {
             setRpcStatusNote(
                 `Delivered to ${jobState.destinationCityName || "company"} · +${formatMoney(delivered.revenue, currencySymbolFor(settings.value.selectedGame))}`,
             );
+            // One-sentence AI recap: called after endTrip so the session
+            // aggregates include this delivery; silent when AI is off.
+            ensureDeliveryNote({
+                income: delivered.revenue,
+                distanceKm: delivered.distanceKm ?? 0,
+                cargoDamagePct: normalizeDamage(
+                    delivered.cargoDamage ?? 0,
+                ),
+                earnedXp: delivered.earnedXp ?? 0,
+            });
             announceAchievements(
                 tripLog.endTrip({
                     kind: "delivered",

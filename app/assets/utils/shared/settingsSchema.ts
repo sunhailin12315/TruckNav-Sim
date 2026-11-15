@@ -64,6 +64,27 @@ export interface GameplaySettings {
     voiceName: string;
 }
 
+/** Spoken-cue text source: "template" keeps today's cues; "ai" uses
+ * pre-generated scripts (docs/ai-features.md Phase 2). */
+export type AiVoiceStyle = "template" | "ai";
+
+export interface AiSettings {
+    /** Master switch; when false nothing ever calls the network. */
+    aiEnabled: boolean;
+    /** OpenAI-compatible base URL, e.g. https://api.deepseek.com/v1 */
+    aiEndpoint: string;
+    /** Stored locally only; never logged, never synced. */
+    aiApiKey: string;
+    /** Model id on the provider, e.g. "deepseek-chat" or "llama3.1:8b". */
+    aiModel: string;
+    /** AI narration paragraph on the drive-report card. */
+    aiDriveReport: boolean;
+    /** One-shot AI notes: route insight after planning, delivery recap. */
+    aiInsights: boolean;
+    /** Text source for spoken cues; "template" keeps current behavior. */
+    aiVoiceStyle: AiVoiceStyle;
+}
+
 export interface AppSettingsState {
     /** Bumped whenever the settings shape changes; see MIGRATIONS. */
     schemaVersion: number;
@@ -80,9 +101,10 @@ export interface AppSettingsState {
     locale: LocaleCode;
     routeTimeMode: RouteTimeMode;
     gameplay: GameplaySettings;
+    ai: AiSettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 10;
+export const SETTINGS_SCHEMA_VERSION = 12;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -99,6 +121,12 @@ export const BEEP_STYLES: readonly BeepStyle[] = [
     "chip",
     "chirp",
 ];
+
+export const AI_VOICE_STYLES: readonly AiVoiceStyle[] = ["template", "ai"];
+
+/** Pre-filled endpoint so enabling AI only needs a key (or a local URL). */
+export const DEFAULT_AI_ENDPOINT = "https://api.deepseek.com/v1";
+export const DEFAULT_AI_MODEL = "deepseek-chat";
 
 /** Sentinel for voiceName: pick the language-matched voice automatically. */
 export const AUTO_VOICE = "auto";
@@ -176,6 +204,18 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
         voiceNeural: true,
         voiceName: AUTO_VOICE,
     },
+    // AI starts disabled: it is an enhancement layer, never a dependency
+    // (docs/ai-features.md §1). Endpoint ships pre-filled so enabling only
+    // needs a key — or a local URL like http://localhost:11434/v1.
+    ai: {
+        aiEnabled: false,
+        aiEndpoint: DEFAULT_AI_ENDPOINT,
+        aiApiKey: "",
+        aiModel: DEFAULT_AI_MODEL,
+        aiDriveReport: true,
+        aiInsights: true,
+        aiVoiceStyle: "template",
+    },
 };
 
 /** A fresh, deeply-copied default settings object (no shared references). */
@@ -225,6 +265,10 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     8: (raw) => raw,
     // v10 adds voiceName (gameplay); the normalizer fills its default.
     9: (raw) => raw,
+    // v11 adds the ai block; the normalizer fills its defaults.
+    10: (raw) => raw,
+    // v12 adds aiInsights (ai block); the normalizer fills its default.
+    11: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -301,6 +345,46 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             source.voiceName.length > 0
                 ? source.voiceName
                 : defaults.voiceName,
+    };
+}
+
+function normalizeAi(raw: unknown, defaults: AiSettings): AiSettings {
+    const source = raw && typeof raw === "object" ? (raw as RawRecord) : {};
+
+    return {
+        aiEnabled:
+            typeof source.aiEnabled === "boolean"
+                ? source.aiEnabled
+                : defaults.aiEnabled,
+        // Free-form endpoint/key/model: validated at request time, not by
+        // migration (same policy as voiceName above).
+        aiEndpoint:
+            typeof source.aiEndpoint === "string" &&
+            source.aiEndpoint.trim().length > 0
+                ? source.aiEndpoint
+                : defaults.aiEndpoint,
+        aiApiKey:
+            typeof source.aiApiKey === "string"
+                ? source.aiApiKey
+                : defaults.aiApiKey,
+        aiModel:
+            typeof source.aiModel === "string" &&
+            source.aiModel.trim().length > 0
+                ? source.aiModel
+                : defaults.aiModel,
+        aiDriveReport:
+            typeof source.aiDriveReport === "boolean"
+                ? source.aiDriveReport
+                : defaults.aiDriveReport,
+        aiInsights:
+            typeof source.aiInsights === "boolean"
+                ? source.aiInsights
+                : defaults.aiInsights,
+        aiVoiceStyle: oneOf(
+            source.aiVoiceStyle,
+            AI_VOICE_STYLES,
+            defaults.aiVoiceStyle,
+        ),
     };
 }
 
@@ -385,6 +469,7 @@ function normalizeSettings(raw: unknown): AppSettingsState {
             source.gameplay,
             DEFAULT_SETTINGS.gameplay,
         ),
+        ai: normalizeAi(source.ai, DEFAULT_SETTINGS.ai),
     };
 }
 

@@ -174,7 +174,9 @@
         "expenses": "Uitgaven",
         "avgCargoDamage": "Gem. schade",
         "newAchievements": "Nieuw",
-        "empty": "Nog geen voltooide opdrachten deze sessie."
+        "empty": "Nog geen voltooide opdrachten deze sessie.",
+        "aiTitle": "AI-notities",
+        "aiLoading": "Denkt na…"
     },
     "voice": {
         "aheadOf": "Over {{d}},",
@@ -258,7 +260,45 @@
         "theme": "Thema",
         "title": "Instellingen",
         "truckMarkerSize": "Truckmarkergrootte",
-        "units": "Eenheden"
+        "units": "Eenheden",
+        "ai": "AI-assistent",
+        "aiEnabled": "AI-assistent",
+        "aiEnabledDescription": "Voegt een AI-copilot toe voor rijrapporten en gesproken meldingen; uitgeschakeld wordt er niets verzonden.",
+        "aiEndpoint": "API-eindpunt",
+        "aiApiKey": "API-sleutel",
+        "aiApiKeyHint": "Leeg laten bij lokale modellen (Ollama)",
+        "aiModel": "Model",
+        "aiTestConnection": "Verbinding testen",
+        "aiTesting": "Testen…",
+        "aiTestOk": "Verbinding ok ({{model}})",
+        "aiTestFail": "Verbinding mislukt: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "Ontbreekt: {{fields}}",
+        "aiField": {
+            "endpoint": "eindpunt",
+            "apiKey": "API-sleutel",
+            "model": "model"
+        },
+        "aiDriveReport": "AI-rijrapport",
+        "aiDriveReportDescription": "Persoonlijke rijnotitie op de rijrapportkaart.",
+        "aiVoiceStyle": "Stijl van de meldingen",
+        "aiVoiceTemplate": "Sjabloonmeldingen",
+        "aiVoiceAi": "AI-meldingen",
+        "aiVoiceStyleHint": "AI-meldingen worden gegenereerd bij het plannen van een route en vereisen netwerk en een ingeschakelde AI; bij fouten wordt teruggevallen op sjabloonmeldingen.",
+        "aiEndpointHint": "Lokale runtimes moeten de oorsprong van deze app toestaan — zet bij Ollama bijvoorbeeld OLLAMA_ORIGINS=*.",
+        "aiInsights": "AI-tips",
+        "aiInsightsDescription": "Eén zin over de route na planning en een korte noot bij de levering.",
+        "aiProviderPreset": "Provider-voorkeuze",
+        "aiPresetCustom": "Aangepast",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (lokaal)",
+            "lmstudio": "LM Studio (lokaal)"
+        },
+        "aiUsage": "AI-verbruik (sessie)"
     },
     "stats": {
         "delivered": "Geleverd",
@@ -298,5 +338,9 @@
         "speedTitle": "Snelheid",
         "topBarDescription": "Verbergt de volledige bovenbalk met rij-informatie.",
         "topBarTitle": "Bovenbalk"
+    },
+    "aiNotes": {
+        "routeInsight": "Route-inzicht",
+        "deliveryNote": "Levernotitie"
     }
 }

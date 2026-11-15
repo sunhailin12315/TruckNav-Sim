@@ -174,7 +174,9 @@
         "expenses": "支出",
         "avgCargoDamage": "平均货损",
         "newAchievements": "新成就",
-        "empty": "本次驾驶还没有完成的行程。"
+        "empty": "本次驾驶还没有完成的行程。",
+        "aiTitle": "AI 点评",
+        "aiLoading": "思考中…"
     },
     "voice": {
         "aheadOf": "前方{{d}}，",
@@ -258,7 +260,45 @@
         "theme": "主题",
         "title": "设置",
         "truckMarkerSize": "卡车标记大小",
-        "units": "单位"
+        "units": "单位",
+        "ai": "AI 助手",
+        "aiEnabled": "AI 助手",
+        "aiEnabledDescription": "为行车报告和语音播报接入 AI 副驾；关闭时不发送任何数据。",
+        "aiEndpoint": "API 地址",
+        "aiApiKey": "API 密钥",
+        "aiApiKeyHint": "本地模型（Ollama）可留空",
+        "aiModel": "模型",
+        "aiTestConnection": "测试连接",
+        "aiTesting": "测试中…",
+        "aiTestOk": "连接成功（{{model}}）",
+        "aiTestFail": "连接失败：{{message}}",
+        "aiTestHttp": "HTTP {{status}}：{{message}}",
+        "aiMissingFields": "缺少配置：{{fields}}",
+        "aiField": {
+            "endpoint": "API 地址",
+            "apiKey": "API 密钥",
+            "model": "模型"
+        },
+        "aiDriveReport": "AI 行车点评",
+        "aiDriveReportDescription": "在行车报告卡片上生成个性化驾驶点评。",
+        "aiVoiceStyle": "播报文案风格",
+        "aiVoiceTemplate": "模板播报",
+        "aiVoiceAi": "AI 播报",
+        "aiVoiceStyleHint": "AI 播报在路线规划时生成，需开启 AI 且有网络；生成失败自动回退模板播报。",
+        "aiEndpointHint": "本地模型需允许本应用的访问来源，Ollama 需设置 OLLAMA_ORIGINS=*。",
+        "aiInsights": "AI 即时点评",
+        "aiInsightsDescription": "规划路线后的一句解读，以及送达时的一句快评。",
+        "aiProviderPreset": "服务商预设",
+        "aiPresetCustom": "自定义",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "通义千问 Qwen",
+            "glm": "智谱 GLM",
+            "openai": "OpenAI",
+            "ollama": "Ollama（本机）",
+            "lmstudio": "LM Studio（本机）"
+        },
+        "aiUsage": "AI 用量（本次会话）"
     },
     "stats": {
         "delivered": "已交付",
@@ -298,5 +338,9 @@
         "speedTitle": "车速",
         "topBarDescription": "隐藏整个顶栏驾驶信息。",
         "topBarTitle": "顶栏"
+    },
+    "aiNotes": {
+        "routeInsight": "路线解读",
+        "deliveryNote": "送达点评"
     }
 }

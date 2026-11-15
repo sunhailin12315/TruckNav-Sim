@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-type settingsView = "main" | "general" | "appearance" | "navigation" | "stats";
+type settingsView =
+    | "main"
+    | "general"
+    | "appearance"
+    | "navigation"
+    | "stats"
+    | "ai";
 
 const { t } = useTranslations();
 
@@ -78,6 +84,16 @@ function handleBack() {
                         />
                     </div>
 
+                    <div class="option setting" @click="setView('ai')">
+                        <Icon name="lucide:sparkles" size="28" />
+                        <span>{{ t("settings.ai") }}</span>
+                        <Icon
+                            name="lucide:chevron-right"
+                            size="24"
+                            class="arrow"
+                        />
+                    </div>
+
                     <div class="option setting" @click="setView('stats')">
                         <Icon name="lucide:chart-column" size="28" />
                         <span>{{ t("settings.statsTitle") }}</span>
@@ -106,6 +122,8 @@ function handleBack() {
                     class="menu-list"
                     key="navigation"
                 />
+
+                <Ai v-else-if="currentView === 'ai'" class="menu-list" key="ai" />
 
                 <Stats
                     v-else-if="currentView === 'stats'"

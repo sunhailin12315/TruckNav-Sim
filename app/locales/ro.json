@@ -174,7 +174,9 @@
         "expenses": "Cheltuieli",
         "avgCargoDamage": "Deteriorare medie",
         "newAchievements": "Noi",
-        "empty": "Niciun transport finalizat în această sesiune."
+        "empty": "Niciun transport finalizat în această sesiune.",
+        "aiTitle": "Notițe AI",
+        "aiLoading": "Se gândește…"
     },
     "voice": {
         "aheadOf": "La {{d}},",
@@ -258,7 +260,45 @@
         "theme": "Temă",
         "title": "Setări",
         "truckMarkerSize": "Dimensiune Marker camion",
-        "units": "Unități"
+        "units": "Unități",
+        "ai": "Asistent AI",
+        "aiEnabled": "Asistent AI",
+        "aiEnabledDescription": "Adaugă un copilot AI pentru rapoarte de condus și anunțuri vocale; oprit, nu se trimite nimic.",
+        "aiEndpoint": "Adresă API",
+        "aiApiKey": "Cheie API",
+        "aiApiKeyHint": "Lăsați gol pentru modele locale (Ollama)",
+        "aiModel": "Model",
+        "aiTestConnection": "Testare conexiune",
+        "aiTesting": "Se testează…",
+        "aiTestOk": "Conexiune reușită ({{model}})",
+        "aiTestFail": "Conexiune eșuată: {{message}}",
+        "aiTestHttp": "HTTP {{status}}: {{message}}",
+        "aiMissingFields": "Lipsesc: {{fields}}",
+        "aiField": {
+            "endpoint": "adresă",
+            "apiKey": "cheie API",
+            "model": "model"
+        },
+        "aiDriveReport": "Raport de condus AI",
+        "aiDriveReportDescription": "Notă personalizată de condus pe cardul de raport.",
+        "aiVoiceStyle": "Stilul anunțurilor vocale",
+        "aiVoiceTemplate": "Anunțuri din șabloane",
+        "aiVoiceAi": "Anunțuri AI",
+        "aiVoiceStyleHint": "Anunțurile AI se generează la planificarea traseului și necesită rețea și AI activat; la eroare se revine la șabloane.",
+        "aiEndpointHint": "Runtime-urile locale trebuie să permită originea acestei aplicații — de exemplu, pentru Ollama setați OLLAMA_ORIGINS=*.",
+        "aiInsights": "Sugestii AI",
+        "aiInsightsDescription": "O frază despre trasă după planificare și o scurtă remarcă la livrare.",
+        "aiProviderPreset": "Presetare furnizor",
+        "aiPresetCustom": "Personalizat",
+        "aiPreset": {
+            "deepseek": "DeepSeek",
+            "qwen": "Qwen (Alibaba)",
+            "glm": "GLM (Zhipu)",
+            "openai": "OpenAI",
+            "ollama": "Ollama (local)",
+            "lmstudio": "LM Studio (local)"
+        },
+        "aiUsage": "Consum AI (sesiune)"
     },
     "stats": {
         "delivered": "Livrate",
@@ -298,5 +338,9 @@
         "speedTitle": "Viteză",
         "topBarDescription": "Ascunde întreaga bară de sus ce conține informaţii despre cursă.",
         "topBarTitle": "Bara de sus"
+    },
+    "aiNotes": {
+        "routeInsight": "Sugestie traseu",
+        "deliveryNote": "Remarcă livrare"
     }
 }

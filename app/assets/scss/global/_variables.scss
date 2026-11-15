@@ -49,3 +49,8 @@ $menu-item-gradient: linear-gradient(
 $default-border-radius: 6px;
 
 $css-transition-bezier: cubic-bezier(0.16, 1, 0.3, 1);
+
+// Fork-side variables still consumed by kept components (AMap HUD, events UI).
+$game-info-bar-height: var(--top-bar-height);
+$white-font-text60: rgb(242, 242, 242, 0.6);
+$default-background-color-dark: rgba(0, 0, 0, 0.25);

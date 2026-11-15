@@ -76,6 +76,7 @@ const { loadLocationData, findDestinationCoords, mapScaleConfig } =
 
 // Check Platform
 const { isElectron, isMobile, isWeb } = usePlatform();
+const { settings: desktopSettings } = useDesktopSettings();
 
 // Graph manipulation
 const { loading, progress, adjacency, nodeCoords, initializeGraphData } =
@@ -689,7 +690,19 @@ onMounted(async () => {
     await loadLocationData();
     if (!mapEl.value) return;
     if (isElectron.value) {
-        (window as any).electronAPI.setWindowSize(950, 700, true, true);
+        const isAutoStart = desktopSettings.value.autoStartNavigation;
+
+        if (isAutoStart) {
+            (window as any).electronAPI.setWindowSize(
+                950,
+                700,
+                true,
+                true,
+                true,
+            );
+        } else {
+            (window as any).electronAPI.setWindowSize(950, 700, true, true);
+        }
     }
 
     try {

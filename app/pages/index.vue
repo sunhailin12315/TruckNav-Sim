@@ -3,6 +3,7 @@ import { SafeArea, SystemBarsType } from "@capacitor-community/safe-area";
 
 const { isElectron, isMobile } = usePlatform();
 const { settings } = useSettings();
+const { settings: desktopSettings } = useDesktopSettings();
 
 const currentView = ref<string>("");
 
@@ -11,9 +12,21 @@ onMounted(() => {
     window.addEventListener("resize", updateSystemBars);
 
     if (isElectron.value) {
-        currentView.value = "desktopHome";
+        // 自动开始导航开启且已选游戏:跳过首页直接进地图。
+        if (
+            desktopSettings.value.autoStartNavigation &&
+            settings.value.selectedGame
+        ) {
+            currentView.value = "map";
+        } else {
+            currentView.value = "desktopHome";
+        }
     } else {
-        currentView.value = "gameManager";
+        if (settings.value.autoStartNav && settings.value.selectedGame) {
+            currentView.value = "map";
+        } else {
+            currentView.value = "gameManager";
+        }
     }
 });
 
@@ -52,7 +65,12 @@ const updateSystemBars = async () => {
     }
 };
 
-const launchGameManager = () => (currentView.value = "gameManager");
+const launchGameManager = () => {
+    // 自动开始导航直达地图后,首页常驻组件迟到的配对成功事件
+    // 不得把视图从地图拽回配对页。
+    if (currentView.value === "map") return;
+    currentView.value = "gameManager";
+};
 const launchMap = () => (currentView.value = "map");
 const goToDesktopIndex = () => (currentView.value = "desktopHome");
 

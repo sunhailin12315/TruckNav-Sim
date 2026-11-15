@@ -175,10 +175,14 @@ export async function aiChat(
             const payload: unknown = await response.json().catch(() => null);
             const text = extractAssistantText(payload);
             if (text === null) {
-                // A malformed 200 won't fix itself on retry.
+                // A malformed 200 won't fix itself on retry; report what the
+                // provider actually said so misconfigured models are obvious.
                 return {
                     ok: false,
-                    failure: { kind: "bad-response", message: "no assistant text" },
+                    failure: {
+                        kind: "bad-response",
+                        message: `no assistant text (${describePayload(payload)})`,
+                    },
                 };
             }
             const usage = extractUsage(payload);
@@ -205,19 +209,31 @@ export async function aiChat(
 }
 
 /**
- * Settings-page probe: a one-token request that validates endpoint, key
- * and model together, through the same failure taxonomy as aiChat.
+ * Settings-page probe: a minimal request that validates endpoint, key and
+ * model together, through the same failure taxonomy as aiChat. No max_tokens
+ * cap — reasoning models would burn a tiny cap on thinking alone and return
+ * empty content, which reads exactly like a broken endpoint.
  */
 export function testAiConnection(config: AiClientConfig): Promise<AiResult> {
     return aiChat(config, {
-        messages: [{ role: "user", content: "ping" }],
+        messages: [
+            {
+                role: "user",
+                content: "Reply with the single word: pong",
+            },
+        ],
         temperature: 0,
-        maxTokens: 1,
-        timeoutMs: 10_000,
+        timeoutMs: 30_000,
     });
 }
 
-/** Pulls the first assistant message text out of a chat-completions payload. */
+/**
+ * Pulls the first assistant message text out of a chat-completions payload.
+ * Tolerates the shapes real providers emit: content as a typed-parts array,
+ * and reasoning models that return empty content with the visible answer in
+ * reasoning_content (proof enough that the endpoint speaks). Returns null
+ * when the payload has nothing usable — the caller reports a diagnostic.
+ */
 export function extractAssistantText(payload: unknown): string | null {
     if (!payload || typeof payload !== "object") return null;
     const choices = (payload as { choices?: unknown }).choices;
@@ -227,8 +243,42 @@ export function extractAssistantText(payload: unknown): string | null {
     const message = (first as { message?: unknown }).message;
     if (!message || typeof message !== "object") return null;
     const content = (message as { content?: unknown }).content;
-    if (typeof content !== "string" || content.trim().length === 0) return null;
-    return content;
+
+    if (typeof content === "string" && content.trim().length > 0) {
+        return content;
+    }
+
+    // Multimodal-style parts: [{ type: "text", text: "..." }, ...]
+    if (Array.isArray(content)) {
+        const joined = content
+            .map((part) =>
+                part && typeof part === "object" && typeof (part as { text?: unknown }).text === "string"
+                    ? (part as { text: string }).text
+                    : "",
+            )
+            .join("")
+            .trim();
+        if (joined.length > 0) return joined;
+    }
+
+    // Reasoning models: the answer may land in reasoning_content/reasoning.
+    const reasoning = (message as { reasoning_content?: unknown; reasoning?: unknown })
+        .reasoning_content ?? (message as { reasoning?: unknown }).reasoning;
+    if (typeof reasoning === "string" && reasoning.trim().length > 0) {
+        return reasoning;
+    }
+
+    return null;
+}
+
+/** Short digest of an unusable response, for actionable failure messages. */
+function describePayload(payload: unknown): string {
+    if (payload === null || payload === undefined) return "响应不是 JSON";
+    if (typeof payload !== "object") return String(payload).slice(0, 150);
+    const keys = Object.keys(payload as Record<string, unknown>);
+    if (keys.length === 0) return "空对象响应";
+    const preview = JSON.stringify(payload);
+    return `keys=[${keys.join(",")}] ${preview.slice(0, 150)}`;
 }
 
 /** Reads the OpenAI-style usage block; absent fields mean no usage data. */

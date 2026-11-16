@@ -318,6 +318,7 @@ describe("settingsSchema", () => {
             aiModel: "deepseek-chat",
             aiDriveReport: true,
             aiInsights: true,
+            aiServiceNote: true,
             aiVoiceStyle: "template",
         });
     });
@@ -334,6 +335,19 @@ describe("settingsSchema", () => {
         expect(settings.ai.aiEnabled).toBe(false);
         expect(settings.ai.aiEndpoint).toBe(DEFAULT_SETTINGS.ai.aiEndpoint);
         expect(loadSettingsFromRaw('{"schemaVersion":11}').settings.ai.aiInsights).toBe(true);
+    });
+
+    it("migrates v13 data up to v14 with the aiServiceNote default", () => {
+        const stored = { schemaVersion: 13, ai: { aiServiceNote: false } };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        // A stored preference is kept across the version bump…
+        expect(settings.ai.aiServiceNote).toBe(false);
+        // …while absent data gets the new default (on).
+        expect(loadSettingsFromRaw('{"schemaVersion":13}').settings.ai.aiServiceNote).toBe(true);
     });
 
     it("normalizes the ai block per-field", () => {

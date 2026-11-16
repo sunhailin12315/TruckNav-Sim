@@ -83,6 +83,8 @@ export interface AiSettings {
     aiDriveReport: boolean;
     /** One-shot AI notes: route insight after planning, delivery recap. */
     aiInsights: boolean;
+    /** AI reason note on the rest/fuel suggestion toast (needs aiInsights). */
+    aiServiceNote: boolean;
     /** Text source for spoken cues; "template" keeps current behavior. */
     aiVoiceStyle: AiVoiceStyle;
 }
@@ -106,7 +108,7 @@ export interface AppSettingsState {
     ai: AiSettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 13;
+export const SETTINGS_SCHEMA_VERSION = 14;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -217,6 +219,7 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
         aiModel: DEFAULT_AI_MODEL,
         aiDriveReport: true,
         aiInsights: true,
+        aiServiceNote: true,
         aiVoiceStyle: "template",
     },
 };
@@ -274,6 +277,8 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     11: (raw) => raw,
     // v13 adds voiceCloud (gameplay); the normalizer fills its default.
     12: (raw) => raw,
+    // v14 adds aiServiceNote (ai block); the normalizer fills its default.
+    13: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -389,6 +394,10 @@ function normalizeAi(raw: unknown, defaults: AiSettings): AiSettings {
             typeof source.aiInsights === "boolean"
                 ? source.aiInsights
                 : defaults.aiInsights,
+        aiServiceNote:
+            typeof source.aiServiceNote === "boolean"
+                ? source.aiServiceNote
+                : defaults.aiServiceNote,
         aiVoiceStyle: oneOf(
             source.aiVoiceStyle,
             AI_VOICE_STYLES,

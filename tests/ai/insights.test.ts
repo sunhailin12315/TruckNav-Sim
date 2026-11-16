@@ -3,8 +3,9 @@ import { extractUsage } from "~/assets/utils/ai/aiClient";
 import {
     buildDeliveryNoteContext,
     buildRouteInsightContext,
+    buildServiceNoteContext,
 } from "~/assets/utils/ai/contextBuilder";
-import { parseAiNote } from "~/assets/utils/ai/prompts";
+import { parseAiNote, serviceNoteMessages } from "~/assets/utils/ai/prompts";
 import type { DirectionStep } from "~/assets/utils/routing/directions";
 
 function makeStep(
@@ -66,6 +67,105 @@ describe("buildDeliveryNoteContext", () => {
 
         expect(context.delivered.income).toBe(15200);
         expect(context.session.netIncome).toBe(68000);
+    });
+
+    it("carries destination, cargo, grade and fines; omits unknown time", () => {
+        const context = JSON.parse(
+            buildDeliveryNoteContext(
+                {
+                    income: 9900,
+                    distanceKm: 300,
+                    cargoDamagePct: 0,
+                    earnedXp: 120,
+                    destination: "Rotterdam",
+                    cargo: "Wood pellets",
+                    grade: "S",
+                    finesCount: 0,
+                    remainingMinutes: null,
+                },
+                { deliveredCount: 1, netIncome: 9900, finesCount: 0 },
+            ),
+        ) as Record<string, Record<string, unknown>>;
+
+        expect(context.delivered).toEqual({
+            income: 9900,
+            distanceKm: 300,
+            cargoDamagePct: 0,
+            earnedXp: 120,
+            destination: "Rotterdam",
+            cargo: "Wood pellets",
+            grade: "S",
+            finesCount: 0,
+        });
+
+        // A tracked deadline (positive or negative) is sent rounded.
+        const late = JSON.parse(
+            buildDeliveryNoteContext(
+                {
+                    income: 1,
+                    distanceKm: 1,
+                    cargoDamagePct: 0,
+                    earnedXp: 0,
+                    finesCount: 2,
+                    remainingMinutes: -12.4,
+                },
+                { deliveredCount: 1, netIncome: 1, finesCount: 2 },
+            ),
+        ) as { delivered: Record<string, unknown> };
+        expect(late.delivered.timeLeftMinutes).toBe(-12);
+        expect(late.delivered.destination).toBeUndefined();
+        expect(late.delivered.grade).toBeUndefined();
+    });
+});
+
+describe("buildServiceNoteContext", () => {
+    it("sends only the live numbers that justify this kind of stop", () => {
+        const fuel = JSON.parse(
+            buildServiceNoteContext({
+                kind: "fuel",
+                kmAhead: 12.4,
+                detourKm: 1.05,
+                detourMinutes: 4,
+                fuelRangeKm: 38.6,
+                fuelAmountL: 120.4,
+                nextRestStopMinutes: 180,
+            }),
+        ) as Record<string, unknown>;
+
+        expect(fuel).toEqual({
+            kind: "fuel",
+            kmAhead: 12,
+            detourKm: 1.1,
+            detourMinutes: 4,
+            fuelRangeKm: 39,
+            fuelAmountL: 120,
+        });
+
+        const rest = JSON.parse(
+            buildServiceNoteContext({
+                kind: "rest",
+                kmAhead: 8,
+                detourKm: 0.6,
+                detourMinutes: 3,
+                nextRestStopMinutes: 17.2,
+            }),
+        ) as Record<string, unknown>;
+
+        expect(rest).toEqual({
+            kind: "rest",
+            kmAhead: 8,
+            detourKm: 0.6,
+            detourMinutes: 3,
+            nextRestStopMinutes: 17,
+        });
+    });
+
+    it("pins the service-note reply language like the other notes", () => {
+        const [system, user] = serviceNoteMessages('{"kind":"rest"}', "de");
+
+        expect(system.content).toContain("60 characters");
+        expect(user.content).toContain("German");
+        expect(user.content).toContain('{"kind":"rest"}');
     });
 });
 

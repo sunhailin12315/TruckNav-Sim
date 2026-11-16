@@ -3,11 +3,22 @@
 // Pure and testable; the caller owns localization and speech synthesis.
 
 /**
- * Distance marks (route-km) at which the upcoming turn is announced.
- * Truck lead times: a loaded 80 km/h rig covers 1 km in ~45 s, so the near
- * mark sits at 1 km rather than the 200 m a car navigation would use.
+ * Final cue: fires when the driver actually closes on the turn rather than
+ * at a fixed 1 km lead — the 5 km/3 km marks keep the planning lead time,
+ * the maneuver wording itself waits until the turn is right ahead.
  */
-export const TURN_ANNOUNCEMENT_THRESHOLDS_KM = [5, 3, 1] as const;
+export const APPROACH_TURN_ANNOUNCEMENT_KM = 0.2;
+
+/**
+ * Distance marks (route-km) at which the upcoming turn is announced, far to
+ * near. The near mark is the approach cue above, not the 1 km a truck's
+ * 45 s lead would suggest.
+ */
+export const TURN_ANNOUNCEMENT_THRESHOLDS_KM = [
+    5,
+    3,
+    APPROACH_TURN_ANNOUNCEMENT_KM,
+] as const;
 
 /** Concise mode's single mark: ~25 s of lead at truck speeds. */
 export const CONCISE_TURN_ANNOUNCEMENT_KM = [0.5] as const;

@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-// Toast for the one-shot AI notes (route insight, delivery recap). Purely
-// presentational: it watches the note states in useAI and shows whichever
-// turned "ready" last for a few seconds. Generation, gating and the voice
-// path live in useAI / the map wiring.
+// Toast for the one-shot AI notes (route insight, delivery recap, service
+// reason). Purely presentational: it watches the note states in useAI and
+// shows whichever turned "ready" last for a few seconds. Generation,
+// gating and the voice path live in useAI / the map wiring. The service
+// note is toast-only — unlike the other two it is never spoken, so the
+// rest/fuel template cue keeps the audio channel to itself.
 
 const { t } = useTranslations();
-const { routeInsightState, deliveryNoteState } = useAI();
+const { routeInsightState, deliveryNoteState, serviceNoteState } = useAI();
 
 const SHOW_MS = 6000;
 
@@ -15,9 +17,13 @@ const note = ref("");
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-function show(kind: "insight" | "delivery", text: string) {
+function show(kind: "insight" | "delivery" | "service", text: string) {
     titleKey.value =
-        kind === "insight" ? "aiNotes.routeInsight" : "aiNotes.deliveryNote";
+        kind === "insight"
+            ? "aiNotes.routeInsight"
+            : kind === "delivery"
+              ? "aiNotes.deliveryNote"
+              : "aiNotes.serviceNote";
     note.value = text;
     isVisible.value = true;
 
@@ -38,6 +44,13 @@ watch(
     () => [deliveryNoteState.status, deliveryNoteState.note] as const,
     ([status, text]) => {
         if (status === "ready" && text) show("delivery", text);
+    },
+);
+
+watch(
+    () => [serviceNoteState.status, serviceNoteState.note] as const,
+    ([status, text]) => {
+        if (status === "ready" && text) show("service", text);
     },
 );
 

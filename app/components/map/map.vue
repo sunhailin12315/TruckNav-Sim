@@ -161,11 +161,14 @@ const {
     aiInsightsEnabled,
     ensureVoiceScript,
     cancelVoiceScript,
+    continueVoiceScript,
     voiceScriptPhraseFor,
     routeInsightState,
     ensureRouteInsight,
     cancelRouteInsight,
     deliveryNoteState,
+    serviceNoteAiEnabled,
+    ensureServiceNote,
 } = useAI();
 
 const isEventDrawerOpen = ref(false);
@@ -265,12 +268,25 @@ watch(serviceSuggestion, (suggestion) => {
                   min: suggestion.detourMinutes,
               }),
     );
+    // AI reason note (toast only, deliberately never spoken — it would
+    // stack behind the restAhead template cue). Gated inside useAI.
+    if (serviceNoteAiEnabled.value) {
+        ensureServiceNote({
+            kind: suggestion.kind,
+            kmAhead: suggestion.kmAhead,
+            detourKm: suggestion.detourKm,
+            detourMinutes: suggestion.detourMinutes,
+            ...(suggestion.kind === "fuel"
+                ? { fuelRangeKm: fuelRange.value, fuelAmountL: fuel.value }
+                : { nextRestStopMinutes: restStopMinutes.value }),
+        });
+    }
 });
 
 // ===== Voice guidance: spoken turn cues + replan announcement (M9) =====
 
 // Spoken distance for an announcement mark: whole kilometers at or beyond
-// the 1 km mark, meters below it ("前方2公里" / "前方500米").
+// 1 km, meters below it ("前方2公里" / "前方200米").
 const spokenDistance = (thresholdKm: number) =>
     thresholdKm >= 1
         ? t("voice.kilometers", { n: Math.round(thresholdKm) })
@@ -324,6 +340,11 @@ watch(
         speakCue(
             `${t("voice.aheadOf", { d: spokenDistance(threshold) })} ${cue}`,
         );
+
+        // Long-route continuation: when the driver approaches the end of
+        // the covered stretch, generate the next batch (guarded no-op on
+        // every other tick).
+        continueVoiceScript(dirs);
     },
 );
 

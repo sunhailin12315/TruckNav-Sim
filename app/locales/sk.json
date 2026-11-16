@@ -153,7 +153,16 @@
         "selected": "Vybrané",
         "select": "Vybrať",
         "download": "Stiahnuť",
-        "inProgress": "Prebieha"
+        "inProgress": "Prebieha",
+        "scanTitle": "Naskenovať miestnu mapu hry",
+        "scanDesc": "Vygeneruje aktuálne mapové údaje (vrátane nových DLC, napr. Island) z lokálne nainštalovanej hry. Trvá 10–25 min; hru medzitým nechajte zatvorenú. Vyžaduje ~10 GB RAM.",
+        "scanStart": "Spustiť skenovanie",
+        "scanResultName": "Naskenovaná mapa",
+        "scanDone": "Hotovo: {nodes} uzlov / {edges} hrán",
+        "scanPhasePrepare": "Príprava",
+        "scanPhaseSectors": "Analyzujem sektory mapy",
+        "scanPhaseGraph": "Staviam routovací graf",
+        "scanPhaseConvert": "Zapisujem mapové údaje"
     },
     "mobile": {
         "pairWithComputer": "Spárovať s počítačom"
@@ -290,6 +299,8 @@
         "aiEndpointHint": "Lokálne runtime musia povoliť pôvod tejto aplikácie — pri Ollame napr. nastavte OLLAMA_ORIGINS=*.",
         "aiInsights": "AI poznámky",
         "aiInsightsDescription": "Jedna veta o trase po naplánovaní a krátke hodnotenie po dodaní.",
+        "aiServiceNote": "Poznámka k zastávke",
+        "aiServiceNoteHint": "K vyskakovacej správe pridá jednu vetu AI o tom, prečo aktuálne navržená prestávka alebo tankovanie zmysluplne nadväzuje; len zobrazenie, nikdy hovorené.",
         "aiProviderPreset": "Predvoľba poskytovateľa",
         "aiPresetCustom": "Vlastné",
         "aiPreset": {
@@ -343,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "Poznámka k trase",
-        "deliveryNote": "Hodnotenie dodania"
+        "deliveryNote": "Hodnotenie dodania",
+        "serviceNote": "Poznámka k zastávke"
     }
 }

@@ -299,6 +299,8 @@
         "aiEndpointHint": "Local runtimes must allow this app's origin — e.g. set OLLAMA_ORIGINS=* for Ollama.",
         "aiInsights": "AI Insights",
         "aiInsightsDescription": "One-sentence route insight after planning and a delivery recap on drop-off.",
+        "aiServiceNote": "Service Stop Note",
+        "aiServiceNoteHint": "Adds one AI sentence about why the suggested rest or fuel stop makes sense right now to the toast; shown only, never spoken.",
         "aiProviderPreset": "Provider preset",
         "aiPresetCustom": "Custom",
         "aiPreset": {
@@ -352,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "Route insight",
-        "deliveryNote": "Delivery note"
+        "deliveryNote": "Delivery note",
+        "serviceNote": "Service note"
     }
 }

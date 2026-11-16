@@ -153,7 +153,16 @@
         "selected": "선택됨",
         "select": "선택",
         "download": "다운로드",
-        "inProgress": "진행 중"
+        "inProgress": "진행 중",
+        "scanTitle": "로컬 게임 맵 스캔",
+        "scanDesc": "로컬에 설치된 게임에서 최신 맵 데이터(아이슬란드 등 신규 DLC 포함)를 생성합니다. 10~25분 소요, 동안 게임을 종료해 두세요. 약 10GB RAM 필요.",
+        "scanStart": "스캔 시작",
+        "scanResultName": "스캔한 맵",
+        "scanDone": "완료: 노드 {nodes} / 간선 {edges}",
+        "scanPhasePrepare": "준비 중",
+        "scanPhaseSectors": "맵 섹터 분석 중",
+        "scanPhaseGraph": "경로 그래프 생성 중",
+        "scanPhaseConvert": "맵 데이터 쓰기 중"
     },
     "mobile": {
         "pairWithComputer": "컴퓨터와 연결"
@@ -290,6 +299,8 @@
         "aiEndpointHint": "로컬 런타임은 이 앱의 출처를 허용해야 합니다. Ollama는 OLLAMA_ORIGINS=* 를 설정하세요.",
         "aiInsights": "AI 인사이트",
         "aiInsightsDescription": "경로 계획 후 한 문장 요약과 배달 완료 시 한 문장 코멘트를 제공합니다.",
+        "aiServiceNote": "휴게소 안내 메모",
+        "aiServiceNoteHint": "제안된 휴게소·주유 정차가 지금 왜 필요한지 AI 문장 하나를 토스트에 추가합니다. 표시만 되고 음성으로 읽지 않습니다.",
         "aiProviderPreset": "제공자 프리셋",
         "aiPresetCustom": "직접 입력",
         "aiPreset": {
@@ -343,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "경로 요약",
-        "deliveryNote": "배달 코멘트"
+        "deliveryNote": "배달 코멘트",
+        "serviceNote": "정차 메모"
     }
 }

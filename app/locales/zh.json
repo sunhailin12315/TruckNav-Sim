@@ -299,6 +299,8 @@
         "aiEndpointHint": "本地模型需允许本应用的访问来源，Ollama 需设置 OLLAMA_ORIGINS=*。",
         "aiInsights": "AI 即时点评",
         "aiInsightsDescription": "规划路线后的一句解读，以及送达时的一句快评。",
+        "aiServiceNote": "停靠建议补注",
+        "aiServiceNoteHint": "休息区/加油站建议弹窗附一句 AI 说明为什么现在该停靠；仅显示，不语音播报。",
         "aiProviderPreset": "服务商预设",
         "aiPresetCustom": "自定义",
         "aiPreset": {
@@ -352,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "路线解读",
-        "deliveryNote": "送达点评"
+        "deliveryNote": "送达点评",
+        "serviceNote": "停靠补注"
     }
 }

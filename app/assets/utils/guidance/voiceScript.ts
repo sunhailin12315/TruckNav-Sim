@@ -8,14 +8,37 @@
 
 import type { DirectionStep } from "../routing/directions";
 
-/** Turns sent to the model; anything beyond keeps template wording. */
+/** Turns sent in ONE generation pass; longer routes continue in batches
+ * as the driver approaches the end of the covered stretch. */
 export const VOICE_SCRIPT_MAX_TURNS = 30;
+
+/** Hard cap of covered turns per route; beyond it the tail keeps the
+ * template wording no matter how far the route runs. */
+export const VOICE_SCRIPT_MAX_TOTAL_TURNS = 150;
+
+/** How close to the last covered turn the driver must be before the next
+ * batch is generated (route km) — early enough that phrases land before
+ * the first uncovered turn's 5 km mark, late enough to not burn a request
+ * the driver may never reach. */
+export const VOICE_SCRIPT_CONTINUE_LEAD_KM = 10;
 
 /** Steps the driver never hears a maneuver phrase for. */
 const SKIPPED_TYPES = new Set(["depart", "destination"]);
 
 /** Max stored phrase length; longer model replies are dropped per-cue. */
 const MAX_PHRASE_LENGTH = 120;
+
+/** One generation pass over the uncovered part of a maneuver window. */
+export interface VoiceScriptBatch {
+    /** Prompt context for this batch ("" when nothing was left to cover). */
+    context: string;
+    /** Step ids this batch asks the model to phrase. */
+    coveredIds: number[];
+    /** Furthest route-km the batch covers; null when it covers nothing. */
+    lastCoveredKm: number | null;
+    /** True when no uncovered eligible turn remained in the window. */
+    exhausted: boolean;
+}
 
 /**
  * Stable identity of a maneuver list. Planning (and every reroute)
@@ -38,23 +61,35 @@ export function routeTotalKm(steps: DirectionStep[]): number {
 }
 
 /**
- * Compact generation context for the planned route: the upcoming maneuvers
- * (already capped) plus the total distance. No coordinates, no street
- * names — the model paraphrases maneuver types and must not invent places.
+ * Plans one generation batch: walks the window in route order, skips the
+ * steps already covered (`exclude`) and the never-spoken depart/destination
+ * types, and takes up to VOICE_SCRIPT_MAX_TURNS. Reports whether the window
+ * held anything left to cover so callers can mark the script complete.
  */
-export function buildVoiceScriptContext(
+export function planVoiceScriptBatch(
     steps: DirectionStep[],
-): string {
+    exclude?: Set<number>,
+): VoiceScriptBatch {
     const turns: Array<{
         i: number;
         type: string;
         km?: number;
         exit?: number;
     }> = [];
+    const coveredIds: number[] = [];
+    let lastCoveredKm: number | null = null;
+    let remaining = false;
 
     for (const step of steps) {
         if (SKIPPED_TYPES.has(step.type)) continue;
-        if (turns.length >= VOICE_SCRIPT_MAX_TURNS) break;
+        if (exclude?.has(step.id)) continue;
+
+        if (turns.length >= VOICE_SCRIPT_MAX_TURNS) {
+            // Still uncovered turns behind the cap: the script continues
+            // when the driver approaches the covered stretch.
+            remaining = true;
+            break;
+        }
 
         turns.push({
             i: step.id,
@@ -64,9 +99,34 @@ export function buildVoiceScriptContext(
                 : {}),
             ...(step.exitCount ? { exit: step.exitCount } : {}),
         });
+        coveredIds.push(step.id);
+        if (step.cumulativeKm !== undefined) {
+            lastCoveredKm =
+                lastCoveredKm === null
+                    ? step.cumulativeKm
+                    : Math.max(lastCoveredKm, step.cumulativeKm);
+        }
     }
 
-    return JSON.stringify({ turns, totalKm: routeTotalKm(steps) });
+    return {
+        context: JSON.stringify({ turns, totalKm: routeTotalKm(steps) }),
+        coveredIds,
+        lastCoveredKm,
+        exhausted: !remaining,
+    };
+}
+
+/**
+ * Compact generation context for the planned route: the upcoming maneuvers
+ * (already capped, minus `exclude`d ids) plus the total distance. No
+ * coordinates, no street names — the model paraphrases maneuver types and
+ * must not invent places.
+ */
+export function buildVoiceScriptContext(
+    steps: DirectionStep[],
+    exclude?: Set<number>,
+): string {
+    return planVoiceScriptBatch(steps, exclude).context;
 }
 
 /**

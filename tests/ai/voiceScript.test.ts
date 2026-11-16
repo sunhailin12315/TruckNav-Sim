@@ -3,6 +3,7 @@ import {
     VOICE_SCRIPT_MAX_TURNS,
     buildVoiceScriptContext,
     parseVoiceScript,
+    planVoiceScriptBatch,
     routeKeyOf,
     routeTotalKm,
 } from "~/assets/utils/guidance/voiceScript";
@@ -84,6 +85,66 @@ describe("buildVoiceScriptContext", () => {
         expect(
             context.turns.some((turn) => turn.type === "destination"),
         ).toBe(false);
+    });
+});
+
+describe("planVoiceScriptBatch", () => {
+    /** depart + 40 straight turns + destination. */
+    function longRoute(): DirectionStep[] {
+        const steps = [makeStep(0, "depart", { cumulativeKm: 0 })];
+        for (let i = 1; i <= 40; i++) {
+            steps.push(makeStep(i, "straight", { cumulativeKm: i * 2 }));
+        }
+        steps.push(makeStep(99, "destination", { cumulativeKm: 82 }));
+        return steps;
+    }
+
+    it("plans the first batch and reports it incomplete", () => {
+        const batch = planVoiceScriptBatch(longRoute());
+
+        expect(batch.coveredIds).toHaveLength(VOICE_SCRIPT_MAX_TURNS);
+        expect(batch.lastCoveredKm).toBe(60); // turn 30 sits at 30*2 km
+        expect(batch.exhausted).toBe(false);
+
+        const turns = (JSON.parse(batch.context) as {
+            turns: Array<{ i: number }>;
+        }).turns;
+        expect(turns[0].i).toBe(1);
+        expect(turns).toHaveLength(VOICE_SCRIPT_MAX_TURNS);
+    });
+
+    it("continues after the excluded ids and finishes the route", () => {
+        const first = planVoiceScriptBatch(longRoute());
+        const covered = new Set(first.coveredIds);
+
+        // Driving shifted the window: depart is gone from the prompt but the
+        // covered ids carry over.
+        const second = planVoiceScriptBatch(longRoute(), covered);
+
+        expect(second.coveredIds).toHaveLength(10); // 40 total turns - 30
+        expect(second.coveredIds[0]).toBe(31);
+        expect(second.exhausted).toBe(true);
+        expect(second.lastCoveredKm).toBe(80);
+
+        // A third pass has nothing left: the caller marks the script complete.
+        const third = planVoiceScriptBatch(
+            longRoute(),
+            new Set([...covered, ...second.coveredIds]),
+        );
+        expect(third.coveredIds).toEqual([]);
+        expect(third.exhausted).toBe(true);
+        expect(third.lastCoveredKm).toBeNull();
+    });
+
+    it("reports an exhausted batch for a short route", () => {
+        const batch = planVoiceScriptBatch([
+            makeStep(0, "depart"),
+            makeStep(3, "left", { cumulativeKm: 5 }),
+            makeStep(9, "destination", { cumulativeKm: 12 }),
+        ]);
+
+        expect(batch.coveredIds).toEqual([3]);
+        expect(batch.exhausted).toBe(true);
     });
 });
 

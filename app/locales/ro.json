@@ -153,7 +153,16 @@
         "selected": "Selectat",
         "select": "Selectează",
         "download": "Descarcă",
-        "inProgress": "În desfășurare"
+        "inProgress": "În desfășurare",
+        "scanTitle": "Scanează harta locală a jocului",
+        "scanDesc": "Generează date cartografice actualizate (inclusiv DLC-uri noi precum Islanda) din jocul instalat local. Durează 10–25 min; ține jocul închis între timp. Necesită ~10 GB RAM.",
+        "scanStart": "Pornește scanarea",
+        "scanResultName": "Hartă scanată",
+        "scanDone": "Gata: {nodes} noduri / {edges} muchii",
+        "scanPhasePrepare": "Se pregătește",
+        "scanPhaseSectors": "Se analizează sectoarele hărții",
+        "scanPhaseGraph": "Se construiește graful de trasee",
+        "scanPhaseConvert": "Se scriu datele hărții"
     },
     "mobile": {
         "pairWithComputer": "Asociați cu Calculatorul"
@@ -290,6 +299,8 @@
         "aiEndpointHint": "Runtime-urile locale trebuie să permită originea acestei aplicații — de exemplu, pentru Ollama setați OLLAMA_ORIGINS=*.",
         "aiInsights": "Sugestii AI",
         "aiInsightsDescription": "O frază despre trasă după planificare și o scurtă remarcă la livrare.",
+        "aiServiceNote": "Notă oprire",
+        "aiServiceNoteHint": "Adaugă în toast o frază AI despre de ce oprirea sugerată pentru odihnă sau combustibil este potrivită acum; doar afișată, niciodată rostită.",
         "aiProviderPreset": "Presetare furnizor",
         "aiPresetCustom": "Personalizat",
         "aiPreset": {
@@ -343,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "Sugestie traseu",
-        "deliveryNote": "Remarcă livrare"
+        "deliveryNote": "Remarcă livrare",
+        "serviceNote": "Notă oprire"
     }
 }

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildDriveReportContext } from "~/assets/utils/ai/contextBuilder";
+import {
+    buildDriveReportContext,
+    computePreviousBaseline,
+} from "~/assets/utils/ai/contextBuilder";
 import type { DriveReport, TripStats } from "~/assets/utils/gameplay/stats";
 import type { TripRecord } from "~/assets/utils/gameplay/tripLog";
 
@@ -123,5 +126,99 @@ describe("buildDriveReportContext", () => {
 
         expect(context.session.fines.reasons).toBeUndefined();
         expect(context.session.fines).toEqual({ count: 3, total: 1250 });
+    });
+
+    it("includes the previous baseline when history backs it", () => {
+        const previous = computePreviousBaseline([
+            makeTrip(4, { income: 14000, distanceKm: 380, cargoDamage: 6 }),
+            makeTrip(3, {
+                kind: "cancelled",
+                expenses: {
+                    fines: 250,
+                    tolls: 0,
+                    ferry: 0,
+                    train: 0,
+                    finesCount: 1,
+                },
+            }),
+            makeTrip(2, { income: 16000, distanceKm: 420, cargoDamage: 4 }),
+            makeTrip(1, { income: 18000, distanceKm: 400, cargoDamage: 2 }),
+        ]);
+        expect(previous).not.toBeNull();
+
+        const context = JSON.parse(
+            buildDriveReportContext(REPORT, [makeTrip(6)], LIFETIME, [], previous),
+        ) as { previous?: Record<string, unknown> };
+
+        // Averages over the 3 delivered trips; fines per trip over all 4.
+        expect(context.previous).toEqual({
+            trips: 4,
+            avgIncome: 16000,
+            avgDistanceKm: 400,
+            avgCargoDamagePct: 4,
+            finesPerTrip: 0.3,
+        });
+    });
+
+    it("omits the previous block below the minimum history", () => {
+        const short = computePreviousBaseline([
+            makeTrip(2),
+            makeTrip(1),
+        ]);
+        expect(short).toBeNull();
+
+        const context = JSON.parse(
+            buildDriveReportContext(REPORT, [makeTrip(6)], LIFETIME, [], short),
+        ) as { previous?: unknown };
+        expect(context.previous).toBeUndefined();
+    });
+});
+
+describe("computePreviousBaseline", () => {
+    it("caps the window at the 10 most recent earlier trips", () => {
+        const many = Array.from({ length: 14 }, (_, i) =>
+            makeTrip(14 - i, { income: 10000 + i, cargoDamage: 0 }),
+        );
+        const baseline = computePreviousBaseline(many);
+
+        expect(baseline?.trips).toBe(10);
+        // The slice takes the 10 newest entries first: incomes 10000..10009
+        // average to 10004.5 (the four oldest are excluded).
+        expect(baseline?.avgIncome).toBeCloseTo(10004.5);
+    });
+
+    it("averages money over delivered trips only while fines span all", () => {
+        const baseline = computePreviousBaseline([
+            makeTrip(3),
+            makeTrip(2, {
+                kind: "cancelled",
+                income: 0,
+                expenses: {
+                    fines: 0,
+                    tolls: 0,
+                    ferry: 0,
+                    train: 0,
+                    finesCount: 2,
+                },
+            }),
+            makeTrip(1, { income: 5000 }),
+        ]);
+
+        // (15200 + 5000) / 2 delivered…
+        expect(baseline?.avgIncome).toBe(10100);
+        // …2 fines across 3 trips.
+        expect(baseline?.finesPerTrip).toBeCloseTo(2 / 3);
+    });
+
+    it("survives an all-cancelled window without dividing by zero", () => {
+        const baseline = computePreviousBaseline([
+            makeTrip(3, { kind: "cancelled" }),
+            makeTrip(2, { kind: "cancelled" }),
+            makeTrip(1, { kind: "cancelled" }),
+        ]);
+
+        expect(baseline?.trips).toBe(3);
+        expect(baseline?.avgIncome).toBe(0);
+        expect(baseline?.avgCargoDamagePct).toBe(0);
     });
 });

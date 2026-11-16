@@ -10,24 +10,33 @@ import {
     buildDriveReportContext,
     buildRouteInsightContext,
     buildDeliveryNoteContext,
+    buildServiceNoteContext,
+    computePreviousBaseline,
 } from "~/assets/utils/ai/contextBuilder";
-import type { DeliveryNoteInput } from "~/assets/utils/ai/contextBuilder";
+import type {
+    DeliveryNoteInput,
+    ServiceNoteInput,
+} from "~/assets/utils/ai/contextBuilder";
 import {
     driveReportMessages,
     parseDriveReportNarration,
     voiceScriptMessages,
     routeInsightMessages,
     deliveryNoteMessages,
+    serviceNoteMessages,
     parseAiNote,
 } from "~/assets/utils/ai/prompts";
 import type { DriveReportNarration } from "~/assets/utils/ai/prompts";
 import {
-    buildVoiceScriptContext,
+    VOICE_SCRIPT_CONTINUE_LEAD_KM,
+    VOICE_SCRIPT_MAX_TOTAL_TURNS,
     parseVoiceScript,
+    planVoiceScriptBatch,
     routeKeyOf,
     routeTotalKm,
 } from "~/assets/utils/guidance/voiceScript";
 import type { DirectionStep } from "~/assets/utils/routing/directions";
+import type { LocaleCode } from "~/assets/utils/shared/settingsSchema";
 import {
     computeDriveReport,
     computeTripStats,
@@ -86,6 +95,10 @@ interface StoredVoiceScript {
     routeKey: string;
     locale: string;
     cues: Array<[number, string]>;
+    /** True when every eligible turn was covered (no continuation needed). */
+    complete: boolean;
+    /** Furthest route-km the stored cues cover (null when unknown). */
+    lastCoveredKm: number | null;
 }
 
 // LRU-ordered by insertion; loaded once per page load.
@@ -103,11 +116,12 @@ function loadScriptCache(): void {
             version?: unknown;
             entries?: unknown;
         };
-        if (parsed.version !== 1 || !Array.isArray(parsed.entries)) return;
+        if (parsed.version !== 2 || !Array.isArray(parsed.entries)) return;
 
         for (const entry of parsed.entries) {
             if (!entry || typeof entry !== "object") continue;
-            const { routeKey, locale, cues } = entry as Partial<StoredVoiceScript>;
+            const { routeKey, locale, cues, complete, lastCoveredKm } =
+                entry as Partial<StoredVoiceScript>;
             if (
                 typeof routeKey !== "string" ||
                 typeof locale !== "string" ||
@@ -124,7 +138,18 @@ function loadScriptCache(): void {
                 }
             }
             if (pairs.length > 0) {
-                scriptCache.set(routeKey, { routeKey, locale, cues: pairs });
+                scriptCache.set(routeKey, {
+                    routeKey,
+                    locale,
+                    cues: pairs,
+                    // An entry without the flag is treated as complete: the
+                    // safest reading is "no continuation owed".
+                    complete: complete !== false,
+                    lastCoveredKm:
+                        typeof lastCoveredKm === "number"
+                            ? lastCoveredKm
+                            : null,
+                });
             }
         }
     } catch {
@@ -137,7 +162,7 @@ function persistScriptCache(): void {
     try {
         localStorage.setItem(
             SCRIPT_CACHE_KEY,
-            JSON.stringify({ version: 1, entries: [...scriptCache.values()] }),
+            JSON.stringify({ version: 2, entries: [...scriptCache.values()] }),
         );
     } catch {
         // Quota/serialization errors are non-fatal: the memory map still works.
@@ -148,9 +173,17 @@ function rememberScript(
     routeKey: string,
     locale: string,
     cues: Map<number, string>,
+    complete: boolean,
+    lastCoveredKm: number | null,
 ): void {
     scriptCache.delete(routeKey); // refresh the LRU position
-    scriptCache.set(routeKey, { routeKey, locale, cues: [...cues] });
+    scriptCache.set(routeKey, {
+        routeKey,
+        locale,
+        cues: [...cues],
+        complete,
+        lastCoveredKm,
+    });
     while (scriptCache.size > SCRIPT_CACHE_MAX) {
         const oldest = scriptCache.keys().next().value;
         if (oldest === undefined) break;
@@ -174,8 +207,17 @@ const deliveryNoteState = reactive<{
     note: string;
 }>({ status: "idle", note: "" });
 
+const serviceNoteState = reactive<{
+    status: AiNarrationStatus;
+    note: string;
+    /** Suggestion identity (kind|kmAhead) the note was generated for. */
+    key: string;
+    locale: string;
+}>({ status: "idle", note: "", key: "", locale: "" });
+
 let routeInsightController: AbortController | null = null;
 let deliveryNoteController: AbortController | null = null;
+let serviceNoteController: AbortController | null = null;
 
 export function useAI() {
     const { settings } = useSettings();
@@ -202,6 +244,11 @@ export function useAI() {
     /** One-shot notes (route insight, delivery recap). */
     const aiInsightsEnabled = computed(
         () => aiReady.value && settings.value.ai.aiInsights,
+    );
+
+    /** AI reason note on the rest/fuel suggestion toast (needs insights on). */
+    const serviceNoteAiEnabled = computed(
+        () => aiInsightsEnabled.value && settings.value.ai.aiServiceNote,
     );
 
     /**
@@ -238,6 +285,11 @@ export function useAI() {
         const sessionTrips = trips.value.filter((trip) => trip.id > anchor);
         const lifetime = computeTripStats(trips.value);
 
+        // Trend baseline over the trips before this session's anchor; the
+        // newest-first order means slice() takes the most recent history.
+        const earlier = trips.value.filter((trip) => trip.id <= anchor);
+        const previous = computePreviousBaseline(earlier);
+
         // Recent feed fine labels; the context builder drops them when the
         // feed knows about more fines than this session counted (labels
         // from older sessions would leak).
@@ -252,6 +304,7 @@ export function useAI() {
                     sessionTrips,
                     lifetime,
                     fineLabels,
+                    previous,
                 ),
                 locale,
             ),
@@ -433,6 +486,69 @@ export function useAI() {
         deliveryNoteState.status = "ready";
     }
 
+    /**
+     * Generates the one-sentence "why stop now" note for a rest/fuel
+     * suggestion the rule engine just raised. One note per suggestion
+     * identity (kind + km ahead) + locale; the same suggestion served
+     * again is free. A new suggestion supersedes the previous note. Callers
+     * keep the template toast + spoken cue and surface this as an extra
+     * reason line. Never throws — a failure just skips the note.
+     */
+    async function ensureServiceNote(input: ServiceNoteInput): Promise<void> {
+        if (!serviceNoteAiEnabled.value || aiInCooldown()) return;
+
+        const key = `${input.kind}|${Math.round(input.kmAhead)}`;
+        const locale = settings.value.locale;
+        if (
+            serviceNoteState.key === key &&
+            serviceNoteState.locale === locale &&
+            (serviceNoteState.status === "ready" ||
+                serviceNoteState.status === "loading")
+        ) {
+            return;
+        }
+
+        serviceNoteController?.abort();
+        serviceNoteController = new AbortController();
+        const controller = serviceNoteController;
+
+        serviceNoteState.key = key;
+        serviceNoteState.locale = locale;
+        serviceNoteState.status = "loading";
+        serviceNoteState.note = "";
+
+        const result = await aiChat(aiConfig.value, {
+            messages: serviceNoteMessages(
+                buildServiceNoteContext(input),
+                locale,
+            ),
+            temperature: 0.6,
+            signal: controller.signal,
+        });
+
+        // A superseded suggestion must not overwrite the current note.
+        if (controller.signal.aborted) return;
+
+        noteUsage(result.ok ? result.usage : undefined);
+
+        if (!result.ok) {
+            noteAiFailure();
+            serviceNoteState.status = "failed";
+            return;
+        }
+
+        const note = parseAiNote(result.text);
+        if (!note) {
+            noteAiFailure();
+            serviceNoteState.status = "failed";
+            return;
+        }
+
+        lastAiFailureAt = 0;
+        serviceNoteState.note = note.note;
+        serviceNoteState.status = "ready";
+    }
+
     // ===== Voice script (aiVoiceStyle "ai") =====
     // One phrase map per planned route, keyed by DirectionStep.id. Not
     // reactive on purpose: the announcement loop reads it at trigger time,
@@ -443,9 +559,17 @@ export function useAI() {
         /** Locale the phrases were generated for (reroute on switch). */
         locale: "",
         cues: new Map<number, string>(),
+        /** Step ids already covered by any generated batch. */
+        covered: new Set<number>(),
+        /** Furthest route-km covered so far; drives the continuation lead. */
+        lastCoveredKm: null as number | null,
+        /** True when no eligible turn is left uncovered (or over the cap). */
+        complete: false,
     };
     let voiceScriptStatus: "idle" | "loading" | "ready" | "failed" = "idle";
     let voiceScriptController: AbortController | null = null;
+    /** Guards against overlapping batch requests for the same route. */
+    let voiceScriptBusy = false;
 
     /** True when spoken cues should come from the AI script. */
     const aiVoiceStyleEnabled = computed(
@@ -460,7 +584,9 @@ export function useAI() {
      * key is route identity + locale: a reroute or language switch
      * regenerates, steady driving serves the same map, and a route seen
      * before is restored from the localStorage cache without a request.
-     * Never throws — a failure just leaves the templates in place.
+     * Only the first batch of turns is generated here; long routes continue
+     * through continueVoiceScript as the driver approaches. Never throws —
+     * a failure just leaves the templates in place.
      */
     async function ensureVoiceScript(steps: DirectionStep[]): Promise<void> {
         if (!aiVoiceStyleEnabled.value || steps.length === 0) return;
@@ -484,6 +610,9 @@ export function useAI() {
             voiceScriptState.routeKey = routeKey;
             voiceScriptState.locale = locale;
             voiceScriptState.cues = new Map(cached.cues);
+            voiceScriptState.covered = new Set(cached.cues.map(([id]) => id));
+            voiceScriptState.lastCoveredKm = cached.lastCoveredKm;
+            voiceScriptState.complete = cached.complete;
             voiceScriptStatus = "ready";
             return;
         }
@@ -495,16 +624,19 @@ export function useAI() {
         voiceScriptState.routeKey = routeKey;
         voiceScriptState.locale = locale;
         voiceScriptState.cues = new Map();
+        voiceScriptState.covered = new Set();
+        voiceScriptState.lastCoveredKm = null;
+        voiceScriptState.complete = false;
         voiceScriptStatus = "loading";
+        voiceScriptBusy = true;
 
+        const batch = planVoiceScriptBatch(steps);
         const result = await aiChat(aiConfig.value, {
-            messages: voiceScriptMessages(
-                buildVoiceScriptContext(steps),
-                locale,
-            ),
+            messages: voiceScriptMessages(batch.context, locale),
             temperature: 0.7,
             signal: controller.signal,
         });
+        voiceScriptBusy = false;
 
         // A superseded run (reroute) must not overwrite the current map.
         if (controller.signal.aborted) return;
@@ -519,18 +651,149 @@ export function useAI() {
         }
 
         lastAiFailureAt = 0;
-        voiceScriptState.cues = cues;
+        mergeVoiceScriptBatch(cues, batch);
         voiceScriptStatus = "ready";
-        rememberScript(routeKey, locale, cues);
+        rememberScript(
+            routeKey,
+            locale,
+            voiceScriptState.cues,
+            voiceScriptState.complete,
+            voiceScriptState.lastCoveredKm,
+        );
+    }
+
+    /**
+     * Continues the phrase map of the current route while driving: called
+     * with the live (in-place shifted) maneuver window on every turn
+     * announcement. A new batch is generated only when the driver gets
+     * within the continuation lead of the last covered turn and turns are
+     * still uncovered under the total cap; everything else is a cheap
+     * early return. Failed/slow batches simply keep the templates.
+     */
+    function continueVoiceScript(steps: DirectionStep[]): void {
+        if (
+            !aiVoiceStyleEnabled.value ||
+            voiceScriptBusy ||
+            voiceScriptStatus !== "ready" ||
+            voiceScriptState.complete ||
+            aiInCooldown() ||
+            voiceScriptState.covered.size >= VOICE_SCRIPT_MAX_TOTAL_TURNS ||
+            steps.length === 0
+        ) {
+            return;
+        }
+
+        // Only the route this script belongs to: a reroute goes through
+        // ensureVoiceScript, which resets the batch bookkeeping. The window
+        // keeps step ids across progress shifts, so the covered set is the
+        // identity check — the head step of the plan window is always id 0.
+        if (voiceScriptState.covered.size === 0) return;
+
+        const headKm = steps[0]?.cumulativeKm ?? 0;
+        if (
+            voiceScriptState.lastCoveredKm !== null &&
+            headKm + VOICE_SCRIPT_CONTINUE_LEAD_KM < voiceScriptState.lastCoveredKm
+        ) {
+            return;
+        }
+
+        const batch = planVoiceScriptBatch(steps, voiceScriptState.covered);
+        if (batch.coveredIds.length === 0) {
+            voiceScriptState.complete = true;
+            return;
+        }
+
+        void runVoiceScriptBatch(
+            batch,
+            voiceScriptState.routeKey,
+            settings.value.locale,
+        );
+    }
+
+    async function runVoiceScriptBatch(
+        batch: ReturnType<typeof planVoiceScriptBatch>,
+        routeKey: string,
+        locale: LocaleCode,
+    ): Promise<void> {
+        const controller = new AbortController();
+        voiceScriptController = controller;
+        voiceScriptBusy = true;
+
+        const result = await aiChat(aiConfig.value, {
+            messages: voiceScriptMessages(batch.context, locale),
+            temperature: 0.7,
+            signal: controller.signal,
+        });
+        voiceScriptBusy = false;
+
+        // Superseded by a reroute (new routeKey clears the batch bookkeeping,
+        // and step ids can repeat across plans — merging a stale batch could
+        // attach wrong phrases), or by a locale switch / cancellation.
+        if (
+            controller.signal.aborted ||
+            voiceScriptState.routeKey !== routeKey ||
+            voiceScriptState.covered.size === 0
+        ) {
+            return;
+        }
+
+        noteUsage(result.ok ? result.usage : undefined);
+
+        const cues = result.ok ? parseVoiceScript(result.text) : null;
+        if (!cues) {
+            // Cooldown + templates keep the drive going; a later trigger may
+            // retry once the cooldown lapses.
+            noteAiFailure();
+            return;
+        }
+
+        lastAiFailureAt = 0;
+        mergeVoiceScriptBatch(cues, batch);
+        rememberScript(
+            voiceScriptState.routeKey,
+            voiceScriptState.locale,
+            voiceScriptState.cues,
+            voiceScriptState.complete,
+            voiceScriptState.lastCoveredKm,
+        );
+    }
+
+    /** Folds one batch's phrases into the route's map and updates coverage. */
+    function mergeVoiceScriptBatch(
+        cues: Map<number, string>,
+        batch: ReturnType<typeof planVoiceScriptBatch>,
+    ): void {
+        for (const [id, phrase] of cues) {
+            voiceScriptState.cues.set(id, phrase);
+        }
+        for (const id of batch.coveredIds) {
+            voiceScriptState.covered.add(id);
+        }
+        if (batch.lastCoveredKm !== null) {
+            voiceScriptState.lastCoveredKm =
+                voiceScriptState.lastCoveredKm === null
+                    ? batch.lastCoveredKm
+                    : Math.max(voiceScriptState.lastCoveredKm, batch.lastCoveredKm);
+        }
+        if (
+            batch.exhausted ||
+            voiceScriptState.covered.size >= VOICE_SCRIPT_MAX_TOTAL_TURNS
+        ) {
+            voiceScriptState.complete = true;
+        }
     }
 
     /** Aborts any in-flight script (route cleared or style switched off). */
     function cancelVoiceScript(): void {
         voiceScriptController?.abort();
         voiceScriptController = null;
+        voiceScriptBusy = false;
         if (voiceScriptStatus === "loading") {
             voiceScriptStatus = "idle";
             voiceScriptState.cues = new Map();
+            voiceScriptState.covered = new Set();
+            voiceScriptState.lastCoveredKm = null;
+            voiceScriptState.complete = false;
         }
     }
 
@@ -558,9 +821,13 @@ export function useAI() {
         cancelRouteInsight,
         deliveryNoteState,
         ensureDeliveryNote,
+        serviceNoteAiEnabled,
+        serviceNoteState,
+        ensureServiceNote,
         aiVoiceStyleEnabled,
         ensureVoiceScript,
         cancelVoiceScript,
+        continueVoiceScript,
         voiceScriptPhraseFor,
     };
 }

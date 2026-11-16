@@ -18,6 +18,7 @@ const { t } = useTranslations();
 const hasAi = computed(() => settings.value.ai.aiEnabled);
 const hasDriveReport = computed(() => settings.value.ai.aiDriveReport);
 const hasInsights = computed(() => settings.value.ai.aiInsights);
+const hasServiceNote = computed(() => settings.value.ai.aiServiceNote);
 
 // Provider presets fill endpoint (+ a known default model) in one pick;
 // local runtimes only preset the endpoint — the model is whatever the
@@ -134,6 +135,10 @@ function toggleAiDriveReport() {
 
 function toggleAiInsights() {
     patchAi({ aiInsights: !settings.value.ai.aiInsights });
+}
+
+function toggleAiServiceNote() {
+    patchAi({ aiServiceNote: !settings.value.ai.aiServiceNote });
 }
 
 // Session-cumulative token usage, for a sense of the running cost.
@@ -366,6 +371,25 @@ async function runConnectionTest() {
                     :active="hasInsights"
                 />
             </div>
+
+            <div class="option setting" v-if="hasInsights">
+                <div class="option-title">
+                    <Icon name="lucide:heart-handshake" size="24" />
+                    <p>{{ t("settings.aiServiceNote") }}</p>
+                </div>
+
+                <SegmentedControl
+                    :left-option="t('settings.on')"
+                    :right-option="t('settings.off')"
+                    @connect="toggleAiServiceNote"
+                    size="normal"
+                    :active="hasServiceNote"
+                />
+            </div>
+
+            <p v-if="hasInsights" class="ai-hint">
+                {{ t("settings.aiServiceNoteHint") }}
+            </p>
 
             <div class="option setting">
                 <div class="option-title">

@@ -79,6 +79,11 @@ let jobEndWindowUntil = 0;
 let lastDeliveryKey = "";
 let pendingTripEnd = false;
 
+// Signed deadline minutes from the last packet that still carried an active
+// job; jobState is cleared before the delivery detection settles, so the AI
+// recap reads the deadline state as it stood on the road.
+let lastActiveRemainingMinutes: number | null = null;
+
 function normalizeDamage(value: number) {
     // The plugin reports damage as 0-100, but guard against 0-1 fractions.
     const percent = value <= 1 ? value * 100 : value;
@@ -378,6 +383,7 @@ export function useEtsTelemetry() {
         } else {
             deliveryDeadlineState = initialDeliveryDeadlineState;
         }
+        if (hasActiveJob) lastActiveRemainingMinutes = remainingMinutes;
 
         Object.assign(jobState, {
             hasActiveJob: hasActiveJob,
@@ -523,20 +529,25 @@ export function useEtsTelemetry() {
             jobEndWindowUntil = 0;
             pendingTripEnd = false;
 
+            // Read the active trip's fines before endTrip clears them; the
+            // count feeds both the grade and the AI recap.
+            const cargoDamagePct = normalizeDamage(
+                delivered.cargoDamage ?? 0,
+            );
+            const finesCount = tripLog.getActiveFinesCount();
+            const grade = computeDeliveryGrade(cargoDamagePct, finesCount);
+
             deliveryState.info = {
                 kind: "delivered",
                 revenue: delivered.revenue,
                 penalty: 0,
                 earnedXp: delivered.earnedXp ?? 0,
-                cargoDamage: normalizeDamage(delivered.cargoDamage ?? 0),
+                cargoDamage: cargoDamagePct,
                 distanceKm: delivered.distanceKm ?? 0,
                 deliveredAt: formatGameClock(delivered.deliveryTime),
                 autoParker: delivered.autoParker ?? false,
                 autoLoaded: delivered.autoLoaded ?? false,
-                grade: computeDeliveryGrade(
-                    normalizeDamage(delivered.cargoDamage ?? 0),
-                    tripLog.getActiveFinesCount(),
-                ),
+                grade,
             };
             deliveryState.isVisible = true;
 
@@ -548,27 +559,32 @@ export function useEtsTelemetry() {
             setRpcStatusNote(
                 `Delivered to ${jobState.destinationCityName || "company"} · +${formatMoney(delivered.revenue, currencySymbolFor(settings.value.selectedGame))}`,
             );
-            // One-sentence AI recap: called after endTrip so the session
-            // aggregates include this delivery; silent when AI is off.
-            ensureDeliveryNote({
-                income: delivered.revenue,
-                distanceKm: delivered.distanceKm ?? 0,
-                cargoDamagePct: normalizeDamage(
-                    delivered.cargoDamage ?? 0,
-                ),
-                earnedXp: delivered.earnedXp ?? 0,
-            });
             announceAchievements(
                 tripLog.endTrip({
                     kind: "delivered",
                     income: delivered.revenue,
                     penalty: 0,
-                    cargoDamage: normalizeDamage(delivered.cargoDamage ?? 0),
+                    cargoDamage: cargoDamagePct,
                     distanceKm: delivered.distanceKm ?? 0,
                     earnedXp: delivered.earnedXp ?? 0,
                     completedAt: gameState.gameTime,
                 }),
             );
+            // One-sentence AI recap: called after endTrip so its synchronous
+            // prologue already sees this trip in the log and the session
+            // aggregates include it; silent when AI is off.
+            ensureDeliveryNote({
+                income: delivered.revenue,
+                distanceKm: delivered.distanceKm ?? 0,
+                cargoDamagePct,
+                earnedXp: delivered.earnedXp ?? 0,
+                destination: jobState.destinationCityName,
+                cargo: jobState.cargoName,
+                grade,
+                finesCount,
+                remainingMinutes: lastActiveRemainingMinutes,
+            });
+            lastActiveRemainingMinutes = null;
             return;
         }
 

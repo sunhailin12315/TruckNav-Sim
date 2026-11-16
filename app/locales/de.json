@@ -153,7 +153,16 @@
         "selected": "Ausgewählt",
         "select": "Auswählen",
         "download": "Herunterladen",
-        "inProgress": "Läuft"
+        "inProgress": "Läuft",
+        "scanTitle": "Lokale Spielkarte scannen",
+        "scanDesc": "Erzeuge aus deiner lokal installierten Spielkarte aktuelle Kartendaten (inkl. neuer DLCs wie Island). Dauer 10–25 Min.; das Spiel bleibt in dieser Zeit geschlossen. Etwa 10 GB RAM erforderlich.",
+        "scanStart": "Scan starten",
+        "scanResultName": "Gescannte Karte",
+        "scanDone": "Fertig: {nodes} Knoten / {edges} Kanten",
+        "scanPhasePrepare": "Vorbereitung",
+        "scanPhaseSectors": "Kartensektoren werden gelesen",
+        "scanPhaseGraph": "Routing-Graph wird erstellt",
+        "scanPhaseConvert": "Kartendaten werden geschrieben"
     },
     "mobile": {
         "pairWithComputer": "Mit Computer koppeln"
@@ -290,6 +299,8 @@
         "aiEndpointHint": "Lokale Laufzeiten müssen den Ursprung dieser App erlauben — für Ollama z. B. OLLAMA_ORIGINS=* setzen.",
         "aiInsights": "KI-Hinweise",
         "aiInsightsDescription": "Ein Satz zur Route nach der Planung und eine kurze Anmerkung bei der Lieferung.",
+        "aiServiceNote": "Raststätten-Hinweis",
+        "aiServiceNoteHint": "Fügt dem Toast einen KI-Satz hinzu, warum die empfohlene Rast oder Tankstelle jetzt sinnvoll ist; nur sichtbar, nie gesprochen.",
         "aiProviderPreset": "Anbieter-Vorlage",
         "aiPresetCustom": "Benutzerdefiniert",
         "aiPreset": {
@@ -343,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "Routen-Hinweis",
-        "deliveryNote": "Liefer-Anmerkung"
+        "deliveryNote": "Liefer-Anmerkung",
+        "serviceNote": "Rast-Hinweis"
     }
 }

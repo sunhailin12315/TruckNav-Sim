@@ -153,7 +153,16 @@
         "selected": "Geselecteerd",
         "select": "Selecteren",
         "download": "Downloaden",
-        "inProgress": "Bezig"
+        "inProgress": "Bezig",
+        "scanTitle": "Lokale spelkaart scannen",
+        "scanDesc": "Genereer actuele kaartgegevens (inclusief nieuwe DLC's zoals IJsland) vanuit je lokaal geïnstalleerde spel. Duurt 10–25 min; houd het spel tussendoor gesloten. Vereist ~10 GB RAM.",
+        "scanStart": "Scan starten",
+        "scanResultName": "Gescande kaart",
+        "scanDone": "Klaar: {nodes} knopen / {edges} verbindingen",
+        "scanPhasePrepare": "Voorbereiden",
+        "scanPhaseSectors": "Kaartsectoren verwerken",
+        "scanPhaseGraph": "Routegrafiek opbouwen",
+        "scanPhaseConvert": "Kaartgegevens schrijven"
     },
     "mobile": {
         "pairWithComputer": "Koppelen met computer"
@@ -290,6 +299,8 @@
         "aiEndpointHint": "Lokale runtimes moeten de oorsprong van deze app toestaan — zet bij Ollama bijvoorbeeld OLLAMA_ORIGINS=*.",
         "aiInsights": "AI-tips",
         "aiInsightsDescription": "Eén zin over de route na planning en een korte noot bij de levering.",
+        "aiServiceNote": "Adviesnoot",
+        "aiServiceNoteHint": "Voegt één AI-zin toe over waarom de voorgestelde rust- of tankstop nu zinvol is; alleen zichtbaar, nooit uitgesproken.",
         "aiProviderPreset": "Provider-voorkeuze",
         "aiPresetCustom": "Aangepast",
         "aiPreset": {
@@ -343,6 +354,7 @@
     },
     "aiNotes": {
         "routeInsight": "Route-inzicht",
-        "deliveryNote": "Levernotitie"
+        "deliveryNote": "Levernotitie",
+        "serviceNote": "Adviesnoot"
     }
 }

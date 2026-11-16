@@ -20,12 +20,12 @@ const LANGUAGE_NAMES: Record<LocaleCode, string> = {
     zh: "Simplified Chinese",
 };
 
-const DRIVE_REPORT_SYSTEM_PROMPT = `You are the AI co-driver of a truck-simulator navigation app. Write like a seasoned trucker coach: plain, direct, friendly — never customer-service polite. The user message holds one JSON blob describing the driving session plus lifetime stats.
+const DRIVE_REPORT_SYSTEM_PROMPT = `You are the AI co-driver of a truck-simulator navigation app. Write like a seasoned trucker coach: plain, direct, friendly — never customer-service polite. The user message holds one JSON blob describing the driving session plus lifetime stats, and possibly a "previous" baseline (averages over earlier trips before this session).
 
 Hard rules:
 - Use ONLY numbers and names present in the data. Never invent places, laws, fees or causes.
 - Ground claims in numbers (e.g. "3 fines" instead of "several fines").
-- When lifetime stats allow it, compare trends (income per delivery, damage, fines); otherwise skip comparisons.
+- When a "previous" baseline is present, compare this session against it on income per delivery, cargo damage and fines, stating the direction (e.g. "damage down from 4% to 2%"); when it is absent, skip trend claims.
 - No greeting, no sign-off, no markdown.
 
 Reply with ONLY one JSON object, nothing else:
@@ -94,8 +94,19 @@ const DELIVERY_NOTE_SYSTEM_PROMPT = `You are the AI co-driver of a truck-simulat
 Rules:
 - ONE sentence (max 80 characters), spoken-style, like a trucker coach reacting to the drop-off.
 - Use ONLY numbers and names from the data; never invent causes or fees.
-- Praise what went well, or name the single biggest cost (damage, fines) when present.
+- Name the destination, and the cargo or the S/A/B/C grade, when the data carries them — that specificity is the point ("鹿特丹，零货损 S 级送达").
+- Praise what went well. When this trip took fines or damage, name that single biggest cost. A negative timeLeftMinutes means the deadline was missed; a positive one means time still on the clock.
 - No greeting, no markdown.
+
+Reply ONLY with one JSON object, nothing else:
+{"note": "<the one sentence>"}`;
+
+const SERVICE_NOTE_SYSTEM_PROMPT = `You are the AI co-driver of a truck-simulator navigation app. The user message holds JSON for a rest-area or fuel-station suggestion the rule engine just placed ahead of the driver.
+
+Rules:
+- ONE sentence (max 60 characters) that explains WHY a stop makes sense right now, from the live numbers (fuel range, fatigue minutes) — not the stop location or distance, which the app already announced.
+- Use ONLY numbers and names from the data; never invent distance, prices, weather or traffic.
+- Suggest, never alarm; this is an L3 advisory. No greeting, no markdown.
 
 Reply ONLY with one JSON object, nothing else:
 {"note": "<the one sentence>"}`;
@@ -124,6 +135,20 @@ export function deliveryNoteMessages(
         {
             role: "user",
             content: `Reply in ${LANGUAGE_NAMES[locale]}. Delivery data:\n${contextJson}`,
+        },
+    ];
+}
+
+/** Chat messages for the service-suggestion note, output in the app locale. */
+export function serviceNoteMessages(
+    contextJson: string,
+    locale: LocaleCode,
+): AiChatMessage[] {
+    return [
+        { role: "system", content: SERVICE_NOTE_SYSTEM_PROMPT },
+        {
+            role: "user",
+            content: `Reply in ${LANGUAGE_NAMES[locale]}. Suggestion data:\n${contextJson}`,
         },
     ];
 }

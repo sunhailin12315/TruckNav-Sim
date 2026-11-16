@@ -4,6 +4,7 @@ import {
     selectVoiceFrom,
     voicesForLocale,
 } from "~/assets/utils/guidance/voiceSelection";
+import { applyPronunciationFixes } from "~/assets/utils/guidance/pronunciation";
 
 // BCP-47 tag per app locale for speech synthesis; falls back to en-US.
 const SPEECH_LANGS: Record<LocaleCode, string> = {
@@ -17,18 +18,31 @@ const SPEECH_LANGS: Record<LocaleCode, string> = {
     zh: "zh-CN",
 };
 
-// Locales the bundled neural model can speak; everything else keeps using
-// the OS speech voice (the melo model is Chinese + English).
+// Locales the bundled offline neural model can speak; everything else keeps
+// using the cloud or OS voice (the melo model is Chinese + English).
 const NEURAL_LOCALES: ReadonlySet<string> = new Set(["zh", "en"]);
+
+// Live cues must never hang on the network: a cloud synthesis slower than
+// this loses the race to the offline engines. The result still lands in the
+// cache, so a slow cue becomes an instant one the next time.
+const CLOUD_GRACE_MS = 5000;
 
 // Electron preload bridge, typed loosely like the other renderer access
 // points ((window as any).electronAPI elsewhere in the app).
+interface CloudAudioPayload {
+    kind: "mp3";
+    bytes: ArrayBuffer | Uint8Array;
+}
 interface ElectronNeuralTts {
     ttsStatus: () => Promise<boolean>;
     ttsSynthesize: (
         text: string,
         locale: string,
     ) => Promise<ArrayBuffer | Uint8Array | null>;
+    ttsCloudSynthesize?: (
+        text: string,
+        locale: string,
+    ) => Promise<CloudAudioPayload | null>;
 }
 
 const electronTts = (): ElectronNeuralTts | null => {
@@ -69,32 +83,54 @@ const refreshVoiceList = () => {
     if (voices.length) voiceList.value = [...voices];
 };
 
-// ===== Neural cue cache: synthesis is slow, cue texts are templated =====
-// Object URLs for synthesized WAVs, keyed by "<locale>:<text>", LRU-capped;
-// evicted URLs are revoked so the blobs don't pile up.
-const NEURAL_CACHE_MAX = 40;
-const neuralCache = new Map<string, string>();
+// ===== Cue audio cache: synthesis is slow, cue texts are templated =====
+// Object URLs for synthesized audio, keyed by "<engine>|<locale>|<fixed
+// text>" (the fix table can make two cues share a pronunciation form; two
+// engines never share one URL), LRU-capped; evicted URLs are revoked so
+// the blobs don't pile up.
+const NEURAL_CACHE_MAX = 60;
+const cueCache = new Map<string, string>();
 
-const neuralCacheGet = (key: string): string | undefined => {
-    const url = neuralCache.get(key);
+const cueCacheGet = (key: string): string | undefined => {
+    const url = cueCache.get(key);
     if (url !== undefined) {
         // Refresh recency (Map iterates in insertion order).
-        neuralCache.delete(key);
-        neuralCache.set(key, url);
+        cueCache.delete(key);
+        cueCache.set(key, url);
     }
     return url;
 };
 
-const neuralCachePut = (key: string, url: string) => {
-    if (neuralCache.size >= NEURAL_CACHE_MAX) {
-        const oldest = neuralCache.keys().next().value;
+const cueCachePut = (key: string, url: string) => {
+    if (cueCache.size >= NEURAL_CACHE_MAX) {
+        const oldest = cueCache.keys().next().value;
         if (oldest !== undefined) {
-            const stale = neuralCache.get(oldest);
+            const stale = cueCache.get(oldest);
             if (stale) URL.revokeObjectURL(stale);
-            neuralCache.delete(oldest);
+            cueCache.delete(oldest);
         }
     }
-    neuralCache.set(key, url);
+    cueCache.set(key, url);
+};
+
+// In-flight syntheses per cache key, so a live cue arriving while
+// prewarm is still filling the same entry joins it instead of doubling
+// the request.
+const inflight = new Map<string, Promise<string | null>>();
+
+const toUrl = (
+    bytes: ArrayBuffer | Uint8Array,
+    mime: string,
+): string | null => {
+    try {
+        // Copy into a plain buffer: IPC may hand back a view, and Blob
+        // wants an ArrayBuffer-backed part.
+        return URL.createObjectURL(
+            new Blob([new Uint8Array(bytes)], { type: mime }),
+        );
+    } catch {
+        return null;
+    }
 };
 
 // One availability probe per page load: the main process reports whether
@@ -102,6 +138,7 @@ const neuralCachePut = (key: string, url: string) => {
 // the engine for the session, so a broken setup can't retry-stall cues.
 let neuralStatusProbe: Promise<boolean> | null = null;
 let neuralDisabled = false;
+let cloudDisabled = false;
 
 const neuralAvailable = (): Promise<boolean> => {
     const api = electronTts();
@@ -110,15 +147,36 @@ const neuralAvailable = (): Promise<boolean> => {
     return neuralStatusProbe;
 };
 
+const cachedOr = (
+    cacheKey: string,
+    synthesize: () => Promise<string | null>,
+): Promise<string | null> => {
+    const cached = cueCacheGet(cacheKey);
+    if (cached) return Promise.resolve(cached);
+
+    const running = inflight.get(cacheKey);
+    if (running) return running;
+
+    const task = synthesize()
+        .then((url) => {
+            if (url) cueCachePut(cacheKey, url);
+            return url;
+        })
+        .finally(() => inflight.delete(cacheKey));
+    inflight.set(cacheKey, task);
+    return task;
+};
+
 /**
- * Spoken navigation cues. Two engines behind one speak() facade: the
- * offline neural voice (sherpa-onnx via the Electron main process) when
- * available and enabled, otherwise the Web Speech API (zero dependencies,
- * like SoundAlerts). Either way the newest cue wins — the running utterance
- * is cancelled so a burst of announcements can't queue up behind each
- * other, and the Web Speech re-speak is deferred by a tick because some
- * engines (Android WebView, Chrome) drop an utterance started in the same
- * tick as a cancel.
+ * Spoken navigation cues. Three engines behind one speak() facade, best
+ * voice first: the online HD neural voice (Edge Read Aloud via the main
+ * process, disk-cached so each cue text costs one round trip ever), then
+ * the offline neural model (sherpa-onnx), then the Web Speech API (zero
+ * dependencies, like SoundAlerts). Either way the newest cue wins — the
+ * running utterance is cancelled so a burst of announcements can't queue
+ * up behind each other, and the Web Speech re-speak is deferred by a tick
+ * because some engines (Android WebView, Chrome) drop an utterance
+ * started in the same tick as a cancel.
  */
 export const useVoiceGuidance = () => {
     const { settings } = useSettings();
@@ -168,50 +226,100 @@ export const useVoiceGuidance = () => {
         }
     };
 
-    // Synthesize a cue into the object-URL cache without playing it. Used
-    // by speakNeural and by prewarm(); a failed synthesize disables the
-    // neural engine for the session (the OS voice takes over).
-    const synthToCache = async (
+    // Synthesize one cue into the cache via the cloud voice; a null or
+    // failed result disables the cloud path for the session (the offline
+    // engines take over). Deliberately never rejects.
+    const primeCloud = (fixed: string, locale: LocaleCode): Promise<string | null> =>
+        cachedOr(`c|${locale}|${fixed}`, async () => {
+            const api = electronTts();
+            if (!api?.ttsCloudSynthesize) return null;
+            const audio = await api
+                .ttsCloudSynthesize(fixed, locale)
+                .catch(() => null);
+            if (!audio) {
+                cloudDisabled = true;
+                return null;
+            }
+            const url = toUrl(audio.bytes, "audio/mpeg");
+            if (!url) cloudDisabled = true;
+            return url;
+        });
+
+    // The offline sherpa path; a failed synthesize disables the engine for
+    // the session (the OS voice takes over), same contract as before.
+    const primeLocal = (fixed: string, locale: LocaleCode): Promise<string | null> =>
+        cachedOr(`n|${locale}|${fixed}`, async () => {
+            const api = electronTts();
+            if (!api) return null;
+            const wav = await api.ttsSynthesize(fixed, locale).catch(() => null);
+            if (!wav) {
+                neuralDisabled = true;
+                return null;
+            }
+            return toUrl(wav, "audio/wav");
+        });
+
+    // Resolve a cue to a playable object URL through the enabled neural
+    // engines, cloud first. cloudGraceMs bounds only the cloud hop — a
+    // timed-out request keeps running and fills the cache for later, but
+    // the offline engines answer now. Returns null when nothing can play.
+    const primeCue = async (
         text: string,
         locale: LocaleCode,
+        cloudGraceMs: number | null,
     ): Promise<string | null> => {
-        const api = electronTts();
-        if (!api) return null;
+        const fixed = applyPronunciationFixes(text, locale);
 
-        const cacheKey = `${locale}:${text}`;
-        const cached = neuralCacheGet(cacheKey);
-        if (cached) return cached;
-
-        const wav = await api.ttsSynthesize(text, locale).catch(() => null);
-        if (!wav) {
-            neuralDisabled = true;
-            return null;
+        if (
+            settings.value.gameplay.voiceCloud &&
+            !cloudDisabled &&
+            electronTts()?.ttsCloudSynthesize
+        ) {
+            const attempt = primeCloud(fixed, locale);
+            const url =
+                cloudGraceMs === null
+                    ? await attempt
+                    : await new Promise<string | null>((resolve) => {
+                          let settled = false;
+                          const timer = setTimeout(() => {
+                              settled = true;
+                              resolve(null);
+                          }, cloudGraceMs);
+                          attempt.then((u) => {
+                              if (settled) return;
+                              settled = true;
+                              clearTimeout(timer);
+                              resolve(u);
+                          });
+                      });
+            if (url) return url;
         }
-        // Copy into a plain buffer: IPC may hand back a view, and Blob
-        // wants an ArrayBuffer-backed part.
-        const url = URL.createObjectURL(
-            new Blob([new Uint8Array(wav)], { type: "audio/wav" }),
-        );
-        neuralCachePut(cacheKey, url);
-        return url;
+
+        if (
+            NEURAL_LOCALES.has(locale) &&
+            !neuralDisabled &&
+            (await neuralAvailable())
+        ) {
+            return await primeLocal(fixed, locale);
+        }
+        return null;
     };
 
-    // Pre-synthesize fixed cues in the background: the WASM engine needs
-    // seconds per cue (model load on the very first), so warming them at
-    // navigation start keeps the first spoken call instant.
+    // Pre-synthesize fixed cues in the background with no deadline: the
+    // offline WASM engine needs seconds per cue (model load on the very
+    // first), so warming them at navigation start keeps the first spoken
+    // call instant. Cloud cues warm the on-disk cache across launches.
     const prewarm = (texts: string[]) => {
         const locale = settings.value.locale;
         const wantsNeural =
             settings.value.gameplay.voiceNavigation &&
             settings.value.gameplay.voiceNeural &&
             settings.value.gameplay.voiceName === AUTO_VOICE &&
-            !neuralDisabled &&
-            NEURAL_LOCALES.has(locale) &&
             electronTts() !== null;
         if (!wantsNeural) return;
 
         for (const text of texts) {
-            void synthToCache(text, locale).catch(() => {});
+            void primeCue(text, locale, null).catch(() => {});
         }
     };
 
@@ -253,9 +361,13 @@ export const useVoiceGuidance = () => {
         }
     };
 
-    const speakNeural = async (text: string, locale: LocaleCode) => {
-        const url = await synthToCache(text, locale);
-        if (!url) return false;
+    const speakNeural = async (
+        text: string,
+        locale: LocaleCode,
+        token: number,
+    ): Promise<boolean> => {
+        const url = await primeCue(text, locale, CLOUD_GRACE_MS);
+        if (!url || token !== speakToken) return false;
 
         const audio = new Audio(url);
         audio.onended = () => {
@@ -274,33 +386,27 @@ export const useVoiceGuidance = () => {
         const token = ++speakToken;
         const fallbackSystem = () => {
             if (token === speakToken) {
+                // The OS engine gets the raw text: system voices use proper
+                // dictionaries and the fix table is for the neural models.
                 speakSystem(text, SPEECH_LANGS[locale] ?? "en-US");
             }
         };
-        // A pinned voice outranks the neural engine: what the user picked
+        // A pinned voice outranks the neural engines: what the user picked
         // is what they want to hear, neural or not.
         const wantsNeural =
             settings.value.gameplay.voiceNeural &&
             settings.value.gameplay.voiceName === AUTO_VOICE &&
-            !neuralDisabled &&
-            NEURAL_LOCALES.has(locale) &&
             electronTts() !== null;
 
         if (wantsNeural) {
-            neuralAvailable()
-                .then(async (available) => {
-                    if (!available || token !== speakToken) return false;
-                    try {
-                        return await speakNeural(text, locale);
-                    } catch (e) {
-                        console.error("Neural TTS failed:", e);
-                        return false;
-                    }
-                })
+            speakNeural(text, locale, token)
                 .then((played) => {
                     if (!played) fallbackSystem();
                 })
-                .catch(fallbackSystem);
+                .catch((e) => {
+                    console.error("Neural TTS failed:", e);
+                    fallbackSystem();
+                });
             return;
         }
 

@@ -147,7 +147,7 @@ buildVoiceScriptContext（voiceScript.ts）：非 depart/destination 的转向�
    → 播报文案 = 模板距离前缀 + (AI短语 ?? 模板转向文案)
 ```
 
-- **零改动受益**：AI 文本进入 `speak()` 门面后自动获得 neural 缓存（按 `<locale>:<text>` 键控）、"最新播报顶掉旧播报"、neural/OS 双引擎——TTS 层一行不用动。
+- **零改动受益**：AI 文本进入 `speak()` 门面后自动获得 cue 缓存（按 `<engine>|<locale>|<发音修正后文本>` 键控）、"最新播报顶掉旧播报"、cloud/offline-neural/OS 三引擎（在线高清语音优先，断网回退离线模型，再回退系统语音；系统语音读原文，不走发音修正表）——TTS 层一行不用动。
 - **重算防护**：reroute 整体重赋值 directions → 触发重新生成并 abort 旧请求；生成完成前播报回退模板句（无缝，用户无感）。短语查找键是生成时的 step.id 快照，不随窗口滑动漂移。
 - **规模上限**：单次生成 cap 30 个转向；更远的转向保持模板文案。疲劳/油量等**情境播报保持模板**——安全类短句不应每次措辞不同，此为对原设计的有意收敛（原"milestoneKm: -1 情境条目"暂不做）。
 

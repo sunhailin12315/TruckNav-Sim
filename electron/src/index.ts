@@ -32,6 +32,7 @@ import * as registry from "native-reg";
 import { getSettings, saveSettings } from "./settingsManager";
 import type { AppSettings } from "./settingsConstants";
 import { registerNeuralTts, runNeuralTtsSelfTest } from "./neuralTts";
+import { registerCloudTts } from "./cloudTts";
 import {
     currentScanState,
     killScan,
@@ -512,6 +513,9 @@ ipcMain.handle("get-settings", () => {
 
 // Offline neural TTS (sherpa-onnx in this process; WAV over IPC).
 registerNeuralTts();
+
+// Online neural TTS (Edge Read Aloud; disk-cached MP3s over IPC).
+registerCloudTts();
 
 // Local game map scanning (dedicated Node subprocess).
 registerScanMap();

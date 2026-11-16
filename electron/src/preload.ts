@@ -69,4 +69,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ttsStatus: () => ipcRenderer.invoke("tts:status"),
     ttsSynthesize: (text: string, locale: string) =>
         ipcRenderer.invoke("tts:synthesize", text, locale),
+
+    // ONLINE NEURAL TTS (Edge Read Aloud; disk-cached MP3s)
+    ttsCloudSynthesize: (text: string, locale: string) =>
+        ipcRenderer.invoke("tts:cloud:synthesize", text, locale),
 });

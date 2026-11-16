@@ -146,6 +146,7 @@ describe("settingsSchema", () => {
             voiceNavigation: false,
             voiceConcise: true,
             voiceNeural: true,
+            voiceCloud: true,
             voiceName: "auto",
         });
         expect(settings.profiles.ets2.avoidFerries).toBe(false);
@@ -169,6 +170,7 @@ describe("settingsSchema", () => {
             voiceNavigation: false,
             voiceConcise: true,
             voiceNeural: true,
+            voiceCloud: true,
             voiceName: "auto",
         });
     });
@@ -219,8 +221,23 @@ describe("settingsSchema", () => {
             voiceNavigation: true,
             voiceConcise: true,
             voiceNeural: true,
+            voiceCloud: true,
             voiceName: "auto",
         });
+    });
+
+    it("migrates v12 data up to v13 with the voiceCloud default", () => {
+        const stored = {
+            schemaVersion: 12,
+            gameplay: { voiceNavigation: true, voiceNeural: false },
+        };
+        const { settings, migrated } = loadSettingsFromRaw(
+            JSON.stringify(stored),
+        );
+
+        expect(migrated).toBe(true);
+        expect(settings.gameplay.voiceCloud).toBe(true);
+        expect(settings.gameplay.voiceNeural).toBe(false);
     });
 
     it("migrates v7 data up to v8 with the voiceNeural default", () => {

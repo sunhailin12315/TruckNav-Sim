@@ -29,6 +29,7 @@ const hasVoiceNavigation = computed(
 );
 const hasVoiceConcise = computed(() => settings.value.gameplay.voiceConcise);
 const hasVoiceNeural = computed(() => settings.value.gameplay.voiceNeural);
+const hasVoiceCloud = computed(() => settings.value.gameplay.voiceCloud);
 
 const beepStyleItems = computed(() =>
     BEEP_STYLES.map((style) => t(`settings.beepStyleOptions.${style}`)),
@@ -101,7 +102,8 @@ function toggleGameplayFlag(
         | "urbanWarning"
         | "voiceNavigation"
         | "voiceConcise"
-        | "voiceNeural",
+        | "voiceNeural"
+        | "voiceCloud",
 ) {
     updateGlobal("gameplay", {
         ...settings.value.gameplay,
@@ -265,6 +267,24 @@ function toggleGameplayFlag(
                 @connect="toggleGameplayFlag('voiceNeural')"
                 size="normal"
                 :active="hasVoiceNeural"
+            />
+        </div>
+
+        <div
+            v-if="hasVoiceNavigation && hasVoiceNeural"
+            class="option setting"
+        >
+            <div class="option-title">
+                <Icon name="lucide:cloud" size="24" />
+                <p>{{ t("settings.voiceCloud") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleGameplayFlag('voiceCloud')"
+                size="normal"
+                :active="hasVoiceCloud"
             />
         </div>
 

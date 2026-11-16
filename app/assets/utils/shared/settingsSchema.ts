@@ -54,8 +54,10 @@ export interface GameplaySettings {
     voiceNavigation: boolean;
     /** Voice guidance announces only the near-distance call. */
     voiceConcise: boolean;
-    /** Prefer the offline neural voice over the OS speech engine when available. */
+    /** Prefer neural voices (online HD first, offline model next) over the OS speech engine. */
     voiceNeural: boolean;
+    /** Allow the online HD neural voice; off keeps neural purely offline. */
+    voiceCloud: boolean;
     /**
      * Explicit TTS voice by voiceURI, or AUTO_VOICE. A picked voice wins
      * over the neural engine; if it disappears the guidance falls back to
@@ -104,7 +106,7 @@ export interface AppSettingsState {
     ai: AiSettings;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 12;
+export const SETTINGS_SCHEMA_VERSION = 13;
 
 const UI_COMPONENTS: readonly UiComponent[] = [
     "speed",
@@ -202,6 +204,7 @@ export const DEFAULT_SETTINGS: AppSettingsState = {
         voiceNavigation: false,
         voiceConcise: true,
         voiceNeural: true,
+        voiceCloud: true,
         voiceName: AUTO_VOICE,
     },
     // AI starts disabled: it is an enhancement layer, never a dependency
@@ -269,6 +272,8 @@ const MIGRATIONS: Record<number, (raw: RawRecord) => RawRecord> = {
     10: (raw) => raw,
     // v12 adds aiInsights (ai block); the normalizer fills its default.
     11: (raw) => raw,
+    // v13 adds voiceCloud (gameplay); the normalizer fills its default.
+    12: (raw) => raw,
 };
 
 function oneOf<T extends string>(
@@ -338,6 +343,10 @@ function normalizeGameplay(raw: unknown, defaults: GameplaySettings): GameplaySe
             typeof source.voiceNeural === "boolean"
                 ? source.voiceNeural
                 : defaults.voiceNeural,
+        voiceCloud:
+            typeof source.voiceCloud === "boolean"
+                ? source.voiceCloud
+                : defaults.voiceCloud,
         // Free-form voiceURI: any non-empty string is kept (a voice that
         // later disappears is handled at speak time, not by migration).
         voiceName:

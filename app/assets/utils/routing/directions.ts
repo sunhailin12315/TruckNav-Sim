@@ -53,7 +53,8 @@ export function generateDirectionsList(
     nodeKms: Float32Array,
     sequenceManeuvers: Int8Array,
     sequenceExits: Int8Array,
-    nodeCoords: Map<number, [number, number]>,
+    // Structural: a Map or the typed NodeCoordIndex both answer get().
+    nodeCoords: { get(id: number): [number, number] | undefined },
 ): DirectionStep[] {
     const steps: DirectionStep[] = [];
     if (nodeSequence.length < 2) return steps;

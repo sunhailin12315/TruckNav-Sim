@@ -36,3 +36,30 @@ export function nextStopKm(
     }
     return null;
 }
+
+export interface NextStopDisplay {
+    name: string | null;
+    /** Route km to it, already rounded to display precision. */
+    kmAhead: number;
+    /** Minutes to it, its share of the remaining minutes by distance. */
+    minutes: number;
+}
+
+/**
+ * Whether two next-stop values would render identically on the job card
+ * (the card shows km at the published 0.1 km grain and whole minutes).
+ * The progress tick runs at the telemetry rate (~10 Hz); gating on this
+ * keeps the rebuilt object from re-rendering the card on every packet
+ * when nothing displayed moved.
+ */
+export function sameNextStopDisplay(
+    a: NextStopDisplay | null,
+    b: NextStopDisplay,
+): boolean {
+    return (
+        a !== null &&
+        a.name === b.name &&
+        a.kmAhead === b.kmAhead &&
+        Math.round(a.minutes) === Math.round(b.minutes)
+    );
+}

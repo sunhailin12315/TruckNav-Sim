@@ -3,6 +3,12 @@ import {
     convertEts2ToGeo,
 } from "~/assets/utils/map/converters";
 import { getActiveMapFolder } from "~/assets/utils/map/helpers";
+import {
+    buildLocationIndex,
+    nearestLocation,
+    type LocationEntry,
+    type LocationIndex,
+} from "~/assets/utils/map/locationIndex";
 import { type WorkerCityArea } from "~/assets/utils/routing/algorithm";
 import { getMapFileUrl } from "~/assets/utils/shared/fileManager";
 
@@ -77,6 +83,10 @@ const mapScaleConfig = shallowRef<MapScaleConfig>({
 
 const optimizedCityNodes = shallowRef<WorkerCityArea[]>([]);
 
+// Cities + villages merged into one grid for the tick-rate place lookups
+// (getGameLocationName); rebuilt with each map load.
+const locationIndex = shallowRef<LocationIndex | null>(null);
+
 const loadedMapSource = ref<string | null>(null);
 const isLoaded = ref(false);
 
@@ -105,6 +115,7 @@ export function useCityData() {
         companiesData.value = null;
         realCompanyModData.value = null;
         optimizedCityNodes.value = [];
+        locationIndex.value = null;
 
         try {
             const citiesUrl = await getMapFileUrl(
@@ -157,6 +168,7 @@ export function useCityData() {
             if (vData) villageData.value = vData;
 
             optimizedCityNodes.value = getWorkerCityData() || [];
+            locationIndex.value = buildNameIndex();
             isLoaded.value = true;
             loadedMapSource.value = folder;
         } catch (e) {
@@ -276,12 +288,9 @@ export function useCityData() {
         return areasOut;
     }
 
-    function getGameLocationName(targetLng: number, targetLat: number): string {
-        if (!isLoaded.value) return "Loading data...";
-
-        let bestName = "";
-        let bestCountry = "";
-        let minDistance = Infinity;
+    /** Cities (game coords converted once) and villages merged for the grid. */
+    function buildNameIndex(): LocationIndex | null {
+        const entries: LocationEntry[] = [];
 
         if (scsCitiesData.value) {
             for (const city of scsCitiesData.value) {
@@ -289,50 +298,47 @@ export function useCityData() {
                     settings.value.selectedGame === "ets2"
                         ? convertEts2ToGeo(city.x, city.y)
                         : convertAtsToGeo(city.x, city.y);
-
-                const dx = lng - targetLng;
-                const dy = lat - targetLat;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    bestName = city.name;
-                    bestCountry = formatCountryToken(city.countryToken);
-                }
+                entries.push({
+                    lng,
+                    lat,
+                    name: city.name,
+                    region: formatCountryToken(city.countryToken),
+                });
             }
         }
 
-        if (villageData.value && villageData.value.features) {
+        if (villageData.value?.features) {
             for (const feature of villageData.value.features) {
                 const [lng, lat] = feature.geometry.coordinates;
-
-                const dx = lng - targetLng;
-                const dy = lat - targetLat;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    bestName = feature.properties.name;
-                    bestCountry = feature.properties.state || "";
-                }
+                entries.push({
+                    lng,
+                    lat,
+                    name: feature.properties.name,
+                    region: feature.properties.state || "",
+                });
             }
         }
 
-        if (bestName) {
-            const threshold = 0.3;
+        return entries.length > 0 ? buildLocationIndex(entries) : null;
+    }
 
-            const fullName = bestCountry
-                ? `${bestName}, ${bestCountry}`
-                : bestName;
+    function getGameLocationName(targetLng: number, targetLat: number): string {
+        if (!isLoaded.value) return "Loading data...";
 
-            if (minDistance < threshold) {
-                return fullName;
-            } else {
-                return `Near ${fullName}`;
-            }
-        }
+        const index = locationIndex.value;
+        if (!index) return "Open Road";
 
-        return "Open Road";
+        // Same answer as the old full scan (cities' game coords converted at
+        // load instead of per call), from a grid ring expansion instead of
+        // walking every city and village each tick.
+        const hit = nearestLocation(index, targetLng, targetLat);
+        if (!hit || !hit.entry.name) return "Open Road";
+
+        const fullName = hit.entry.region
+            ? `${hit.entry.name}, ${hit.entry.region}`
+            : hit.entry.name;
+
+        return hit.dist < 0.3 ? fullName : `Near ${fullName}`;
     }
 
     function formatCountryToken(token?: string): string {

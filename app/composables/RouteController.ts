@@ -31,7 +31,16 @@ import {
     type RouteAlternativeFlags,
     type RouteAlternativeSummary,
 } from "~/assets/utils/routing/routeAlternatives";
-import { nextStopKm } from "~/assets/utils/routing/nextStop";
+import {
+    nextStopKm,
+    sameNextStopDisplay,
+    type NextStopDisplay,
+} from "~/assets/utils/routing/nextStop";
+import { createTollSession } from "~/assets/utils/routing/tollSession";
+import type {
+    NeighborIndex,
+    NodeCoordIndex,
+} from "~/assets/utils/routing/graphIndex";
 import { isArrived } from "~/assets/utils/routing/approachLines";
 
 import RouteWorker from "~/workers/route.worker?worker&inline";
@@ -51,14 +60,20 @@ const WORKER_ANSWER_WITHIN_MS = 30_000;
 // Session-wide toll-gate POI cache: the map only exposes POIs from tiles
 // loaded so far, so points accumulate as the driver's viewport sweeps the
 // route. Reroutes use the set built so far (best-effort, grows over time).
-let sessionTollPoints: [number, number][] = [];
+// The session owns the dedup keys so a sweep only touches what it just
+// found, and the worker receives the delta instead of a full re-clone.
+const tollSession = createTollSession();
+// How much of the session cache the current worker instance already holds;
+// reset whenever a worker is (re)created, so the next push replaces instead
+// of appending onto a worker that knows nothing.
+let tollPointsSyncedCount = 0;
 let sessionTollRevision = 0;
 let sessionTollAccumulatedAt = 0;
 
 export const useRouteController = (
     map: Ref<maplibregl.Map | null>,
-    adjacency: Map<number, any>,
-    nodeCoords: Map<number, [number, number]>,
+    adjacency: NeighborIndex,
+    nodeCoords: NodeCoordIndex,
     stopNavigationMode: () => void,
 ) => {
     const { getGameLocationName, getWorkerCityData, mapScaleConfig } =
@@ -86,7 +101,9 @@ export const useRouteController = (
 
     const startNodeId = ref<number | null>(null);
     const endNodeId = ref<number | null>(null);
-    const lastMathPos = ref<[number, number] | null>(null);
+    // Plain state, not a ref: the progress tick reads and writes it every
+    // packet and nothing renders it, so reactivity would only cost.
+    let lastMathPos: [number, number] | null = null;
 
     // The truck's place eased onto the route line (snapToRoute): between
     // 18 m and 10 m of the route the marker glides onto it, beyond it stays
@@ -97,11 +114,10 @@ export const useRouteController = (
     // The next user waypoint still ahead of the truck, its share of the
     // remaining time by distance (WestPlay's nextStop): the job card's
     // "next stop" line. Null without waypoints, or once all are behind.
-    const nextStopEta = ref<{
-        name: string | null;
-        kmAhead: number;
-        minutes: number;
-    } | null>(null);
+    // The progress tick republishes it only when a displayed value moves
+    // (see updateNextStopEta), so the card re-renders when it changes, not
+    // at the telemetry rate.
+    const nextStopEta = ref<NextStopDisplay | null>(null);
 
     // Each waypoint's cumulative route km, projected once per route (not
     // per tick); the projection runs without a heading filter, which only
@@ -149,7 +165,7 @@ export const useRouteController = (
     ) {
         const stops = waypointList.value;
         if (stops.length === 0) {
-            nextStopEta.value = null;
+            if (nextStopEta.value !== null) nextStopEta.value = null;
             return;
         }
         const stop = nextStopKm(
@@ -159,16 +175,22 @@ export const useRouteController = (
             remainingGameMinutes,
         );
         if (!stop) {
-            nextStopEta.value = null;
+            if (nextStopEta.value !== null) nextStopEta.value = null;
             return;
         }
         const at = stops[stop.index]!;
         const name = getGameLocationName(at[0], at[1]);
-        nextStopEta.value = {
+        const next: NextStopDisplay = {
             name: name && name !== "Loading data..." ? name : null,
-            kmAhead: stop.distanceKm,
+            kmAhead: Math.round(stop.distanceKm * 10) / 10,
             minutes: stop.minutes,
         };
+        // The tick runs at the telemetry rate; only republish when a value
+        // the card actually shows has moved, else the new object identity
+        // re-renders the job card ten times a second for nothing.
+        if (!sameNextStopDisplay(nextStopEta.value, next)) {
+            nextStopEta.value = next;
+        }
     }
 
     const isCalculating = ref(false);
@@ -230,7 +252,9 @@ export const useRouteController = (
 
     /**
      * Pulls toll-gate POIs from the currently loaded tiles into the session
-     * cache and pushes the cache to the worker when it grew.
+     * cache and pushes what's new to the worker. With a live worker that is
+     * only the delta since its last sync; the baseline push after a worker
+     * (re)start sends the whole cache once.
      */
     function accumulateTollPoints(force = false) {
         const now = Date.now();
@@ -240,29 +264,22 @@ export const useRouteController = (
 
         if (!worker || !isWorkerReady.value) return;
 
-        const seen = new Set(
-            sessionTollPoints.map(([lng, lat]) => `${lng.toFixed(4)}:${lat.toFixed(4)}`),
-        );
+        tollSession.absorb(querySpritePoints("toll_ico"));
 
-        let added = 0;
-        for (const [lng, lat] of querySpritePoints("toll_ico")) {
-            const key = `${lng.toFixed(4)}:${lat.toFixed(4)}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
-            sessionTollPoints.push([lng, lat]);
-            added++;
-        }
+        const points = tollSession.points;
+        if (points.length <= tollPointsSyncedCount) return;
 
-        if (added > 0 || force) {
-            sessionTollRevision++;
-            worker.postMessage({
-                type: "SET_TOLL_POINTS",
-                payload: {
-                    points: sessionTollPoints,
-                    revision: sessionTollRevision,
-                },
-            });
-        }
+        const append = tollPointsSyncedCount > 0;
+        sessionTollRevision++;
+        worker.postMessage({
+            type: "SET_TOLL_POINTS",
+            payload: {
+                points: append ? points.slice(tollPointsSyncedCount) : points,
+                append,
+                revision: sessionTollRevision,
+            },
+        });
+        tollPointsSyncedCount = points.length;
     }
 
     function findPoiAhead(
@@ -533,6 +550,10 @@ export const useRouteController = (
         );
 
         isWorkerReady.value = true;
+
+        // The worker's toll set is empty against a fresh graph, so the
+        // baseline push below must replace rather than append.
+        tollPointsSyncedCount = 0;
 
         // Baseline push so the worker starts with the session cache.
         accumulateTollPoints(true);
@@ -1259,10 +1280,10 @@ export const useRouteController = (
         for (const fromNodeId of nearbyNodes) {
             const neighbors = adjacency.get(fromNodeId);
             const fromPos = nodeCoords.get(fromNodeId);
-            if (!neighbors || !fromPos) continue;
+            if (!fromPos) continue;
 
-            for (const edge of neighbors) {
-                const toPos = nodeCoords.get(edge.to);
+            for (const toId of neighbors) {
+                const toPos = nodeCoords.get(toId);
                 if (!toPos) continue;
 
                 let roadBearing = getBearing(fromPos, toPos);
@@ -1296,7 +1317,7 @@ export const useRouteController = (
                     bestEdge = {
                         type: "road",
                         fromId: fromNodeId,
-                        toId: edge.to,
+                        toId,
                         projectedCoords: projected,
                         bearing: visualRoadBearing,
                     };
@@ -1570,11 +1591,11 @@ export const useRouteController = (
         const cache = routeStatsCache.value;
         if (!cache) return;
 
-        if (lastMathPos.value) {
-            const sqDist = getSquaredDist(lastMathPos.value, truckCoords);
+        if (lastMathPos) {
+            const sqDist = getSquaredDist(lastMathPos, truckCoords);
             if (sqDist < 0.000000001) return;
         }
-        lastMathPos.value = truckCoords;
+        lastMathPos = truckCoords;
 
         const path = currentRoutePath.value;
         const searchLimit = Math.min(
@@ -1782,7 +1803,7 @@ export const useRouteController = (
         stopNavigationMode();
 
         nextTurnDistance.value = 0;
-        lastMathPos.value = null;
+        lastMathPos = null;
         nextStopEta.value = null;
         waypointKmCache = null;
     }

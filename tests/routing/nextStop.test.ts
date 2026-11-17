@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { nextStopKm } from "~/assets/utils/routing/nextStop";
+import {
+    nextStopKm,
+    sameNextStopDisplay,
+    type NextStopDisplay,
+} from "~/assets/utils/routing/nextStop";
 
 describe("nextStopKm", () => {
     it("picks the first stop still ahead and shares the remaining time by distance", () => {
@@ -24,5 +28,42 @@ describe("nextStopKm", () => {
         expect(nextStopKm([120], 0, 0, 60)).toBeNull();
         expect(nextStopKm([], 0, 100, 60)).toBeNull();
         expect(nextStopKm([120], 0, 400, 0)).toBeNull();
+    });
+});
+
+describe("sameNextStopDisplay", () => {
+    // The published shape: kmAhead already rounded to the 0.1 km display
+    // grain, minutes raw (the card renders whole minutes).
+    const base: NextStopDisplay = {
+        name: "Utrecht",
+        kmAhead: 12.3,
+        minutes: 8.4,
+    };
+
+    it("holds null distinct from a value", () => {
+        expect(sameNextStopDisplay(null, base)).toBe(false);
+    });
+
+    it("holds unchanged values equal", () => {
+        expect(sameNextStopDisplay(base, { ...base })).toBe(true);
+    });
+
+    it("ignores sub-minute drift", () => {
+        expect(sameNextStopDisplay(base, { ...base, minutes: 8.42 })).toBe(
+            true,
+        );
+    });
+
+    it("fires when a displayed value actually moves", () => {
+        expect(sameNextStopDisplay(base, { ...base, kmAhead: 12.2 })).toBe(
+            false,
+        );
+        expect(sameNextStopDisplay(base, { ...base, minutes: 8.6 })).toBe(
+            false,
+        ); // 8 → 9 displayed
+        expect(sameNextStopDisplay(base, { ...base, name: null })).toBe(false);
+        expect(
+            sameNextStopDisplay(base, { ...base, name: "Amsterdam" }),
+        ).toBe(false);
     });
 });

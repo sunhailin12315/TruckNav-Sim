@@ -326,11 +326,22 @@ export function useEtsTelemetry() {
         );
 
         Object.assign(truckState, {
-            truckCoords: truckCoords,
             truckHeading: truckHeading,
             truckSpeed: truckSpeed,
             averageSpeed: avgSpeed,
         });
+
+        // The coords ride a fresh tuple every packet, which would invalidate
+        // every reader at the telemetry rate even parked; only republish on
+        // an actual move. (Heading and speed above are scalars — Vue's
+        // identity check already absorbs their no-change writes.)
+        const coordsMoved =
+            !lastPosition ||
+            lastPosition[0] !== truckCoords[0] ||
+            lastPosition[1] !== truckCoords[1];
+        if (coordsMoved) {
+            truckState.truckCoords = truckCoords;
+        }
 
         lastPosition = truckCoords;
         headingOffset = newOffset;

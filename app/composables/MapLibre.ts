@@ -6,6 +6,10 @@ import {
     lightenColor,
 } from "~/assets/utils/shared/colors";
 import { BlobSource } from "~/assets/utils/shared/BlobSource";
+import {
+    probePmtilesArchive,
+    rangeSource,
+} from "~/assets/utils/map/pmtilesSource";
 import { getMapFileUrl } from "~/assets/utils/shared/fileManager";
 import { getActiveMapFolder } from "~/assets/utils/map/helpers";
 
@@ -32,22 +36,9 @@ export async function initializeMap(
             `map-data/tiles/${fileName}.mp3`,
         );
 
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Failed to load ${fileName}`);
+        let attachment = await probePmtilesArchive(url);
 
-            const blob = await response.blob();
-            const pmtilesInstance = new PMTiles(new BlobSource(blob, key));
-            protocol.add(pmtilesInstance);
-
-            console.log(
-                `Successfully loaded ${fileName} into memory (${(
-                    blob.size /
-                    1024 /
-                    1024
-                ).toFixed(2)} MB)`,
-            );
-        } catch (error) {
+        if (!attachment) {
             // Scanned maps don't ship their own tiles; fall back to the base
             // game's. Both share the same projection, so the base rendering
             // lines up with scanned roads (only newly added DLC roads are
@@ -61,21 +52,35 @@ export async function initializeMap(
                     game,
                     `map-data/tiles/${fileName}.mp3`,
                 );
-                const response = await fetch(fallbackUrl);
-                if (!response.ok) {
+                attachment = await probePmtilesArchive(fallbackUrl);
+                if (!attachment) {
                     console.error(
-                        `Error loading PMTiles blob (also no base fallback):`,
-                        error,
+                        `Failed to load PMTiles archive ${fileName} (and no base fallback)`,
                     );
                     return;
                 }
-                const blob = await response.blob();
-                const pmtilesInstance = new PMTiles(new BlobSource(blob, key));
-                protocol.add(pmtilesInstance);
+            } else {
+                console.error(`Failed to load PMTiles archive ${fileName}`);
                 return;
             }
-            console.error("Error loading PMTiles blob:", error);
         }
+
+        // Byte-range streaming when the server seeks (the archive stays off
+        // RAM and boot skips the whole-file transfer); the whole blob where
+        // it cannot, which works everywhere.
+        const source =
+            attachment.mode === "range"
+                ? rangeSource(attachment.url, key)
+                : new BlobSource(attachment.blob, key);
+        protocol.add(new PMTiles(source));
+
+        console.log(
+            `Attached ${fileName} via ${attachment.mode}${
+                attachment.mode === "blob"
+                    ? ` (${(attachment.blob.size / 1024 / 1024).toFixed(2)} MB)`
+                    : ""
+            }`,
+        );
     }
 
     await Promise.all([

@@ -15,6 +15,7 @@ import {
     truckHeadApproach,
     yardJoinPoint,
 } from "~/assets/utils/routing/approachLines";
+import { fillNodeDisplayMapping } from "~/assets/utils/routing/displayMapping";
 import type { MapScaleConfig } from "~/composables/CityData";
 
 let cityNodes: WorkerCityArea[] | null = null;
@@ -192,7 +193,13 @@ self.onmessage = async (e: MessageEvent) => {
     const { type, requestId, payload } = e.data;
 
     if (type === "SET_TOLL_POINTS") {
-        tollPointsGeo = payload.points ?? [];
+        // The UI sweeps toll POIs as tiles load and pushes deltas; a message
+        // without `append` (the baseline after INIT_GRAPH) replaces the set.
+        if (payload.append) {
+            for (const point of payload.points ?? []) tollPointsGeo.push(point);
+        } else {
+            tollPointsGeo = payload.points ?? [];
+        }
         tollPointsRevision = payload.revision ?? 0;
         return;
     }
@@ -344,27 +351,14 @@ self.onmessage = async (e: MessageEvent) => {
                 const nodeDisplayIndices = new Int32Array(
                     result.nodeSequence.length,
                 );
-                for (let i = 0; i < result.nodeSequence.length; i++) {
-                    const originalNodePos = nodeCoordsMapInstance.get(
-                        result.nodeSequence[i]!,
-                    );
-                    if (!originalNodePos) continue;
-
-                    let minDistSq = Infinity;
-                    let bestIdx = 0;
-                    for (let j = 0; j < finalSmoothedPath.length; j++) {
-                        const p = finalSmoothedPath[j]!;
-                        const dSq =
-                            Math.pow(p[0] - originalNodePos[0], 2) +
-                            Math.pow(p[1] - originalNodePos[1], 2);
-                        if (dSq < minDistSq) {
-                            minDistSq = dSq;
-                            bestIdx = j;
-                        }
-                    }
-                    nodeKms[i] = finalStatsCache[bestIdx * 3]!;
-                    nodeDisplayIndices[i] = bestIdx;
-                }
+                fillNodeDisplayMapping(
+                    result.nodeSequence,
+                    nodeCoordsMapInstance,
+                    finalSmoothedPath,
+                    finalStatsCache,
+                    nodeKms,
+                    nodeDisplayIndices,
+                );
 
                 const sequenceManeuvers = new Int8Array(
                     result.nodeSequence.length,
@@ -636,28 +630,14 @@ self.onmessage = async (e: MessageEvent) => {
             const nodeDisplayIndices = new Int32Array(
                 combinedNodeSequence.length,
             );
-            for (let i = 0; i < combinedNodeSequence.length; i++) {
-                const originalNodePos = nodeCoordsMapInstance.get(
-                    combinedNodeSequence[i]!,
-                );
-                if (!originalNodePos) continue;
-
-                let MinDistSq = Infinity;
-                let bestIdx = 0;
-                for (let j = 0; j < finalSmoothedPath.length; j++) {
-                    const p = finalSmoothedPath[j]!;
-                    const dSq =
-                        Math.pow(p[0] - originalNodePos[0], 2) +
-                        Math.pow(p[1] - originalNodePos[1], 2);
-
-                    if (dSq < MinDistSq) {
-                        MinDistSq = dSq;
-                        bestIdx = j;
-                    }
-                }
-                nodeKms[i] = finalStatsCache[bestIdx * 3]!;
-                nodeDisplayIndices[i] = bestIdx;
-            }
+            fillNodeDisplayMapping(
+                combinedNodeSequence,
+                nodeCoordsMapInstance,
+                finalSmoothedPath,
+                finalStatsCache,
+                nodeKms,
+                nodeDisplayIndices,
+            );
 
             // The final node stands for the destination in the guidance (the
             // "Arrived" step's km and its spoken marks count down to it), so

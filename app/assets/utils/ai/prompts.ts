@@ -16,6 +16,8 @@ const LANGUAGE_NAMES: Record<LocaleCode, string> = {
     cs: "Czech",
     sk: "Slovak",
     ro: "Romanian",
+    fr: "French",
+    ru: "Russian",
     ko: "Korean",
     zh: "Simplified Chinese",
 };

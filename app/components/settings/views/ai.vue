@@ -1,4 +1,4 @@
-<script lang="ts setup">
+<script lang="ts" setup>
 import SegmentedControl from "../segmentedControl.vue";
 import {
     AI_VOICE_STYLES,
@@ -207,13 +207,15 @@ async function runConnectionTest() {
     } else {
         testState.value = "fail";
         const failure = result.failure;
+        // "aborted" carries no message; the in-operator narrows it safely.
+        const detail = "message" in failure ? failure.message : "";
         testMessage.value =
             failure.kind === "http"
                 ? t("settings.aiTestHttp", {
                       status: failure.status,
                       message: failure.message,
                   })
-                : t("settings.aiTestFail", { message: failure.message });
+                : t("settings.aiTestFail", { message: detail });
     }
 }
 </script>

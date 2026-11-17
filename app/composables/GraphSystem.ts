@@ -1,21 +1,13 @@
 import { ref } from "vue";
 import RBush from "rbush";
 import { loadGraph } from "~/assets/utils/routing/clientGraph";
-import { haversine } from "~/assets/utils/routing/helpers";
+import type { NodeIndexItem } from "~/types";
+import { getSquaredDist } from "~/assets/utils/map/maths";
 import {
     buildGraphIndex,
     NeighborIndex,
     NodeCoordIndex,
 } from "~/assets/utils/routing/graphIndex";
-
-interface NodeIndexItem {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-    id: number;
-    coord: [number, number];
-}
 
 const loading = ref(true);
 const progress = ref(0);
@@ -48,11 +40,13 @@ export function useGraphSystem() {
             maxX: target[0] + radiusDeg,
             maxY: target[1] + radiusDeg,
         });
+
         if (candidates.length === 0) return [];
+
         return candidates
             .map((item) => ({
                 id: item.id,
-                dist: haversine(target, item.coord),
+                dist: getSquaredDist(target, item.coord),
             }))
             .sort((a, b) => a.dist - b.dist)
             .slice(0, limit)

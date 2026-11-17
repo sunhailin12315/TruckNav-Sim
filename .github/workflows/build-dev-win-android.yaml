@@ -85,3 +85,41 @@ jobs:
               with:
                   name: TruckNav-Android-Dev
                   path: android/app/build/outputs/apk/debug/app-debug.apk
+
+    # ---------------------------------------------------------
+    # BUILD LINUX APPIMAGE (ELECTRON)
+    # ---------------------------------------------------------
+    build-linux:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+
+            - name: Install Root Dependencies
+              run: npm install
+
+            - name: Build Nuxt Web App
+              run: |
+                  npx nuxi build
+                  npx nuxi generate
+
+            - name: Sync Capacitor Electron
+              run: npx cap sync electron
+
+            - name: Build Linux AppImage
+              run: |
+                  cd electron
+                  npm install
+                  npm run electron:make -- --linux
+
+            - name: Upload Linux AppImage to GitHub
+              uses: actions/upload-artifact@v4
+              with:
+                  name: TruckNav-Linux-Dev
+                  path: electron/dist/*.AppImage

@@ -1,0 +1,61 @@
+.notification-container {
+    display: flex;
+    pointer-events: none;
+    z-index: $ui-z-index;
+
+    position: relative;
+
+    width: 100%;
+}
+
+.notification-wrapper {
+    position: relative;
+    min-width: 20rem;
+
+    border: $card-border;
+    border-radius: 10px;
+
+    background-color: $card-bg;
+    padding: 6px 12px;
+    color: $white-font-text;
+    font-size: 1.6rem;
+
+    height: 4.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.content-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.timer-progress {
+    position: absolute;
+
+    width: 100%;
+    background-color: var(--theme-color);
+    height: 2px;
+
+    display: flex;
+    bottom: 0;
+    left: 0;
+    border-radius: $default-border-radius;
+}
+
+.notification-icon {
+    &.found {
+        color: $green-color;
+    }
+
+    &.failed {
+        color: $red-color;
+    }
+
+    &.loading {
+        color: var(--theme-color);
+    }
+}

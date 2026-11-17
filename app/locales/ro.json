@@ -20,7 +20,25 @@
         "resume": "Continuă",
         "selectGame": "Selectează Jocul",
         "startNavigation": "Începeți Navigarea",
-        "stop": "Oprește"
+        "stop": "Oprește",
+        "chooseMap": "Alege Harta",
+        "companionActive": "Aplicația PC Companion trebuie să fie activă",
+        "connection": "Conexiune",
+        "downloadBaseMap": "Descarcă Harta de Bază",
+        "drive": "La Drum",
+        "freeRoam": "Cursă Liberă",
+        "liveRoute": "Traseu în Timp Real",
+        "maps": "Hărți",
+        "mods": "Moduri",
+        "preferences": "Preferințe",
+        "readyForDeparture": "Gata de Plecare",
+        "select": "Selectează",
+        "selectSimulator": "Simulatoare",
+        "session": "Sesiune",
+        "stopsTimeline": "Cronologia Opririlor",
+        "trip": "Cursă",
+        "trucknav": "TruckNav",
+        "trucknavMoto": "Partenerul tău la drum"
     },
     "achievements": {
         "firstDelivery": {
@@ -170,7 +188,14 @@
     "notifications": {
         "locatingRoute": "Se găsește traseul",
         "noRouteAvailable": "Niciun traseu disponibil",
-        "routeFound": "Traseu găsit"
+        "routeFound": "Traseu găsit",
+        "deliveryLate": "Livrare întârziată",
+        "deliveryUrgent": "Livrare urgentă",
+        "lowFuel": "Nivel scăzut de combustibil",
+        "lowFuelJob": "Combustibil scăzut și cursă urgentă",
+        "lowFuelRest": "Combustibil scăzut și odihnă necesară",
+        "lowRest": "Odihnă necesară",
+        "lowRestJob": "Odihnă și cursă urgentă"
     },
     "driveReport": {
         "title": "Raport de condus",
@@ -254,8 +279,6 @@
         "voiceConciseDescription": "Anunță doar la distanța mică.",
         "voiceNeural": "Voce neuronală",
         "voiceNeuralDescription": "Folosește voci neuronale pentru calitate superioară și pronunție mai bună; dezactivat folosește vocea sistemului.",
-        "voiceCloud": "Voce HD online",
-        "voiceCloudDescription": "Preferă vocea HD online, cu cea mai bună pronunție a numelor de localități. Fiecare anunț se descarcă o singură dată și se memoizează; fără conexiune revine la vocea offline.",
         "voiceName": "Voce narator",
         "voiceNameDescription": "Alegeți vocea pentru indicațiile vocale. Automat urmărește limba aplicației; fără selecție, vocea neurală are prioritate.",
         "voiceNameAuto": "Automat (conform limbii)",
@@ -299,8 +322,6 @@
         "aiEndpointHint": "Runtime-urile locale trebuie să permită originea acestei aplicații — de exemplu, pentru Ollama setați OLLAMA_ORIGINS=*.",
         "aiInsights": "Sugestii AI",
         "aiInsightsDescription": "O frază despre trasă după planificare și o scurtă remarcă la livrare.",
-        "aiServiceNote": "Notă oprire",
-        "aiServiceNoteHint": "Adaugă în toast o frază AI despre de ce oprirea sugerată pentru odihnă sau combustibil este potrivită acum; doar afișată, niciodată rostită.",
         "aiProviderPreset": "Presetare furnizor",
         "aiPresetCustom": "Personalizat",
         "aiPreset": {
@@ -311,7 +332,36 @@
             "ollama": "Ollama (local)",
             "lmstudio": "LM Studio (local)"
         },
-        "aiUsage": "Consum AI (sesiune)"
+        "aiUsage": "Consum AI (sesiune)",
+        "voiceCloud": "Voce HD online",
+        "voiceCloudDescription": "Preferă vocea HD online, cu cea mai bună pronunție a numelor de localități. Fiecare anunț se descarcă o singură dată și se memoizează; fără conexiune revine la vocea offline.",
+        "aiServiceNote": "Notă oprire",
+        "aiServiceNoteHint": "Adaugă în toast o frază AI despre de ce oprirea sugerată pentru odihnă sau combustibil este potrivită acum; doar afișată, niciodată rostită.",
+        "arrow": "Săgeată",
+        "autoStartNav": "Pornire automată navigație",
+        "autoStartNavDescription": "Deschide harta la pornire",
+        "backToMainMenu": "Meniu Principal",
+        "colorsMap": "Culori și Hartă",
+        "disc": "Disc",
+        "drivingHud": "HUD de Conducere",
+        "drivingHudDescription": "Comută afișarea HUD-ului pe ecran",
+        "glowColor": "Culoare Strălucire",
+        "glowEffect": "Efect de Strălucire",
+        "guidanceTime": "Ghidare și Timp",
+        "hudSizing": "HUD și Dimensiuni",
+        "languageDescription": "Alege limba preferată",
+        "mapExpansions": "Extensii de Hartă",
+        "mapExpansionsDescription": "Selectează DLC-urile de hartă pe care le deții",
+        "outerRim": "Margine Exterioară",
+        "preferencesSystem": "Preferințe și Sistem",
+        "regionalGame": "Regiune și Joc",
+        "rimColor": "Culoare Margine",
+        "switchGameMaps": "Schimbă Jocul și Hărțile",
+        "system": "Sistem",
+        "themesMapStyling": "Teme și Stilul Hărții",
+        "timeHud": "Timp și HUD",
+        "turnArrows": "Săgeți Viraj",
+        "typography": "Tipografie"
     },
     "stats": {
         "delivered": "Livrate",
@@ -350,11 +400,53 @@
         "speedLimitTitle": "Limita de Viteză",
         "speedTitle": "Viteză",
         "topBarDescription": "Ascunde întreaga bară de sus ce conține informaţii despre cursă.",
-        "topBarTitle": "Bara de sus"
+        "topBarTitle": "Bara de sus",
+        "landscapeHudCards": "Carduri HUD Mod Peisaj",
+        "landscapeHudDescription": "Afișează cardurile de combustibil, odihnă, cursă și încărcătură în partea de jos în modul peisaj."
     },
     "aiNotes": {
         "routeInsight": "Sugestie traseu",
         "deliveryNote": "Remarcă livrare",
         "serviceNote": "Notă oprire"
+    },
+    "buttons": {
+        "startNav": "Pornește Navigarea",
+        "job": "Cursă"
+    },
+    "documentation": {
+        "baseMapRequired": "Hartă de bază necesară",
+        "downloadMapData": "Descarcă datele hărții pentru a activa navigația GPS în timp real",
+        "openRoad": "Drum liber înainte",
+        "openRoadDescription": "Nicio livrare activă. Alege un contract de pe piața de mărfuri sau bucură-te de drum"
+    },
+    "modPanel": {
+        "title": "Moduri de Hartă",
+        "description": "Selectează modul activ de hartă",
+        "selectMapMod": "Selectează Modul de Hartă"
+    },
+    "placeholder": {
+        "title": "Titlu",
+        "description": "Descriere",
+        "restStop": "Zonă de odihnă în 45 km"
+    },
+    "trip": {
+        "vehicleDamage": "Daune Vehicul",
+        "currentJob:": "Cursă Curentă",
+        "cargo": "Încărcătură",
+        "weight": "Greutate",
+        "remains": "Rămas",
+        "wear": "Uzură",
+        "payout": "Plată",
+        "rest": "Odihnă",
+        "rested": "Odihnit",
+        "needRest": "Necesită Odihnă",
+        "speed": "Viteză",
+        "safeSpeed": "Viteză Sigură",
+        "overLimit": "Peste Limită",
+        "vehicle": "Vehicul",
+        "fuel": "Combustibil"
+    },
+    "typographyPanel": {
+        "description": "Alege un font care se potrivește stilului tău"
     }
 }

@@ -20,7 +20,25 @@
         "resume": "Hervatten",
         "selectGame": "Kies game",
         "startNavigation": "Navigatie starten",
-        "stop": "Stop"
+        "stop": "Stop",
+        "chooseMap": "Kies kaart",
+        "companionActive": "PC Companion moet actief zijn",
+        "connection": "Verbinding",
+        "downloadBaseMap": "Basiskaart downloaden",
+        "drive": "Rit",
+        "freeRoam": "Vrij rijden",
+        "liveRoute": "Live route",
+        "maps": "Kaarten",
+        "mods": "Mods",
+        "preferences": "Voorkeuren",
+        "readyForDeparture": "Klaar voor vertrek",
+        "select": "Selecteren",
+        "selectSimulator": "Simulators",
+        "session": "Sessie",
+        "stopsTimeline": "Tijdlijn tussenstops",
+        "trip": "Rit",
+        "trucknav": "TruckNav",
+        "trucknavMoto": "Jouw trucking-maatje"
     },
     "achievements": {
         "firstDelivery": {
@@ -170,7 +188,14 @@
     "notifications": {
         "locatingRoute": "Route zoeken",
         "noRouteAvailable": "Geen route beschikbaar",
-        "routeFound": "Route gevonden"
+        "routeFound": "Route gevonden",
+        "deliveryLate": "Levering te laat",
+        "deliveryUrgent": "Dringende levering",
+        "lowFuel": "Weinig brandstof",
+        "lowFuelJob": "Weinig brandstof & spoedopdracht",
+        "lowFuelRest": "Weinig brandstof & rust nodig",
+        "lowRest": "Rust nodig",
+        "lowRestJob": "Rust & spoedopdracht"
     },
     "driveReport": {
         "title": "Rijrapport",
@@ -254,8 +279,6 @@
         "voiceConciseDescription": "Aankondigen alleen op de nabije afstand.",
         "voiceNeural": "Neurale stem",
         "voiceNeuralDescription": "Gebruikt neurale stemmen voor hogere kwaliteit en betere uitspraak; uit gebruikt de systeemstem.",
-        "voiceCloud": "Online hd-stem",
-        "voiceCloudDescription": "Geeft de voorkeur aan de online hd-stem, met de beste plaatsnaamuitspraak. Elke melding wordt éénmaal gedownload en gecachet; zonder verbinding valt het terug op de offline stem.",
         "voiceName": "Vertelstem",
         "voiceNameDescription": "Kies de stem voor gesproken aanwijzingen. Automatisch volgt de app-taal; zonder keuze heeft de neurale stem voorrang.",
         "voiceNameAuto": "Automatisch (taal volgen)",
@@ -299,8 +322,6 @@
         "aiEndpointHint": "Lokale runtimes moeten de oorsprong van deze app toestaan — zet bij Ollama bijvoorbeeld OLLAMA_ORIGINS=*.",
         "aiInsights": "AI-tips",
         "aiInsightsDescription": "Eén zin over de route na planning en een korte noot bij de levering.",
-        "aiServiceNote": "Adviesnoot",
-        "aiServiceNoteHint": "Voegt één AI-zin toe over waarom de voorgestelde rust- of tankstop nu zinvol is; alleen zichtbaar, nooit uitgesproken.",
         "aiProviderPreset": "Provider-voorkeuze",
         "aiPresetCustom": "Aangepast",
         "aiPreset": {
@@ -311,7 +332,36 @@
             "ollama": "Ollama (lokaal)",
             "lmstudio": "LM Studio (lokaal)"
         },
-        "aiUsage": "AI-verbruik (sessie)"
+        "aiUsage": "AI-verbruik (sessie)",
+        "voiceCloud": "Online hd-stem",
+        "voiceCloudDescription": "Geeft de voorkeur aan de online hd-stem, met de beste plaatsnaamuitspraak. Elke melding wordt éénmaal gedownload en gecachet; zonder verbinding valt het terug op de offline stem.",
+        "aiServiceNote": "Adviesnoot",
+        "aiServiceNoteHint": "Voegt één AI-zin toe over waarom de voorgestelde rust- of tankstop nu zinvol is; alleen zichtbaar, nooit uitgesproken.",
+        "arrow": "Pijl",
+        "autoStartNav": "Navigatie automatisch starten",
+        "autoStartNavDescription": "Open kaart bij opstarten",
+        "backToMainMenu": "Hoofdmenu",
+        "colorsMap": "Kleuren & Kaart",
+        "disc": "Schijf",
+        "drivingHud": "Rij-HUD",
+        "drivingHudDescription": "Schakel de rij-HUD op het scherm in of uit",
+        "glowColor": "Glow-kleur",
+        "glowEffect": "Glow-effect",
+        "guidanceTime": "Begeleiding & Tijd",
+        "hudSizing": "HUD & Afmetingen",
+        "languageDescription": "Kies je voorkeurstaal",
+        "mapExpansions": "Kaartuitbreidingen",
+        "mapExpansionsDescription": "Selecteer de kaart-DLC's die je bezit",
+        "outerRim": "Buitenrand",
+        "preferencesSystem": "Voorkeuren & Systeem",
+        "regionalGame": "Regionaal & Game",
+        "rimColor": "Randkleur",
+        "switchGameMaps": "Wissel van game & kaarten",
+        "system": "Systeem",
+        "themesMapStyling": "Thema's & Kaartstijl",
+        "timeHud": "Tijd & HUD",
+        "turnArrows": "Afslaande pijlen",
+        "typography": "Typografie"
     },
     "stats": {
         "delivered": "Geleverd",
@@ -350,11 +400,53 @@
         "speedLimitTitle": "Snelheidsbord",
         "speedTitle": "Snelheid",
         "topBarDescription": "Verbergt de volledige bovenbalk met rij-informatie.",
-        "topBarTitle": "Bovenbalk"
+        "topBarTitle": "Bovenbalk",
+        "landscapeHudCards": "Liggende HUD-kaarten",
+        "landscapeHudDescription": "Toon brandstof-, rust-, opdracht- en ladingskaarten onderaan in liggende weergave."
     },
     "aiNotes": {
         "routeInsight": "Route-inzicht",
         "deliveryNote": "Levernotitie",
         "serviceNote": "Adviesnoot"
+    },
+    "buttons": {
+        "startNav": "Navigatie starten",
+        "job": "Opdracht"
+    },
+    "documentation": {
+        "baseMapRequired": "Basiskaart vereist",
+        "downloadMapData": "Download de kaartgegevens om live GPS-navigatie in te schakelen",
+        "openRoad": "Vrije weg vooruit",
+        "openRoadDescription": "Geen actieve levering. Kies een opdracht op de vrachtmarkt of geniet van de rit"
+    },
+    "modPanel": {
+        "title": "Kaart-mods",
+        "description": "Selecteer je actieve kaart-mod",
+        "selectMapMod": "Selecteer kaart-mod"
+    },
+    "placeholder": {
+        "title": "Titel",
+        "description": "Beschrijving",
+        "restStop": "Parkeerplaats over 45 km"
+    },
+    "trip": {
+        "vehicleDamage": "Voertuigschade",
+        "currentJob:": "Huidige opdracht",
+        "cargo": "Lading",
+        "weight": "Gewicht",
+        "remains": "Resterend",
+        "wear": "Slijtage",
+        "payout": "Opbrengst",
+        "rest": "Rust",
+        "rested": "Uitgerust",
+        "needRest": "Rust nodig",
+        "speed": "Snelheid",
+        "safeSpeed": "Veilige snelheid",
+        "overLimit": "Boven limiet",
+        "vehicle": "Voertuig",
+        "fuel": "Brandstof"
+    },
+    "typographyPanel": {
+        "description": "Kies een lettertype dat bij jouw stijl past"
     }
 }

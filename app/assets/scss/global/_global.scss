@@ -1,23 +1,69 @@
 @use "~/assets/scss/global/variables" as *;
+@use "~/assets/scss/global/mixins" as *;
 
+/** DEFAULT **/
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+:root {
+    --ui-scale: 1;
+    --bottom-pill-tabs-height: 7.5rem;
+
+    --speed-limit-card-width: 7.5rem;
+
+    --warning-color: #f59e0b;
+    --red-color: #dd4a34;
+
+    @media (orientation: landscape), (min-width: 768px) {
+        --bottom-pill-tabs-height: 6.5rem;
+    }
+
+    --safe-side-right: calc(1.6rem + env(safe-area-inset-right, 0px));
+    --safe-side-left: calc(1.6rem + env(safe-area-inset-left, 0px));
+}
+
+/** MEDIA GLOBAL FONT-SIZE **/
 html {
-    font-size: 62.5%;
+    font-size: calc(62.5% * var(--ui-scale, 1));
     background-color: $primaryColor;
+}
+
+@media (max-width: 350px) {
+    html {
+        font-size: calc(56.25% * var(--ui-scale, 1));
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    html {
+        font-size: calc(56.25% * var(--ui-scale, 1));
+    }
+}
+
+@media (min-width: 768px) and (min-height: 600px) {
+    html {
+        font-size: calc(75% * var(--ui-scale, 1));
+    }
+}
+
+@media (min-width: 1000px) and (min-height: 700px) {
+    html {
+        font-size: calc(81.25% * var(--ui-scale, 1));
+    }
 }
 
 body {
     font-family: var(--app-font);
-    font-weight: 800;
-    background-color: $primaryColor;
+    font-weight: 500;
+    background-color: $primaryBackgroundColor;
     -webkit-tap-highlight-color: transparent;
     padding-top: env(safe-area-inset-top);
     color: $white-font-text;
+
+    font-size: 1.7rem;
 }
 
 html,
@@ -36,9 +82,161 @@ input {
     font-family: var(--app-font);
 }
 
+.safe-side-right {
+    right: var(--safe-side-right) !important;
+}
+
+.safe-side-left {
+    left: var(--safe-side-left) !important;
+}
+
+.safe-padding-right {
+    padding-right: var(--safe-side-right) !important;
+}
+
+.safe-padding-left {
+    padding-left: var(--safe-side-left) !important;
+}
+
+/** TRUCKNAV ICON **/
+.truck-nav-marker {
+    position: relative;
+    border-radius: 50%;
+    box-shadow: 0px 0px var(--marker-glow-opacity) -4px color-mix(in srgb, var(
+                    --marker-glow-color
+                )
+                65%, transparent);
+
+    &::after {
+        content: "";
+        pointer-events: none;
+
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+
+        opacity: var(--marker-rim-opacity, 1);
+
+        border: 2px solid
+            color-mix(in srgb, var(--marker-rim-color) 22%, transparent);
+    }
+}
+
+/** DEFAULT SECTION **/
+.section {
+    height: calc(100dvh - env(safe-area-inset-top));
+    padding: 1.2rem 2.4rem;
+
+    flex: 1;
+    min-height: 0;
+}
+
+.section-title {
+    height: 5.5rem;
+    padding-bottom: 1rem;
+
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+
+    font-size: 1.8rem;
+
+    .icon {
+        margin-top: 2px;
+        color: var(--theme-color);
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+/** SMALL DESIGN UI ELEMENTS **/
+.separator {
+    height: 2px;
+
+    margin: 0 -3rem;
+
+    background-color: $primaryAccentColor;
+}
+
+.data-pill {
+    background-color: rgba($color: $primaryBackgroundColor, $alpha: 0.3);
+    border-radius: $default-border-radius;
+    border: 1px solid rgba($color: $primaryBackgroundColor, $alpha: 0.6);
+    padding: 0.3rem 0.8rem;
+}
+
+.pill {
+    color: var(--main-text-color);
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 1px 8px;
+
+    width: fit-content;
+}
+
+.small-separator {
+    height: 1px;
+    margin: 0 1.6rem;
+    background-color: $primaryAccentColor;
+
+    border-radius: $default-border-radius;
+    opacity: 0.7;
+}
+
+.dot {
+    width: 4px;
+    height: 4px;
+    transform: translateY(1px);
+    border-radius: 50%;
+    background-color: $white-font-text-muted;
+    opacity: 0.8;
+}
+
+/** GENERAL CATEGORIES **/
+.category-title {
+    text-transform: uppercase;
+    font-size: 1.6rem;
+    color: $white-font-text-muted;
+    font-weight: 600;
+
+    letter-spacing: 0.4px;
+
+    &.small {
+        font-size: 1.4rem;
+    }
+
+    &.w-description {
+        line-height: 1.3;
+        font-size: 1.7rem;
+        color: $white-font-text;
+        color: rgba($color: $white-font-text, $alpha: 0.9);
+    }
+}
+
+.category-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.category-description {
+    font-size: 1.5rem;
+    color: rgba($color: $white-font-text-muted, $alpha: 0.8);
+    margin-top: -0.4rem;
+
+    text-wrap-mode: nowrap;
+}
+
+/** PRIMARY BUTTONS **/
+button {
+    &:focus {
+        outline: none;
+        border: none;
+    }
+}
+
 .btn {
     border-style: none;
-    padding: 4px 8px;
+    padding: 0.4rem 0.8rem;
     font-family: inherit;
     font-weight: inherit;
     cursor: pointer;
@@ -52,18 +250,20 @@ input {
 .nav-btn {
     background-color: var(--theme-color);
     display: flex;
+    align-items: center;
     gap: 0.4rem;
 
     font-family: inherit;
-    font-weight: 700;
     font-size: 1.6rem;
     color: var(--main-text-color);
+    font-weight: var(--button-font-weight);
 
-    height: 38px;
+    width: fit-content;
+    height: fit-content;
     border: none;
-    border-radius: 5px;
-    padding: 4px 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: $default-border-radius;
+    padding: 4px 1.6rem;
+    box-shadow: $behind-shadow;
 
     justify-content: center;
     align-items: center;
@@ -72,26 +272,135 @@ input {
 
     transition: 0.1s ease all;
 
-    &:active {
-        filter: brightness(0.8);
-        transform: translateY(1px);
-        box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.1);
-
-        user-select: none;
+    &.full-width {
+        width: 100%;
     }
 
-    &.red-color {
-        background-color: $red-color;
-        color: #222;
-    }
-
-    &.default-color {
-        background-color: $primaryDarkerColor;
+    &.primary-color {
+        background-color: $primaryColor;
         color: $white-font-text;
+        font-weight: 500;
+    }
+
+    &.dark {
+        background-color: $primaryLightButtonColor;
+        color: $white-font-text;
+        font-weight: 500;
+    }
+
+    &.red {
+        color: rgba($color: $red-color, $alpha: 0.85);
+        background-color: rgba($color: $red-color, $alpha: 0.15);
+    }
+
+    &.square {
+        align-self: stretch;
+        height: auto;
+        width: auto;
+        aspect-ratio: 1;
+        padding: 0.4rem;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &.icon {
+        aspect-ratio: 1;
+        padding: 0.4rem 0.6rem;
+    }
+
+    &.icon-close {
+        aspect-ratio: 1;
+        padding: 0.3rem;
+        height: 3.2rem;
     }
 
     &:disabled {
         opacity: 0.5;
         pointer-events: none;
     }
+}
+
+.drive-hud-panel,
+.trip-info {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/** MISSING MAP / JOB **/
+.middle-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+
+    @include for-phone-landscape {
+        flex-direction: row;
+        gap: 0.8rem;
+    }
+}
+
+.bottom-text {
+    line-height: 1.2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+
+    max-width: 90%;
+    text-align: center;
+    font-size: 1.4rem;
+    color: $white-font-text-muted;
+
+    .header-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .header {
+        opacity: 0.7;
+        font-weight: 600;
+        padding: 0;
+        font-size: 1.6rem;
+    }
+
+    .sub-header {
+        opacity: 0.5;
+    }
+
+    @include for-phone-landscape {
+        align-items: start;
+        text-align: start;
+    }
+}
+
+.middle-icon-wrapper {
+    flex-shrink: 0;
+
+    .middle-icon {
+        opacity: 0.13;
+    }
+}
+
+/** TRANSITION GROUPS **/
+
+.btn-slide-enter-active,
+.btn-slide-leave-active {
+    transition: all 0.25s $css-transition-bezier;
+}
+
+.btn-slide-enter-from,
+.btn-slide-leave-to {
+    width: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: -0.8rem !important;
+    opacity: 0;
+    transform: scale(0.6);
 }

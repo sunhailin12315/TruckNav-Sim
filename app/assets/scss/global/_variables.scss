@@ -1,18 +1,15 @@
-$primaryColor: #263444;
-$primaryDarlerColor10: #222f3d;
-$primaryDarkerColor: #151d25;
+$primaryBackgroundColor: #232323;
+$primaryColor: #2d2d2d;
+$primaryAccentColor: #333333;
+$primaryLightButtonColor: #373737;
 
-$secondaryColor: #3d546e;
-$secondaryDarkerColor: #222e3c;
+$primaryButtonAccent: #272727;
 
 $white-font-text: #f2f2f2;
-$white-font-text60: rgb(242, 242, 242, 0.6);
-
-$default-background-color-dark: rgba(0, 0, 0, 0.25);
-$default-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+$white-font-text-muted: #b5b5b5;
 
 $red-color: #dd4a34;
-$green-color: #4caf50;
+$green-color: #0ea674;
 $warning-color: #f59e0b;
 $blue-color: #7dd3fc;
 
@@ -25,9 +22,43 @@ $card-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
 
 $ats-color: #d32f2f;
 $ets2-color: #fbc02d;
+$notification-height: 2rem;
 
+$map-z-index: 0;
+$ui-z-index: 5;
+$ui-priority-index: 10;
+$popup-panel-index: 11;
+$bottom-pill-z-index: 12;
+$sheet-slide-z-index: 13;
+$above-ui-priority-index: 15;
+$sheet-z-index: 99;
+$loading-win-z-index: 999;
+
+$backdrop-filter: blur(2px);
+
+$el-border-design: 1px solid $primaryAccentColor;
+$el-box-shadow-design: inset 0 1px $primaryAccentColor;
+$behind-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+
+$menu-item-gradient: linear-gradient(
+    to right,
+    rgba($primaryColor, 0.9) 15%,
+    rgba($primaryColor, 0.4) 45%
+);
+
+$default-border-radius: 6px;
+
+$css-transition-bezier: cubic-bezier(0.16, 1, 0.3, 1);
+
+// Fork-side variables still consumed by kept components (AMap HUD, events UI).
 $game-info-bar-height: var(--top-bar-height);
+$white-font-text60: rgb(242, 242, 242, 0.6);
+$default-background-color-dark: rgba(0, 0, 0, 0.25);
 
-$expanded-sheet-height: 215px;
-$collapsed-sheet-height: 90px;
-$notification-height: 20px;
+// Variables restored with the fork's settings stylesheets.
+/* $alpha: not in fork's variables */
+/* $button-padding: not in fork's variables */
+/* $color: not in fork's variables */
+$default-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+$primaryDarkerColor: #151d25;
+$secondaryColor: #3d546e;

@@ -1,34 +1,40 @@
 <script lang="ts" setup>
-const props = defineProps<{
-    truckSpeed: number;
-    speedLimit: number;
-}>();
-
-const { kmToUserUnits } = useUnitConversion();
+const { kmToUserUnits, speedUnit } = useUnitConversion();
 const { settings } = useSettings();
 
-const truckSpeedConverted = computed(() => kmToUserUnits(props.truckSpeed));
-const speedLimitConverted = computed(() => kmToUserUnits(props.speedLimit));
+const { truckSpeed, speedLimit } = useEtsTelemetry();
+
+const truckSpeedConverted = computed(() => kmToUserUnits(truckSpeed.value));
+const speedLimitConverted = computed(() => kmToUserUnits(speedLimit.value));
+
+const hasAnyHudEnabled = computed(() => {
+    if (
+        settings.value.activeUiComponents.includes("speed") ||
+        settings.value.activeUiComponents.includes("speedLimit")
+    ) {
+        return true;
+    }
+
+    return false;
+});
 </script>
 
 <template>
-    <div
-        v-if="speedLimit !== 0"
-        class="speed-limit-sign"
-        :class="settings.selectedGame === 'ets2' ? 'circle' : 'square'"
-    >
-        <Transition name="over-limit">
-            <div
-                v-if="truckSpeed > speedLimit + 5"
-                class="speed-limit-over-limit"
-                :class="settings.selectedGame === 'ets2' ? 'circle' : 'square'"
-            >
-                <div class="over-limit">{{ truckSpeedConverted }}</div>
-            </div>
-        </Transition>
+    <div v-if="hasAnyHudEnabled" class="speed-and-limit">
+        <div
+            v-if="settings.activeUiComponents.includes('speed')"
+            class="current-speed-wrapper"
+        >
+            <div class="current-speed">{{ truckSpeedConverted }}</div>
+            <span class="unit">{{ speedUnit }}</span>
+        </div>
 
-        <div class="speed-limit">
-            {{ speedLimitConverted }}
+        <div
+            v-if="settings.activeUiComponents.includes('speedLimit')"
+            class="limit-speed-wrapper"
+            :class="settings.selectedGame === 'ets2' ? 'ets2' : 'ats'"
+        >
+            <div class="limit-speed">{{ speedLimitConverted }}</div>
         </div>
     </div>
 </template>

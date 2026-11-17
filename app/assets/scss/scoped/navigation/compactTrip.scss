@@ -1,33 +1,94 @@
 .compact-trip-progress {
     display: flex;
     align-items: center;
-    position: absolute;
-    top: -100px;
-    right: -2px;
-    padding: 4px 12px 4px 12px;
+    justify-content: space-between;
+    overflow: hidden;
+
+    text-wrap: nowrap;
+
+    padding: 0.2rem 0.8rem;
+    gap: 0.6rem;
 
     display: flex;
-    gap: 1.4rem;
+    flex: 1;
 
     font-size: var(--compact-trip-size);
     color: $white-font-text;
 
-    border: 1.5px solid var(--theme-color);
-    border-right: none;
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+    border-radius: $default-border-radius;
 
-    background-color: $primaryColor;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    backdrop-filter: $backdrop-filter;
+    background-color: rgba($color: $primaryColor, $alpha: 0.9);
 
-    .icon-btn {
-        flex: 1;
-        height: fit-content;
-        padding: 0;
+    box-shadow: 0 0px 9px rgba($color: #000000, $alpha: 0.05);
+
+    min-height: 3.6rem;
+
+    .icon {
+        display: flex;
+        align-items: center;
     }
 
     &.preview {
         position: static;
         margin: 0;
     }
+
+    @media (orientation: landscape) {
+        width: 45%;
+    }
+
+    &.special-cargo {
+        &::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: -28px;
+            width: 8rem;
+            height: 1.6rem;
+
+            transform: rotate(-45deg);
+
+            background: repeating-linear-gradient(
+                -45deg,
+                $warning-color,
+                $warning-color 6px,
+                #18181b 6px,
+                #18181b 12px
+            );
+
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+    }
+}
+
+.route-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+    gap: 0.5rem;
+
+    .dot {
+        background-color: $white-font-text;
+    }
+
+    .route-distance-wrapper {
+        display: flex;
+        align-items: baseline;
+        gap: 0.2rem;
+
+        .unit {
+            font-size: 1.4rem;
+            color: $white-font-text-muted;
+
+            &.white {
+                color: $white-font-text;
+            }
+        }
+    }
+}
+
+.free-roam {
+    font-size: 1.6rem;
 }

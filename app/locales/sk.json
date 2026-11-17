@@ -20,7 +20,25 @@
         "resume": "Pokračovať",
         "selectGame": "Vyber hru",
         "startNavigation": "Začať navigáciu",
-        "stop": "Zastaviť"
+        "stop": "Zastaviť",
+        "chooseMap": "Vybrať mapu",
+        "companionActive": "Aplikácia v PC musí byť spustená",
+        "connection": "Pripojenie",
+        "downloadBaseMap": "Stiahnuť základnú mapu",
+        "drive": "Jazda",
+        "freeRoam": "Voľná jazda",
+        "liveRoute": "Aktívna trasa",
+        "maps": "Mapy",
+        "mods": "Módy",
+        "preferences": "Predvoľby",
+        "readyForDeparture": "Pripravené na odchod",
+        "select": "Vybrať",
+        "selectSimulator": "Simulátory",
+        "session": "Jazda",
+        "stopsTimeline": "Časová os zastávok",
+        "trip": "Trasa",
+        "trucknav": "TruckNav",
+        "trucknavMoto": "Tvoj spoločník na cestách"
     },
     "achievements": {
         "firstDelivery": {
@@ -170,7 +188,14 @@
     "notifications": {
         "locatingRoute": "Hľadanie trasy",
         "noRouteAvailable": "Žiadna dostupná trasa!",
-        "routeFound": "Trasa nájdená"
+        "routeFound": "Trasa nájdená",
+        "deliveryLate": "Oneskorené doručenie",
+        "deliveryUrgent": "Súrne doručenie",
+        "lowFuel": "Málo paliva",
+        "lowFuelJob": "Málo paliva a súrna zákazka",
+        "lowFuelRest": "Málo paliva a únava",
+        "lowRest": "Potreba odpočinku",
+        "lowRestJob": "Únava a súrna zákazka"
     },
     "driveReport": {
         "title": "Vodičská správa",
@@ -254,8 +279,6 @@
         "voiceConciseDescription": "Pokyny iba na krátku vzdialenosť.",
         "voiceNeural": "Neurónový hlas",
         "voiceNeuralDescription": "Používa neurónové hlasy na vyššiu kvalitu a lepšiu výslovnosť; vypnuté použije systémový hlas.",
-        "voiceCloud": "Online HD hlas",
-        "voiceCloudDescription": "Preferuje online HD hlas s najlepšou výslovnosťou miestnych mien. Každé oznámenie sa stiahne raz a uloží do vyrovnávacej pamäte; bez pripojenia sa vráti k offline hlasu.",
         "voiceName": "Hlas sprievodcu",
         "voiceNameDescription": "Zvoľte hlas pre hovorené pokyny. Automaticky podľa jazyka aplikácie; bez voľby má prednosť neurálny hlas.",
         "voiceNameAuto": "Automaticky (podľa jazyka)",
@@ -299,8 +322,6 @@
         "aiEndpointHint": "Lokálne runtime musia povoliť pôvod tejto aplikácie — pri Ollame napr. nastavte OLLAMA_ORIGINS=*.",
         "aiInsights": "AI poznámky",
         "aiInsightsDescription": "Jedna veta o trase po naplánovaní a krátke hodnotenie po dodaní.",
-        "aiServiceNote": "Poznámka k zastávke",
-        "aiServiceNoteHint": "K vyskakovacej správe pridá jednu vetu AI o tom, prečo aktuálne navržená prestávka alebo tankovanie zmysluplne nadväzuje; len zobrazenie, nikdy hovorené.",
         "aiProviderPreset": "Predvoľba poskytovateľa",
         "aiPresetCustom": "Vlastné",
         "aiPreset": {
@@ -311,7 +332,36 @@
             "ollama": "Ollama (lokálne)",
             "lmstudio": "LM Studio (lokálne)"
         },
-        "aiUsage": "Spotreba AI (relácia)"
+        "aiUsage": "Spotreba AI (relácia)",
+        "voiceCloud": "Online HD hlas",
+        "voiceCloudDescription": "Preferuje online HD hlas s najlepšou výslovnosťou miestnych mien. Každé oznámenie sa stiahne raz a uloží do vyrovnávacej pamäte; bez pripojenia sa vráti k offline hlasu.",
+        "aiServiceNote": "Poznámka k zastávke",
+        "aiServiceNoteHint": "K vyskakovacej správe pridá jednu vetu AI o tom, prečo aktuálne navržená prestávka alebo tankovanie zmysluplne nadväzuje; len zobrazenie, nikdy hovorené.",
+        "arrow": "Šípka",
+        "autoStartNav": "Automaticky spustiť navigáciu",
+        "autoStartNavDescription": "Otvoriť mapu pri spustení",
+        "backToMainMenu": "Hlavné menu",
+        "colorsMap": "Farby a mapa",
+        "disc": "Kruh",
+        "drivingHud": "Jazdný HUD",
+        "drivingHudDescription": "Zobraziť alebo skryť jazdný HUD na obrazovke",
+        "glowColor": "Farba žiary",
+        "glowEffect": "Efekt žiary",
+        "guidanceTime": "Navádzanie a čas",
+        "hudSizing": "HUD a veľkosti",
+        "languageDescription": "Vyber si preferovaný jazyk",
+        "mapExpansions": "Rozšírenia mapy",
+        "mapExpansionsDescription": "Vyber mapové DLC, ktoré vlastníš",
+        "outerRim": "Vonkajší okraj",
+        "preferencesSystem": "Predvoľby a systém",
+        "regionalGame": "Regionálne nastavenia a hra",
+        "rimColor": "Farba okraja",
+        "switchGameMaps": "Prepnúť hru a mapy",
+        "system": "Systém",
+        "themesMapStyling": "Motívy a štýl mapy",
+        "timeHud": "Čas a HUD",
+        "turnArrows": "Šípky odbočenia",
+        "typography": "Typografia"
     },
     "stats": {
         "delivered": "Doručené",
@@ -350,11 +400,53 @@
         "speedLimitTitle": "Rýchlostná značka",
         "speedTitle": "Rýchlosť",
         "topBarDescription": "Schová celú hornú lištu s informáciami.",
-        "topBarTitle": "Vrchná lišta"
+        "topBarTitle": "Vrchná lišta",
+        "landscapeHudCards": "HUD karty na šírku",
+        "landscapeHudDescription": "Zobraziť karty paliva, odpočinku, zákazky a nákladu dole v režime na šírku."
     },
     "aiNotes": {
         "routeInsight": "Poznámka k trase",
         "deliveryNote": "Hodnotenie dodania",
         "serviceNote": "Poznámka k zastávke"
+    },
+    "buttons": {
+        "startNav": "Spustiť navigáciu",
+        "job": "Zákazka"
+    },
+    "documentation": {
+        "baseMapRequired": "Vyžaduje sa základná mapa",
+        "downloadMapData": "Stiahni mapové dáta pre aktiváciu živej GPS navigácie",
+        "openRoad": "Voľná cesta pred tebou",
+        "openRoadDescription": "Žiadna aktívna zákazka. Vyber si náklad z trhu zákaziek alebo si uži voľnú jazdu"
+    },
+    "modPanel": {
+        "title": "Mapové módy",
+        "description": "Vyber svoj aktívny mapový mód",
+        "selectMapMod": "Vybrať mapový mód"
+    },
+    "placeholder": {
+        "title": "Názov",
+        "description": "Popis",
+        "restStop": "Odpočívadlo o 45 km"
+    },
+    "trip": {
+        "vehicleDamage": "Poškodenie vozidla",
+        "currentJob:": "Aktuálna zákazka",
+        "cargo": "Náklad",
+        "weight": "Hmotnosť",
+        "remains": "Zostáva",
+        "wear": "Opotrebenie",
+        "payout": "Odmena",
+        "rest": "Odpočinok",
+        "rested": "Odpočinutý",
+        "needRest": "Potreba odpočinku",
+        "speed": "Rýchlosť",
+        "safeSpeed": "Bezpečná rýchlosť",
+        "overLimit": "Prekročenie rýchlosti",
+        "vehicle": "Vozidlo",
+        "fuel": "Palivo"
+    },
+    "typographyPanel": {
+        "description": "Vyber si písmo, ktoré ladí s tvojím štýlom"
     }
 }

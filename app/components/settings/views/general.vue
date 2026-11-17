@@ -2,8 +2,13 @@
 import { ets2Expansions } from "~/data/ets2/ets2Expansions";
 import { atsExpansions } from "~/data/ats/atsExpansions";
 
-const { settings, activeSettings, updateProfile, resetSettings } =
-    useSettings();
+const {
+    settings,
+    activeSettings,
+    updateGlobal,
+    updateProfile,
+    resetSettings,
+} = useSettings();
 const { locale, setLocale, t } = useTranslations();
 const {
     settings: desktopSettings,
@@ -14,6 +19,11 @@ const {
 const isDlcPanelOpened = ref(false);
 
 const isMetric = computed(() => activeSettings.value.units === "metric");
+const autoStartEnabled = computed(() => settings.value.autoStartNav === true);
+
+function toggleAutoStartNav() {
+    updateGlobal("autoStartNav", !settings.value.autoStartNav);
+}
 const rpcEnabled = computed(() => desktopSettings.value.rpcEnabled);
 const selectedExpansion = computed(() => {
     return settings.value.selectedGame === "ets2"
@@ -57,6 +67,21 @@ onMounted(async () => {
 
 <template>
     <div>
+        <div class="option setting">
+            <div class="option-title">
+                <Icon name="lucide:rocket" size="24" />
+                <p>{{ t("settings.autoStartNav") }}</p>
+            </div>
+
+            <SegmentedControl
+                :left-option="t('settings.on')"
+                :right-option="t('settings.off')"
+                @connect="toggleAutoStartNav"
+                size="normal"
+                :active="autoStartEnabled"
+            />
+        </div>
+
         <div v-if="activeSettings.activeMod === 'none'" class="option setting">
             <div class="option-title">
                 <Icon name="lucide:map-plus" size="24" />

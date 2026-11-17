@@ -20,7 +20,25 @@
         "resume": "Fortsetzen",
         "selectGame": "Spiel auswählen",
         "startNavigation": "Navigation starten",
-        "stop": "Stopp"
+        "stop": "Stopp",
+        "chooseMap": "Karte auswählen",
+        "companionActive": "PC-Begleit-App muss aktiv sein",
+        "connection": "Verbindung",
+        "downloadBaseMap": "Basiskarte herunterladen",
+        "drive": "Fahrt",
+        "freeRoam": "Freie Fahrt",
+        "liveRoute": "Live-Route",
+        "maps": "Karten",
+        "mods": "Mods",
+        "preferences": "Einstellungen",
+        "readyForDeparture": "Abfahrbereit",
+        "select": "Auswählen",
+        "selectSimulator": "Simulatoren",
+        "session": "Sitzung",
+        "stopsTimeline": "Stopp-Timeline",
+        "trip": "Tour",
+        "trucknav": "TruckNav",
+        "trucknavMoto": "Dein Trucking-Begleiter"
     },
     "achievements": {
         "firstDelivery": {
@@ -170,7 +188,14 @@
     "notifications": {
         "locatingRoute": "Route wird gesucht",
         "noRouteAvailable": "Keine Route verfügbar",
-        "routeFound": "Route gefunden"
+        "routeFound": "Route gefunden",
+        "deliveryLate": "Lieferverspätung",
+        "deliveryUrgent": "Eilige Lieferung",
+        "lowFuel": "Wenig Kraftstoff",
+        "lowFuelJob": "Wenig Kraftstoff & eiliger Auftrag",
+        "lowFuelRest": "Wenig Kraftstoff & Pause nötig",
+        "lowRest": "Pause nötig",
+        "lowRestJob": "Pause & eiliger Auftrag"
     },
     "driveReport": {
         "title": "Fahrbericht",
@@ -254,8 +279,6 @@
         "voiceConciseDescription": "Ansagen nur beim nahen Abbiegepunkt.",
         "voiceNeural": "Neuronale Stimme",
         "voiceNeuralDescription": "Verwendet neuronale Stimmen für höhere Qualität und bessere Aussprache; aus verwendet die Systemstimme.",
-        "voiceCloud": "Online-HD-Stimme",
-        "voiceCloudDescription": "Bevorzugt die Online-HD-Stimme mit der besten Ortsnamen-Aussprache. Jede Ansage wird einmal heruntergeladen und zwischengespeichert; ohne Verbindung wird die Offline-Stimme verwendet.",
         "voiceName": "Erzählerstimme",
         "voiceNameDescription": "Stimme für die Sprachansagen wählen. Automatisch folgt der App-Sprache; ohne Auswahl hat die neuronale Stimme Vorrang.",
         "voiceNameAuto": "Automatisch (Sprache folgen)",
@@ -299,8 +322,6 @@
         "aiEndpointHint": "Lokale Laufzeiten müssen den Ursprung dieser App erlauben — für Ollama z. B. OLLAMA_ORIGINS=* setzen.",
         "aiInsights": "KI-Hinweise",
         "aiInsightsDescription": "Ein Satz zur Route nach der Planung und eine kurze Anmerkung bei der Lieferung.",
-        "aiServiceNote": "Raststätten-Hinweis",
-        "aiServiceNoteHint": "Fügt dem Toast einen KI-Satz hinzu, warum die empfohlene Rast oder Tankstelle jetzt sinnvoll ist; nur sichtbar, nie gesprochen.",
         "aiProviderPreset": "Anbieter-Vorlage",
         "aiPresetCustom": "Benutzerdefiniert",
         "aiPreset": {
@@ -311,7 +332,36 @@
             "ollama": "Ollama (lokal)",
             "lmstudio": "LM Studio (lokal)"
         },
-        "aiUsage": "KI-Verbrauch (Sitzung)"
+        "aiUsage": "KI-Verbrauch (Sitzung)",
+        "voiceCloud": "Online-HD-Stimme",
+        "voiceCloudDescription": "Bevorzugt die Online-HD-Stimme mit der besten Ortsnamen-Aussprache. Jede Ansage wird einmal heruntergeladen und zwischengespeichert; ohne Verbindung wird die Offline-Stimme verwendet.",
+        "aiServiceNote": "Raststätten-Hinweis",
+        "aiServiceNoteHint": "Fügt dem Toast einen KI-Satz hinzu, warum die empfohlene Rast oder Tankstelle jetzt sinnvoll ist; nur sichtbar, nie gesprochen.",
+        "arrow": "Pfeil",
+        "autoStartNav": "Navigation automatisch starten",
+        "autoStartNavDescription": "Karte beim Start öffnen",
+        "backToMainMenu": "Hauptmenü",
+        "colorsMap": "Farben & Karte",
+        "disc": "Scheibe",
+        "drivingHud": "Fahr-HUD",
+        "drivingHudDescription": "Fahr-HUD auf dem Bildschirm ein-/ausblenden",
+        "glowColor": "Leuchtfarbe",
+        "glowEffect": "Leuchteffekt",
+        "guidanceTime": "Führung & Zeit",
+        "hudSizing": "HUD & Größen",
+        "languageDescription": "Wähle deine bevorzugte Sprache",
+        "mapExpansions": "Kartenerweiterungen",
+        "mapExpansionsDescription": "Wähle die Karten-DLCs aus, die du besitzt",
+        "outerRim": "Äußerer Rand",
+        "preferencesSystem": "Einstellungen & System",
+        "regionalGame": "Region & Spiel",
+        "rimColor": "Randfarbe",
+        "switchGameMaps": "Spiel & Karten wechseln",
+        "system": "System",
+        "themesMapStyling": "Designs & Karten-Styling",
+        "timeHud": "Zeit & HUD",
+        "turnArrows": "Abbiegepfeile",
+        "typography": "Typografie"
     },
     "stats": {
         "delivered": "Geliefert",
@@ -350,11 +400,53 @@
         "speedLimitTitle": "Tempolimit-Schild",
         "speedTitle": "Geschwindigkeit",
         "topBarDescription": "Blendet die komplette obere Leiste mit Fahrinfos aus.",
-        "topBarTitle": "Obere Leiste"
+        "topBarTitle": "Obere Leiste",
+        "landscapeHudCards": "Querformat-HUD-Karten",
+        "landscapeHudDescription": "Zeigt Karten für Kraftstoff, Pause, Auftrag und Fracht unten in der Querformat-Ansicht an."
     },
     "aiNotes": {
         "routeInsight": "Routen-Hinweis",
         "deliveryNote": "Liefer-Anmerkung",
         "serviceNote": "Rast-Hinweis"
+    },
+    "buttons": {
+        "startNav": "Navigation starten",
+        "job": "Auftrag"
+    },
+    "documentation": {
+        "baseMapRequired": "Basiskarte erforderlich",
+        "downloadMapData": "Lade die Kartendaten herunter, um die Live-GPS-Navigation zu aktivieren.",
+        "openRoad": "Freie Fahrt voraus",
+        "openRoadDescription": "Keine aktive Lieferung. Nimm einen Auftrag aus dem Frachtmarkt an oder genieße die Fahrt."
+    },
+    "modPanel": {
+        "title": "Karten-Mods",
+        "description": "Wähle deine aktive Karten-Mod aus",
+        "selectMapMod": "Karten-Mod auswählen"
+    },
+    "placeholder": {
+        "title": "Titel",
+        "description": "Beschreibung",
+        "restStop": "Raststätte in 45 km"
+    },
+    "trip": {
+        "vehicleDamage": "Fahrzeugschaden",
+        "currentJob:": "Aktueller Auftrag",
+        "cargo": "Fracht",
+        "weight": "Gewicht",
+        "remains": "Verbleibend",
+        "wear": "Verschleiß",
+        "payout": "Vergütung",
+        "rest": "Pause",
+        "rested": "Ausgeruht",
+        "needRest": "Pause erforderlich",
+        "speed": "Geschwindigkeit",
+        "safeSpeed": "Sichere Geschwindigkeit",
+        "overLimit": "Über Tempolimit",
+        "vehicle": "Fahrzeug",
+        "fuel": "Kraftstoff"
+    },
+    "typographyPanel": {
+        "description": "Wähle eine Schriftart, die zu deinem Stil passt"
     }
 }

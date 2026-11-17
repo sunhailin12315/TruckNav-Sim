@@ -1,33 +1,62 @@
 .game-btn {
-    height: 100%;
     width: 100%;
+    opacity: 0.45;
 
-    border-radius: 6px;
-    background-color: $primaryDarkerColor;
+    border-radius: $default-border-radius;
+    background-color: $primaryColor;
+    border-bottom: 2px solid transparent;
+
+    transition: opacity 0.2s $css-transition-bezier;
 
     &.is-selected {
-        outline: 2px solid var(--theme-color);
-        color: $white-font-text;
         opacity: 1;
+        border-bottom: 2px solid var(--theme-color);
+
+        color: $white-font-text;
+
+        border-color: color-mix(in srgb, var(--theme-color) 70%, transparent);
+
+        background-color: color-mix(
+            in srgb,
+            var(--theme-color) 10%,
+            transparent
+        );
+
+        .check {
+            color: $green-color;
+        }
     }
 
     display: flex;
+    align-items: center;
     flex-direction: column;
+    height: 4.6rem;
 
     opacity: 0.5;
     transition: 0.3s opacity;
-    color: gray;
+    color: $white-font-text-muted;
 
     cursor: pointer;
 }
 
-.game-name-wrapper {
+.game-card-wrapper {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 0.8rem;
+    height: 100%;
 
-    padding: 12px;
+    padding: 0.8rem;
+
+    .icon {
+        height: 100%;
+    }
+}
+
+.game-name-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
 }
 
 .game-name {
@@ -35,11 +64,4 @@
     letter-spacing: 0.4px;
 
     text-transform: uppercase;
-}
-
-img {
-    width: 100%;
-    object-fit: cover;
-
-    border-radius: 6px;
 }

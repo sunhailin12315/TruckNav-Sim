@@ -5,9 +5,13 @@ import cs from "~/locales/cs.json";
 import sk from "~/locales/sk.json";
 import ro from "~/locales/ro.json";
 import ko from "~/locales/ko.json";
+import fr from "~/locales/fr.json";
+import ru from "~/locales/ru.json";
 import zh from "~/locales/zh.json";
 
-type TranslationTree = typeof en;
+/** Recursive structural tree; lookups are runtime path-based (readValue),
+ * so locales may omit keys and fall back through the t() chain. */
+type TranslationTree = { [key: string]: string | TranslationTree };
 
 const dictionaries: Record<LocaleCode, TranslationTree> = {
     en,
@@ -17,6 +21,8 @@ const dictionaries: Record<LocaleCode, TranslationTree> = {
     sk,
     ro,
     ko,
+    fr,
+    ru,
     zh,
 };
 

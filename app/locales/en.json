@@ -20,7 +20,25 @@
         "resume": "Resume",
         "selectGame": "Select Game",
         "startNavigation": "Start Navigation",
-        "stop": "Stop"
+        "stop": "Stop",
+        "chooseMap": "Choose Map",
+        "companionActive": "PC Companion must be active",
+        "connection": "Connection",
+        "downloadBaseMap": "Download Base Map",
+        "drive": "Drive",
+        "freeRoam": "Free Roam",
+        "liveRoute": "Live Route",
+        "maps": "Maps",
+        "mods": "Mods",
+        "preferences": "Preferences",
+        "readyForDeparture": "Ready for Departure",
+        "select": "Select",
+        "selectSimulator": "Simulators",
+        "session": "Session",
+        "stopsTimeline": "Stops Timeline",
+        "trip": "Trip",
+        "trucknav": "TruckNav",
+        "trucknavMoto": "Your Trucking Companion"
     },
     "achievements": {
         "firstDelivery": {
@@ -170,7 +188,14 @@
     "notifications": {
         "locatingRoute": "Locating Route",
         "noRouteAvailable": "No Route Available",
-        "routeFound": "Route Found"
+        "routeFound": "Route Found",
+        "deliveryLate": "Delivery Rate",
+        "deliveryUrgent": "Delivery Urgent",
+        "lowFuel": "Low Fuel",
+        "lowFuelJob": "Low Fuel & Urgent Job",
+        "lowFuelRest": "Low Fuel & Rest",
+        "lowRest": "Low Rest",
+        "lowRestJob": "Rest & Urgent Job"
     },
     "driveReport": {
         "title": "Drive Report",
@@ -254,8 +279,6 @@
         "voiceConciseDescription": "Only announce turns at the near-distance call.",
         "voiceNeural": "Neural Voice",
         "voiceNeuralDescription": "Uses neural voices for higher quality and better pronunciation; off uses the system voice.",
-        "voiceCloud": "Online HD Voice",
-        "voiceCloudDescription": "Prefers the online high-definition voice, which pronounces place names best. Each cue is downloaded once and cached; without a connection it falls back to the offline voice.",
         "voiceName": "Narrator voice",
         "voiceNameDescription": "Pick the voice for spoken cues. Auto matches the app language; the neural voice keeps priority when no voice is picked.",
         "voiceNameAuto": "Automatic (match language)",
@@ -299,8 +322,6 @@
         "aiEndpointHint": "Local runtimes must allow this app's origin — e.g. set OLLAMA_ORIGINS=* for Ollama.",
         "aiInsights": "AI Insights",
         "aiInsightsDescription": "One-sentence route insight after planning and a delivery recap on drop-off.",
-        "aiServiceNote": "Service Stop Note",
-        "aiServiceNoteHint": "Adds one AI sentence about why the suggested rest or fuel stop makes sense right now to the toast; shown only, never spoken.",
         "aiProviderPreset": "Provider preset",
         "aiPresetCustom": "Custom",
         "aiPreset": {
@@ -311,7 +332,36 @@
             "ollama": "Ollama (local)",
             "lmstudio": "LM Studio (local)"
         },
-        "aiUsage": "AI usage (this session)"
+        "aiUsage": "AI usage (this session)",
+        "voiceCloud": "Online HD Voice",
+        "voiceCloudDescription": "Prefers the online high-definition voice, which pronounces place names best. Each cue is downloaded once and cached; without a connection it falls back to the offline voice.",
+        "aiServiceNote": "Service Stop Note",
+        "aiServiceNoteHint": "Adds one AI sentence about why the suggested rest or fuel stop makes sense right now to the toast; shown only, never spoken.",
+        "arrow": "Arrow",
+        "autoStartNav": "Auto-Start Navigation",
+        "autoStartNavDescription": "Launch Map On Start",
+        "backToMainMenu": "Main Menu",
+        "colorsMap": "Colors & Map",
+        "disc": "Disc",
+        "drivingHud": "Driving Hud",
+        "drivingHudDescription": "Toggle on-screen driving HUD",
+        "glowColor": "Glow Color",
+        "glowEffect": "Glow Effect",
+        "guidanceTime": "Guidance & Time",
+        "hudSizing": "Hud & Sizing",
+        "languageDescription": "Choose your preferred language",
+        "mapExpansions": "Map Expansions",
+        "mapExpansionsDescription": "Select the map DLCs you own",
+        "outerRim": "Outer Rim",
+        "preferencesSystem": "Preferences & System",
+        "regionalGame": "Regional & Game",
+        "rimColor": "Rim Color",
+        "switchGameMaps": "Switch Game & Maps",
+        "system": "System",
+        "themesMapStyling": "Themes & Map Styling",
+        "timeHud": "Time & HUD",
+        "turnArrows": "Turn Arrows",
+        "typography": "Typography"
     },
     "stats": {
         "delivered": "Delivered",
@@ -350,11 +400,53 @@
         "speedLimitTitle": "Speed Sign",
         "speedTitle": "Speed",
         "topBarDescription": "Hides the whole top bar with drive info.",
-        "topBarTitle": "Top Bar"
+        "topBarTitle": "Top Bar",
+        "landscapeHudCards": "Landscape HUD Cards",
+        "landscapeHudDescription": "Show fuel, rest, job, and cargo cards at the bottom in landscape view."
     },
     "aiNotes": {
         "routeInsight": "Route insight",
         "deliveryNote": "Delivery note",
         "serviceNote": "Service note"
+    },
+    "buttons": {
+        "startNav": "Start Navigation",
+        "job": "Job"
+    },
+    "documentation": {
+        "baseMapRequired": "Base Map Required",
+        "downloadMapData": "Download the map datat to enable live GPS navigation",
+        "openRoad": "Open Road Ahead",
+        "openRoadDescription": "No active delivery. Pick up a contract from the freight market or enjoy the drive"
+    },
+    "modPanel": {
+        "title": "Map Mods",
+        "description": "Select your active map mod",
+        "selectMapMod": "Select Map Mod"
+    },
+    "placeholder": {
+        "title": "Title",
+        "description": "Description",
+        "restStop": "Rest stop in 45 km"
+    },
+    "trip": {
+        "vehicleDamage": "Vehicle Damage",
+        "currentJob:": "Current Job",
+        "cargo": "Cargo",
+        "weight": "Weight",
+        "remains": "Remains",
+        "wear": "Wear",
+        "payout": "Payout",
+        "rest": "Rest",
+        "rested": "Rested",
+        "needRest": "Need Resting",
+        "speed": "Speed",
+        "safeSpeed": "Safe Speed",
+        "overLimit": "Over Limit",
+        "vehicle": "Vehicle",
+        "fuel": "Fuel"
+    },
+    "typographyPanel": {
+        "description": "Choose a font that matches your style"
     }
 }

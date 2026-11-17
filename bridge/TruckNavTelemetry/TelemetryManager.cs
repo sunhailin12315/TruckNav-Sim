@@ -44,6 +44,9 @@ internal sealed class TelemetryManager
                 MapScale = data.CommonValues.Scale,
                 GameTime = data.CommonValues.GameTime.Date,
                 NextRestStopMinutes = data.CommonValues.NextRestStop.Value,
+                // Frame clock for the app-side freshness watchdog (see
+                // Packets.cs); frozen repeats + paused == false == crash.
+                RenderTimestamp = data.RenderTimestamp,
             },
             Truck = new TruckData
             {

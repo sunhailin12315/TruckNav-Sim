@@ -4,7 +4,7 @@ import {
     setupElectronDeepLinking,
 } from "@capacitor-community/electron";
 import type { MenuItemConstructorOptions } from "electron";
-import { app, dialog, ipcMain, MenuItem, shell } from "electron";
+import { app, dialog, ipcMain, MenuItem, Notification, shell } from "electron";
 import electronIsDev from "electron-is-dev";
 import unhandled from "electron-unhandled";
 import express from "express";
@@ -269,52 +269,148 @@ async function getSteamPath() {
 const exeName = "TruckNavTelemetry.exe";
 let telemetryProcess: ChildProcess | null = null;
 
-async function startTelemetryServer() {
-    try {
-        const serverPath = app.isPackaged
-            ? path.join(process.resourcesPath, "bin", exeName)
-            : path.join(app.getAppPath(), "bin", exeName);
+// --- Telemetry bridge supervisor --------------------------------------------
+// The bridge must not be allowed to die silently: the app's frontend would
+// just keep spinning its reconnect backoff against a dead port. Unexpected
+// exits restart it on a backoff ladder; a crash loop stops the attempts and
+// says so (mirrors the app-side backoff; see docs/ets2la-reference-study.md
+// §2.2 — plan the next attempt, never queue up catch-up restarts).
+const TELEMETRY_RESTART_BASE_MS = 3000;
+const TELEMETRY_RESTART_MAX_MS = 30000;
+/** A run at least this long resets the backoff ladder. */
+const TELEMETRY_STABLE_MS = 60000;
+/** A run shorter than this counts toward the crash-loop streak. */
+const TELEMETRY_CRASH_LOOP_MS = 2000;
+const TELEMETRY_CRASH_LOOP_LIMIT = 5;
 
-        if (!existsSync(serverPath)) {
-            dialog.showErrorBox(
-                "DEBUG: Path Error",
-                `Telemetry .exe NOT found at:\n${serverPath}`,
+let telemetryRestartTimer: ReturnType<typeof setTimeout> | null = null;
+let telemetryRestartAttempts = 0;
+let telemetryCrashLoopStreak = 0;
+let telemetryGaveUp = false;
+let telemetrySpawnedAt = 0;
+
+function spawnTelemetry() {
+    const serverPath = app.isPackaged
+        ? path.join(process.resourcesPath, "bin", exeName)
+        : path.join(app.getAppPath(), "bin", exeName);
+
+    if (!existsSync(serverPath)) {
+        dialog.showErrorBox(
+            "DEBUG: Path Error",
+            `Telemetry .exe NOT found at:\n${serverPath}`,
+        );
+        return;
+    }
+
+    const serverDir = path.dirname(serverPath);
+
+    const logPath = path.join(
+        app.getPath("userData"),
+        "telemetry-crash-log.txt",
+    );
+    const logStream = createWriteStream(logPath, { flags: "a" });
+
+    logStream.write(`\n\n--- App Boot: ${new Date().toISOString()} ---\n`);
+    logStream.write(`Path: ${serverPath}\nPackaged: ${app.isPackaged}\n\n`);
+
+    const proc = spawn(serverPath, [], {
+        cwd: serverDir,
+        windowsHide: true,
+    });
+    telemetryProcess = proc;
+    telemetrySpawnedAt = Date.now();
+
+    proc.stdout?.pipe(logStream);
+    proc.stderr?.pipe(logStream);
+
+    proc.on("error", (err: any) => {
+        logStream.write(
+            `[FATAL ERROR]: Failed to start process: ${err.message}\n`,
+        );
+    });
+
+    proc.on("close", (code: number) => {
+        logStream.write(`[INFO]: Server process exited with code ${code}\n`);
+        // Ignore delayed closes from a process we already replaced.
+        if (telemetryProcess !== proc) return;
+        telemetryProcess = null;
+        handleTelemetryExit();
+    });
+}
+
+/** Decide whether an unexpected bridge exit gets restarted, and when. */
+function handleTelemetryExit() {
+    // Deliberate teardown (app quit, killTelemetry) is never a crash.
+    if ((app as any).isQuitting || telemetryGaveUp) return;
+
+    const lifetime = Date.now() - telemetrySpawnedAt;
+    if (lifetime >= TELEMETRY_STABLE_MS) {
+        telemetryRestartAttempts = 0;
+        telemetryCrashLoopStreak = 0;
+    } else if (lifetime < TELEMETRY_CRASH_LOOP_MS) {
+        // Dying instantly twice in a row usually means the port is held by a
+        // foreign process — restarting on the ladder would only loop.
+        telemetryCrashLoopStreak++;
+        if (telemetryCrashLoopStreak >= TELEMETRY_CRASH_LOOP_LIMIT) {
+            telemetryGaveUp = true;
+            console.error(
+                "[Telemetry] crash loop detected — automatic restarts paused",
             );
+            notifyTelemetryGaveUp();
             return;
         }
+    } else {
+        telemetryCrashLoopStreak = 0;
+    }
 
+    if (telemetryRestartTimer) return;
+    const delay = Math.min(
+        TELEMETRY_RESTART_BASE_MS * 2 ** telemetryRestartAttempts,
+        TELEMETRY_RESTART_MAX_MS,
+    );
+    telemetryRestartAttempts++;
+    console.log(
+        `[Telemetry] died after ${Math.round(lifetime / 1000)}s, restart in ${Math.round(delay / 1000)}s`,
+    );
+    telemetryRestartTimer = setTimeout(() => {
+        telemetryRestartTimer = null;
+        if (telemetryGaveUp || telemetryProcess || (app as any).isQuitting)
+            return;
+        // Clear any zombie instance the same way an app boot would.
+        try {
+            spawnSync("taskkill", ["/F", "/IM", exeName, "/T"], {
+                stdio: "ignore",
+                windowsHide: true,
+            });
+        } catch (e) {}
+        spawnTelemetry();
+    }, delay);
+}
+
+function notifyTelemetryGaveUp() {
+    try {
+        if (Notification.isSupported()) {
+            new Notification({
+                title: "Telemetry bridge stopped",
+                body: "TruckNavTelemetry.exe keeps crashing on start, automatic restarts are paused. Check telemetry-crash-log.txt, close conflicting apps, then use Start Telemetry Server to retry.",
+            }).show();
+        }
+    } catch (e) {
+        // Notification backends vary (Linux without a notify daemon); the
+        // crash log stays the source of truth.
+    }
+}
+
+async function startTelemetryServer() {
+    try {
+        // Deliberate (re)start from app boot or the manual IPC: full ladder
+        // reset. The old process's late `close` is already filtered by the
+        // spawned-instance identity check, so it cannot read as a crash.
         killTelemetry();
-        const serverDir = path.dirname(serverPath);
-
-        const logPath = path.join(
-            app.getPath("userData"),
-            "telemetry-crash-log.txt",
-        );
-        const logStream = createWriteStream(logPath, { flags: "a" });
-
-        logStream.write(`\n\n--- App Boot: ${new Date().toISOString()} ---\n`);
-        logStream.write(`Path: ${serverPath}\nPackaged: ${app.isPackaged}\n\n`);
-
-        telemetryProcess = spawn(serverPath, [], {
-            cwd: serverDir,
-            windowsHide: true,
-        });
-
-        telemetryProcess.stdout?.pipe(logStream);
-        telemetryProcess.stderr?.pipe(logStream);
-
-        telemetryProcess.on("error", (err: any) => {
-            logStream.write(
-                `[FATAL ERROR]: Failed to start process: ${err.message}\n`,
-            );
-        });
-
-        telemetryProcess.on("close", (code: number) => {
-            logStream.write(
-                `[INFO]: Server process exited with code ${code}\n`,
-            );
-            telemetryProcess = null;
-        });
+        telemetryGaveUp = false;
+        telemetryRestartAttempts = 0;
+        telemetryCrashLoopStreak = 0;
+        spawnTelemetry();
     } catch (globalError) {
         console.error("Failed to start telemetry server:", globalError);
     }
@@ -322,6 +418,11 @@ async function startTelemetryServer() {
 
 const killTelemetry = () => {
     console.log("[Telemetry] Cleaning up background processes...");
+
+    if (telemetryRestartTimer) {
+        clearTimeout(telemetryRestartTimer);
+        telemetryRestartTimer = null;
+    }
 
     if (telemetryProcess) {
         try {

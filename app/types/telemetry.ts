@@ -22,6 +22,11 @@ export interface CommonData {
     mapScale: number;
     gameTime: string; // ISO Date String
     nextRestStopMinutes: number;
+    /**
+     * µs game render clock of the packet's frame (freshness watchdog);
+     * absent from older bridges — then the frozen-frame check stays inert.
+     */
+    renderTimestamp?: number;
 }
 
 /**

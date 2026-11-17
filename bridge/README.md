@@ -16,6 +16,11 @@
 不受影响。前端（`app/composables/EtsTelemetry.ts`）优先读新字段，读不到时回退到
 两帧符号恢复（`app/assets/utils/telemetry/deliveryDeadline.ts`）。
 
+**v1.1.1（源码侧，未发版）新增 `common.renderTimestamp`（ulong，µs 游戏渲染时钟）**，
+供前端新鲜度看门狗识别"游戏崩溃后末帧无限重播"（`app/assets/utils/telemetry/freshness.ts`）。
+纯增量字段：旧客户端忽略即可，新客户端遇到无此字段的旧 exe 时冻结检测自动失效，
+广播节奏不变（心跳语义保留）。
+
 ## 组成
 
 - `SCSSdkClient/` — 上游 scs-sdk-plugin rev 1.12 的 C# 客户端（MIT，见其目录内

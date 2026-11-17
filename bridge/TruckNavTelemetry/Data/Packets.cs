@@ -29,6 +29,15 @@ public class CommonData
     public float MapScale { get; set; }
     public DateTime GameTime { get; set; }
     public int NextRestStopMinutes { get; set; }
+
+    /// <summary>
+    /// Game render clock (microseconds since game start) of the frame this
+    /// packet was built from. The app freshness watchdog uses it to spot the
+    /// crash signature: byte-identical repeats while paused == false mean the
+    /// game froze or died but the bridge keeps replaying the last frame.
+    /// Values stay far below 2^53, so the JSON round-trip keeps full precision.
+    /// </summary>
+    public ulong RenderTimestamp { get; set; }
 }
 
 public class TruckConstants

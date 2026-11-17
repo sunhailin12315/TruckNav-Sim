@@ -15,6 +15,11 @@ import {
     observeDeliveryDeadline,
     type DeliveryDeadlineState,
 } from "~/assets/utils/telemetry/deliveryDeadline";
+import {
+    initialFreshnessState,
+    observeFreshness,
+    type FreshnessState,
+} from "~/assets/utils/telemetry/freshness";
 import { currencySymbolFor, formatMoney } from "~/assets/utils/shared/format";
 import type { AchievementDef } from "~/assets/utils/gameplay/achievements";
 import { computeDeliveryGrade } from "~/assets/utils/gameplay/score";
@@ -110,6 +115,15 @@ let reconnectAttempts = 0;
 
 const BASE_RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT_DELAY_MS = 30000;
+// Reconnect spread: ±20 % jitter so several clients on one bridge (phone +
+// tablet + second monitor) do not hammer the port in lockstep after a blip.
+const RECONNECT_JITTER = 0.2;
+
+// Freshness watchdog state: detects the two failure modes onclose cannot see
+// (bridge silence on a live socket; game-crash zombie frames). See
+// assets/utils/telemetry/freshness.ts for the rules and their rationale.
+let freshnessState: FreshnessState = initialFreshnessState;
+let freshnessTimer: ReturnType<typeof setInterval> | null = null;
 
 function sendDiscordRpcState(payload: {
     game: string;
@@ -237,6 +251,16 @@ export function useEtsTelemetry() {
 
         socket = new WebSocket(url);
 
+        // Fresh connection: start the freshness tracker from scratch, so a
+        // quiet-but-legit socket (bridge up, game closed) is never mistaken
+        // for the silence that follows a dropped session.
+        freshnessState = initialFreshnessState;
+        if (!freshnessTimer) {
+            freshnessTimer = setInterval(() => {
+                tickFreshness();
+            }, 1000);
+        }
+
         socket.onopen = () => {
             reconnectAttempts = 0;
             console.log("Connected to Bridge");
@@ -248,8 +272,22 @@ export function useEtsTelemetry() {
 
                 const data = rawData as TelemetryPacket;
 
+                // Any parsable packet is proof of socket liveness; feed the
+                // tracker before filtering so wrong-game packets keep the
+                // silence check honest. The watchdog tick is the only actor
+                // of the verdict.
+                freshnessState = observeFreshness(freshnessState, {
+                    nowMs: Date.now(),
+                    received: true,
+                    renderTimestamp: data.common?.renderTimestamp,
+                    paused: data.paused,
+                }).state;
+
                 if (data.game.toLowerCase() !== settings.value.selectedGame) {
-                    resetDataOnDisconnected(onUpdate);
+                    // Keep-alive from the other game: reset once, then idle.
+                    if (gameState.gameConnected) {
+                        resetDataOnDisconnected(onUpdate);
+                    }
                     return;
                 }
 
@@ -268,10 +306,37 @@ export function useEtsTelemetry() {
         };
     }
 
+    /**
+     * 1 Hz freshness evaluation. `onclose` misses both failure modes this
+     * guards: a socket that stays open while the bridge goes silent (game
+     * exit), and byte-identical zombie re-broadcasts after a game crash.
+     * Tearing down is done through the existing path: close the socket and
+     * let onclose reset state and schedule the backoff reconnect.
+     */
+    function tickFreshness() {
+        if (!socket) return;
+
+        const result = observeFreshness(freshnessState, {
+            nowMs: Date.now(),
+            received: false,
+        });
+        freshnessState = result.state;
+
+        if (result.disconnect) {
+            console.log("Telemetry stream went stale — reconnecting");
+            socket.close();
+        }
+    }
+
     function stopTelemetry() {
         if (reconnectTimer) {
             clearTimeout(reconnectTimer);
             reconnectTimer = null;
+        }
+
+        if (freshnessTimer) {
+            clearInterval(freshnessTimer);
+            freshnessTimer = null;
         }
 
         if (socket) {
@@ -290,10 +355,16 @@ export function useEtsTelemetry() {
         );
         reconnectAttempts++;
 
+        // Spread concurrent clients (phone + tablet + desktop) apart instead
+        // of letting them re-hit the port in lockstep.
+        const jittered = Math.round(
+            delay * (1 + (Math.random() * 2 - 1) * RECONNECT_JITTER),
+        );
+
         reconnectTimer = setTimeout(() => {
             reconnectTimer = null;
             startTelemetry(onUpdate);
-        }, delay);
+        }, jittered);
     }
 
     function processData(
